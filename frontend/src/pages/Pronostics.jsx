@@ -6,8 +6,16 @@ import { isSubscriptionActive } from "../hooks/useAuth";
 export default function Pronostics() {
   const [loading, setLoading] = useState(true);
   const [pronos, setPronos] = useState([]);
+  const [filter, setFilter] = useState('all');
   const [error, setError] = useState("");
-  const active = isSubscriptionActive();
+  
+  const list = pronos.filter(p => {
+    if (filter === 'all') return true;
+    if (filter === 'gold') return p.label === 'prono_en_or';
+    if (filter === 'bankroll') return p.label === 'strategie_bankroll';
+    return true;
+  });
+const active = isSubscriptionActive();
 
   useEffect(() => {
     if (!active) {
@@ -91,6 +99,17 @@ export default function Pronostics() {
                 <b className="text-primary">{p.cote}</b>
               </p>
               <p className="text-gray-400 mt-2">Résultat : {p.resultat}</p>
+              {p.details && (<p className="text-gray-300 mt-3 whitespace-pre-line">{p.details}</p>)}
+              {p.audioUrl && (
+                <audio controls className="mt-3 w-full">
+                  <source src={`${API_BASE}${p.audioUrl}`} />
+                </audio>
+              )}
+              {p.label !== 'standard' && (
+                <span className="inline-block mt-3 text-xs px-2 py-1 rounded bg-[#111] border border-primary">
+                  {p.label === 'prono_en_or' ? 'PRONO EN OR' : (p.label === 'strategie_bankroll' ? 'STRATÉGIE BANKROLL' : p.label)}
+                </span>
+              )}
             </div>
           ))}
         </div>

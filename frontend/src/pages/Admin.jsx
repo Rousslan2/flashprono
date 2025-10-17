@@ -13,6 +13,9 @@ export default function Admin() {
 
   // ---- FORM AJOUT PRONO (ancien) ----
   const [form, setForm] = useState({
+    label: "standard",
+    details: "",
+    audioUrl: "",
     sport: "Football",
     date: new Date().toISOString().slice(0, 16), // input datetime-local
     equipe1: "",
@@ -24,6 +27,14 @@ export default function Admin() {
 
   // ---- LISTE PRONOS (ancien) ----
   const [pronos, setPronos] = useState([]);
+
+  const uploadAudio = async (file) => {
+    const fd = new FormData();
+    fd.append("audio", file);
+    const token = localStorage.getItem("token");
+    const { data } = await axios.post(`${API_BASE}/api/admin/upload/audio`, fd, { headers: { Authorization: `Bearer ${token}` } });
+    return data.url;
+  };
   const [loadingList, setLoadingList] = useState(true);
 
   // ---- USERS (nouveau) ----
@@ -218,7 +229,42 @@ export default function Admin() {
             <Field className="md:col-span-2" label="Résultat"><input name="resultat" value={form.resultat} onChange={onChange} className="w-full bg-[#0c0c0c] border border-[#222] rounded-lg p-2" /></Field>
           </div>
           <button type="submit" className="mt-6 bg-primary text-black px-6 py-2 rounded-lg font-semibold hover:scale-105">Enregistrer</button>
-        </form>
+        
+        {/* Section */}
+        <label className="block mt-3">Section</label>
+        <select className="w-full bg-[#0b0b0b] border border-[#222] p-2 rounded"
+          value={form.label} onChange={e => setForm(f => ({...f, label: e.target.value}))}>
+          <option value="standard">Standard</option>
+          <option value="prono_en_or">Prono en or</option>
+          <option value="strategie_bankroll">Prono stratégie bankroll</option>
+        </select>
+
+        {/* Détails */}
+        <label className="block mt-3">Détails / Analyse</label>
+        <textarea rows="5" className="w-full bg-[#0b0b0b] border border-[#222] p-2 rounded"
+          placeholder="Analyse, justification, points clés..." 
+          value={form.details} onChange={e => setForm(f => ({...f, details: e.target.value}))}></textarea>
+
+        {/* Vocal */}
+        <label className="block mt-3">Vocal (MP3/WAV/M4A/OGG)</label>
+        <input type="file" accept=".mp3,.wav,.m4a,.ogg"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+              const url = await uploadAudio(file);
+              setForm(f => ({...f, audioUrl: url}));
+              alert("Audio uploadé ✅");
+            } catch (err) {
+              alert(err?.response?.data?.message || "Upload audio échoué");
+            }
+          }} />
+        {form.audioUrl && (
+          <audio controls className="mt-2 w-full">
+            <source src={`${API_BASE}${form.audioUrl}`} />
+          </audio>
+        )}
+</form>
       )}
 
       {/* LISTE PRONOS (ancien) */}
