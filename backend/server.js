@@ -8,23 +8,9 @@ import cors from "cors";
 import cron from "node-cron";
 import { connectDB } from "./config/db.js";
 
-const FRONT = process.env.FRONTEND_URL;
-app.use(cors({
-  origin: (origin, cb) => {
-    const allowed = [FRONT, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
-    if (!origin) return cb(null, true);
-    if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
-    return cb(null, true);
-  },
-  credentials: true,
-}));
-
-
 // 🔐 Middlewares
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import { logAdminAction } from "./middleware/logMiddleware.js";
-
-app.use('/uploads', express.static('uploads'));
 
 // 📦 Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -38,22 +24,36 @@ import User from "./models/User.js";
 // ⚙️ Initialisation
 dotenv.config();
 connectDB();
+
+// ✅ Créer l'app AVANT tout app.use(...)
 const app = express();
 
 // =============================
 // 🌐 CONFIGURATION GLOBALE
 // =============================
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000", // pour développement local
-      "https://frontend-production-14f9.up.railway.app", // ton frontend en production
-    ],
-    credentials: true,
-  })
-);
+const FRONT = process.env.FRONTEND_URL;
+const allowed = [
+  FRONT,
+  "http://localhost:3000",   // dev
+  "http://localhost:5173",   // Vite dev
+  "http://127.0.0.1:5173",
+  "https://frontend-production-14f9.up.railway.app", // ton front prod
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // Postman / curl
+    if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
+    return cb(null, false);
+  },
+  credentials: true,
+}));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 📁 Fichiers statiques (vocaux, etc.)
+app.use("/uploads", express.static("uploads"));
 
 // =============================
 // 🩺 ROUTE DE TEST / STATUS API
@@ -62,7 +62,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     env: process.env.NODE_ENV || "development",
-    clientUrl: process.env.CLIENT_URL,
+    clientUrl: process.env.CLIENT_URL || FRONT,
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
     mongoUriSet: !!process.env.MONGO_URI,
     message: "✅ FlashProno API opérationnelle",
@@ -108,9 +108,7 @@ cron.schedule(
           },
         }
       );
-      console.log(
-        `🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`
-      );
+      console.log(`🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`);
     } catch (e) {
       console.error("Cron error:", e);
     }
