@@ -153,6 +153,12 @@ export default function Navbar() {
         </div>
       )}
 
-    </nav>
+    
+  <div className='flex gap-3'>
+    <a href='/pronostics'>Pronostics</a>
+    <a href='/pronos-en-or'>Pronos en or</a>
+    <a href='/strategie-bankroll'>Stratégie bankroll</a>
+  </div>
+</nav>
   );
 }

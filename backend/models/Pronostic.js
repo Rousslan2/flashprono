@@ -7,7 +7,14 @@ const pronosticSchema = new mongoose.Schema({
   cote: { type: Number, required: true },
   type: { type: String, required: true },
   resultat: { type: String, default: "en attente" },
-  date: { type: Date, default: Date.now }
+  date: { type: Date, default: Date.now },
+  competition: { type: String },
+  bookmaker: { type: String },
+  confiance: { type: Number, min: 0, max: 100, default: 50 },
+  image: { type: String },
+  analyse: { type: String },
+  statut: { type: String, enum: ['en attente','gagné','perdu','remboursé'], default: 'en attente' },
+  categorie: { type: String, enum: ['standard','pronos_en_or','strategie_bankroll'], default: 'standard' },
 }, { timestamps: true });
 
 export default mongoose.model("Pronostic", pronosticSchema);

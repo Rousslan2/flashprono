@@ -10,6 +10,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Success from "./pages/Success";
 import Admin from "./pages/Admin";
+import PronosEnOr from "./pages/PronosEnOr";
+import StrategieBankroll from "./pages/StrategieBankroll";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -46,7 +48,10 @@ export default function App() {
               </AdminRoute>
             }
           />
-        </Routes>
+        
+  <Route path="/pronos-en-or" element={<ProtectedRoute><PronosEnOr/></ProtectedRoute>} />
+  <Route path="/strategie-bankroll" element={<ProtectedRoute><StrategieBankroll/></ProtectedRoute>} />
+</Routes>
       </main>
       <Footer />
     </div>
