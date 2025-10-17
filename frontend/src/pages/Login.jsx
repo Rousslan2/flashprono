@@ -19,14 +19,22 @@ export default function Login() {
     setErr("");
     setLoading(true);
     try {
-      const { data } = await axios.post(`${API_BASE}/api/auth/login`, form, { timeout: 15000 });
-      if (!data?.token || !data?.user) throw new Error("Réponse inattendue du serveur.");
+      const { data } = await axios.post(`${API_BASE}/api/auth/login`, form);
+      // ⚠️ le backend doit renvoyer { token, user }
+      if (!data?.token || !data?.user) {
+        throw new Error("Réponse inattendue du serveur.");
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      // 🔔 informe la Navbar immédiatement
       window.dispatchEvent(new Event("auth-update"));
+
+      // Redirige vers next (ou dashboard)
       navigate(next, { replace: true });
     } catch (e) {
-      setErr(e?.response?.data?.message || e?.message || "Échec de connexion");
+      setErr(e?.response?.data?.message || e.message || "Erreur de connexion");
     } finally {
       setLoading(false);
     }
