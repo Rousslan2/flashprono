@@ -240,3 +240,4 @@ function resultTextColor(result) {
   if (val.includes("perdu") || val.includes("lose")) return "text-red-400";
   return "text-gray-400";
 }
+// touch 
