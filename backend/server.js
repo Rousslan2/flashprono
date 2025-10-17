@@ -9,6 +9,19 @@ import path from "path";
 import cron from "node-cron";
 import { connectDB } from "./config/db.js";
 
+const FRONT = process.env.FRONTEND_URL;
+app.use(cors({
+  origin: (origin, cb) => {
+    // Autorise localhost et l'URL front Railway si définie
+    const allowed = [FRONT, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
+    if (!origin) return cb(null, true);
+    if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
+    return cb(null, true); // fallback permissif
+  },
+  credentials: true,
+}));
+
+
 // 🔐 Middlewares
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import { logAdminAction } from "./middleware/logMiddleware.js";
