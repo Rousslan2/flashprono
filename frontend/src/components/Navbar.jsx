@@ -4,7 +4,7 @@ import { getUser, isAuthenticated, logout } from "../hooks/useAuth";
 
 export default function Navbar() {
   const [auth, setAuth] = useState({ isAuth: false, user: null });
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // utilisé pour le menu mobile + dropdown
   const timerRef = useRef(null);
   const location = useLocation();
 
@@ -21,9 +21,10 @@ export default function Navbar() {
     };
   }, []);
 
-  // 🔁 se met à jour aussi quand l’URL change
+  // 🔁 se met à jour quand l’URL change + ferme le menu mobile
   useEffect(() => {
     refreshAuth();
+    setMenuOpen(false);
   }, [location.pathname]);
 
   const initials = (name = "") =>
@@ -49,19 +50,19 @@ export default function Navbar() {
   return (
     <nav className="bg-black text-primary p-4 flex justify-between items-center shadow-lg z-50 relative">
       <Link to="/" className="text-2xl font-bold">⚡ FlashProno</Link>
-      {/* Mobile hamburger */}
+
+      {/* Bouton hamburger (mobile) */}
       <button
         className="md:hidden ml-auto p-2 border border-primary rounded-lg"
         aria-label="Ouvrir le menu"
         onClick={() => setMenuOpen(o => !o)}
       >
-        {/* Icone hamburger */}
-        <div className="w-6 h-0.5 bg-primary mb-1.5"></div>
-        <div className="w-6 h-0.5 bg-primary mb-1.5"></div>
-        <div className="w-6 h-0.5 bg-primary"></div>
+        <div className="w-6 h-0.5 bg-primary mb-1.5" />
+        <div className="w-6 h-0.5 bg-primary mb-1.5" />
+        <div className="w-6 h-0.5 bg-primary" />
       </button>
-    
 
+      {/* Menu desktop */}
       <div className="hidden md:flex gap-6 items-center">
         <Link to="/pronostics" className="hover:text-white transition">Pronostics</Link>
         <Link to="/abonnements" className="hover:text-white transition">Abonnements</Link>
@@ -129,17 +130,19 @@ export default function Navbar() {
           </>
         )}
       </div>
+
       {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-black/95 border-t border-primary animate-in fade-in slide-in-from-top-2">
           <div className="flex flex-col py-3">
             <Link to="/pronostics" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Pronostics</Link>
             <Link to="/abonnements" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Abonnements</Link>
+            {auth.user?.isAdmin && (
+              <Link to="/admin" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Admin</Link>
+            )}
             {auth.isAuth ? (
               <>
                 <Link to="/dashboard" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Espace membre</Link>
-                {/* Sous-menu rapide */}
-                <Link to="/dashboard" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Mon espace</Link>
                 <a href="https://wa.me/33695962084" target="_blank" rel="noreferrer" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Support</a>
                 <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-left px-4 py-3 hover:bg-[#111]">Déconnexion</button>
               </>
@@ -152,13 +155,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
-    
-  <div className='flex gap-3'>
-    <a href='/pronostics'>Pronostics</a>
-    <a href='/pronos-en-or'>Pronos en or</a>
-    <a href='/strategie-bankroll'>Stratégie bankroll</a>
-  </div>
-</nav>
+    </nav>
   );
 }
