@@ -29,10 +29,15 @@ const app = express();
 // =============================
 // 🌐 CONFIGURATION GLOBALE
 // =============================
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000", // pour développement local
+      "https://frontend-production-14f9.up.railway.app", // ton frontend en production
+    ],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -114,7 +119,7 @@ app.get("/", (_req, res) => {
 // =============================
 // 🚀 LANCEMENT SERVEUR
 // =============================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080; // ✅ Railway utilise 8080
 app.listen(PORT, () => {
   console.log(`✅ Serveur FlashProno actif sur le port ${PORT}`);
 });
