@@ -178,11 +178,13 @@ function PronoCard({ p }) {
       </h3>
 
       <p className="text-gray-300 mt-1">
-        Pronostic : {p.type} • Cote : <b className="text-primary">{p.cote}</b>
+        <b className="text-white">Pronostic :</b> {p.type} • <b className="text-white">Cote :</b>{" "}
+        <b className="text-primary">{p.cote}</b>
       </p>
 
       <p className="text-gray-400 mt-2">
-        Résultat : <b className={resultTextColor(p.resultat)}>{p.resultat || "En attente"}</b>
+        <b className="text-white">Résultat :</b>{" "}
+        <b className={resultTextColor(p.resultat)}>{p.resultat || "En attente"}</b>
       </p>
 
       {p.details && (
