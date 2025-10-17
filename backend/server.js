@@ -5,12 +5,15 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 import cron from "node-cron";
 import { connectDB } from "./config/db.js";
 
 // 🔐 Middlewares
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import { logAdminAction } from "./middleware/logMiddleware.js";
+
+app.use('/uploads', express.static('uploads'));
 
 // 📦 Routes
 import authRoutes from "./routes/authRoutes.js";

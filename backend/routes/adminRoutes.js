@@ -5,6 +5,30 @@ import { logAdminAction } from "../middleware/logMiddleware.js";
 import User from "../models/User.js";
 import Pronostic from "../models/Pronostic.js";
 
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// 🎙️ Upload audio (multer)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(process.cwd(), "uploads", "audio");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, unique + ext);
+  }
+});
+const audioFilter = (_req, file, cb) => {
+  const ok = /\.(mp3|wav|m4a|ogg)$/i.test(file.originalname);
+  cb(ok ? null : new Error("Format audio invalide"), ok);
+};
+const upload = multer({ storage, fileFilter: audioFilter, limits: { fileSize: 25 * 1024 * 1024 } });
+
+
 const router = express.Router();
 
 // 🔒 garde global (auth + admin)
@@ -235,6 +259,40 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+});
+
+
+// =====================
+// 🎙️ UPLOAD AUDIO (admin)
+// =====================
+router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: "Aucun fichier" });
+    const url = `/uploads/audio/${file.filename}`;
+    logAdminAction("UPLOAD_AUDIO", req.user, { url });
+    res.json({ ok: true, url });
+  } catch (e) { next(e); }
+});
+
+// =====================
+// 🧾 PRONOS (CRUD minimal)
+// =====================
+router.get("/pronostics", async (_req, res, next) => {
+  try {
+    const items = await Pronostic.find().sort({ createdAt: -1 });
+    res.json(items);
+  } catch (e) { next(e); }
+});
+
+router.post("/pronostics", async (req, res, next) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
+    const prono = await Pronostic.create(req.body);
+    logAdminAction("CREATE_PRONO", req.user, prono);
+    res.json(prono);
+  } catch (e) { next(e); }
 });
 
 export default router;
