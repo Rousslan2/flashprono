@@ -22,10 +22,12 @@ export default function Pronostics() {
         const { data } = await axios.get(`${API_BASE}/api/pronostics`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        // tri du plus récent au plus ancien
+
+        // 🔁 TRIER du plus proche au plus loin (petit -> grand)
         const sorted = (data || []).sort(
-          (a, b) => new Date(b.date) - new Date(a.date)
+          (a, b) => new Date(a.date) - new Date(b.date)
         );
+
         setPronos(sorted);
       } catch (e) {
         setError(e?.response?.data?.message || "Erreur lors du chargement des pronostics.");
@@ -161,7 +163,6 @@ function PronoCard({ p }) {
   const color = borderColorFor(p.resultat);
   return (
     <article className={`bg-black p-5 rounded-xl border ${color} transition`}>
-      {/* header */}
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="text-sm text-primary font-semibold">{p.sport || "—"}</div>
         <div className="flex items-center gap-2">
@@ -172,12 +173,10 @@ function PronoCard({ p }) {
         </div>
       </div>
 
-      {/* match */}
       <h3 className="text-lg md:text-xl text-white">
         {p.equipe1} <span className="text-gray-400">vs</span> {p.equipe2}
       </h3>
 
-      {/* infos */}
       <p className="text-gray-300 mt-1">
         Type : {p.type} • Cote : <b className="text-primary">{p.cote}</b>
       </p>
@@ -186,14 +185,12 @@ function PronoCard({ p }) {
         Résultat : <b className={resultTextColor(p.resultat)}>{p.resultat || "En attente"}</b>
       </p>
 
-      {/* détails */}
       {p.details && (
         <p className="text-gray-300 mt-3 whitespace-pre-line leading-relaxed">
           {p.details}
         </p>
       )}
 
-      {/* audio */}
       {p.audioUrl && (
         <div className="mt-3">
           <audio controls className="w-full">
