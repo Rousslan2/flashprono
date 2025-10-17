@@ -178,7 +178,7 @@ function PronoCard({ p }) {
       </h3>
 
       <p className="text-gray-300 mt-1">
-        Type : {p.type} • Cote : <b className="text-primary">{p.cote}</b>
+        Pronostic : {p.type} • Cote : <b className="text-primary">{p.cote}</b>
       </p>
 
       <p className="text-gray-400 mt-2">
