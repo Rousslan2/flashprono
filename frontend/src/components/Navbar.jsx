@@ -49,8 +49,20 @@ export default function Navbar() {
   return (
     <nav className="bg-black text-primary p-4 flex justify-between items-center shadow-lg z-50 relative">
       <Link to="/" className="text-2xl font-bold">⚡ FlashProno</Link>
+      {/* Mobile hamburger */}
+      <button
+        className="md:hidden ml-auto p-2 border border-primary rounded-lg"
+        aria-label="Ouvrir le menu"
+        onClick={() => setMenuOpen(o => !o)}
+      >
+        {/* Icone hamburger */}
+        <div className="w-6 h-0.5 bg-primary mb-1.5"></div>
+        <div className="w-6 h-0.5 bg-primary mb-1.5"></div>
+        <div className="w-6 h-0.5 bg-primary"></div>
+      </button>
+    
 
-      <div className="flex gap-6 items-center">
+      <div className="hidden md:flex gap-6 items-center">
         <Link to="/pronostics" className="hover:text-white transition">Pronostics</Link>
         <Link to="/abonnements" className="hover:text-white transition">Abonnements</Link>
         {auth.user?.isAdmin && (
@@ -117,6 +129,30 @@ export default function Navbar() {
           </>
         )}
       </div>
+      {/* Menu mobile */}
+      {menuOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-black/95 border-t border-primary animate-in fade-in slide-in-from-top-2">
+          <div className="flex flex-col py-3">
+            <Link to="/pronostics" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Pronostics</Link>
+            <Link to="/abonnements" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Abonnements</Link>
+            {auth.isAuth ? (
+              <>
+                <Link to="/dashboard" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Espace membre</Link>
+                {/* Sous-menu rapide */}
+                <Link to="/dashboard" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Mon espace</Link>
+                <a href="https://wa.me/33695962084" target="_blank" rel="noreferrer" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Support</a>
+                <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-left px-4 py-3 hover:bg-[#111]">Déconnexion</button>
+              </>
+            ) : (
+              <>
+                <Link to="/register" className="px-4 py-3 border-b border-white/10 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Créer un compte</Link>
+                <Link to="/login" className="px-4 py-3 hover:bg-[#111]" onClick={() => setMenuOpen(false)}>Connexion</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </nav>
   );
 }
