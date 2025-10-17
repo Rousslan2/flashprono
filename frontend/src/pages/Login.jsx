@@ -1,80 +1,51 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
 import axios from "axios";
 import { API_BASE } from "../config";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const [error,setError] = useState("");
+  const [loading,setLoading] = useState(false);
   const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const next = params.get("next") || "/dashboard";
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const onSubmit = async (e) => {
+  const onSubmit = async (e)=>{
     e.preventDefault();
-    setErr("");
-    setLoading(true);
-    try {
-      const { data } = await axios.post(`${API_BASE}/api/auth/login`, form);
-      // ⚠️ le backend doit renvoyer { token, user }
-      if (!data?.token || !data?.user) {
-        throw new Error("Réponse inattendue du serveur.");
-      }
-
+    setError(""); setLoading(true);
+    try{
+      const {data} = await axios.post(`${API_BASE}/api/auth/login`, {email,password});
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      // 🔔 informe la Navbar immédiatement
-      window.dispatchEvent(new Event("auth-update"));
-
-      // Redirige vers next (ou dashboard)
-      navigate(next, { replace: true });
-    } catch (e) {
-      setErr(e?.response?.data?.message || e.message || "Erreur de connexion");
-    } finally {
-      setLoading(false);
-    }
+      navigate("/dashboard");
+    }catch(err){
+      const msg = err?.response?.data?.message || "Erreur réseau";
+      setError(msg);
+    }finally{ setLoading(false); }
   };
 
   return (
-    <section className="py-16 max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-primary mb-6 text-center">Connexion</h1>
-
-      <form onSubmit={onSubmit} className="bg-black p-6 rounded-xl border border-primary">
-        <label className="block text-sm text-gray-300 mb-1">Email</label>
-        <input
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={onChange}
-          className="w-full mb-4 p-2 rounded-lg bg-[#0c0c0c] border border-[#222]"
-          required
-        />
-
-        <label className="block text-sm text-gray-300 mb-1">Mot de passe</label>
-        <input
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={onChange}
-          className="w-full mb-6 p-2 rounded-lg bg-[#0c0c0c] border border-[#222]"
-          required
-        />
-
-        {err && <p className="text-red-400 mb-4">{err}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-primary text-black px-4 py-2 rounded-lg font-semibold hover:scale-105 transition disabled:opacity-60"
-        >
-          {loading ? "Connexion..." : "Se connecter"}
-        </button>
-      </form>
+    <section className="container-mobile py-8 sm:py-12">
+      <div className="max-w-md mx-auto card p-5 sm:p-6">
+        <h1 className="text-center text-2xl sm:text-3xl font-extrabold text-[#38ff73]">Connexion</h1>
+        <form onSubmit={onSubmit} className="mt-5 grid gap-3">
+          <div>
+            <label className="text-sm text-gray-400">Email</label>
+            <input className="input mt-1" value={email} onChange={e=>setEmail(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400">Mot de passe</label>
+            <input type="password" className="input mt-1" value={password} onChange={e=>setPassword(e.target.value)} />
+          </div>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button className="btn btn-primary w-full py-3 text-base" disabled={loading}>
+            {loading ? "Connexion…" : "Se connecter"}
+          </button>
+          <p className="text-center text-sm text-gray-400">
+            Pas de compte ? <Link to="/register" className="text-[#38ff73]">Créer un compte</Link>
+          </p>
+        </form>
+      </div>
     </section>
   );
 }

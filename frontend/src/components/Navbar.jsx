@@ -1,122 +1,111 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
-import { getUser, isAuthenticated, logout } from "../hooks/useAuth";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const [auth, setAuth] = useState({ isAuth: false, user: null });
-  const [menuOpen, setMenuOpen] = useState(false);
-  const timerRef = useRef(null);
-  const location = useLocation();
+  const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const menuRef = useRef(null);
+  const profileRef = useRef(null);
+  const navigate = useNavigate();
 
-  const refreshAuth = () =>
-    setAuth({ isAuth: isAuthenticated(), user: getUser() });
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
-    refreshAuth();
-    window.addEventListener("auth-update", refreshAuth);
-    window.addEventListener("storage", refreshAuth);
-    return () => {
-      window.removeEventListener("auth-update", refreshAuth);
-      window.removeEventListener("storage", refreshAuth);
+    const onClick = (e) => {
+      if (open && menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+      if (profileOpen && profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
     };
-  }, []);
+    window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, [open, profileOpen]);
 
-  // 🔁 se met à jour aussi quand l’URL change
-  useEffect(() => {
-    refreshAuth();
-  }, [location.pathname]);
-
-  const initials = (name = "") =>
-    name.trim().split(/\s+/).map(n => n[0]).join("").slice(0, 2).toUpperCase();
-
-  const openMenu = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setMenuOpen(true);
-  };
-  const closeMenu = () => {
-    timerRef.current = setTimeout(() => setMenuOpen(false), 200);
-  };
-  const toggleMenu = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setMenuOpen(s => !s);
-  };
-
-  const handleLogout = () => {
-    logout();
-    window.dispatchEvent(new Event("auth-update"));
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
-    <nav className="bg-black text-primary p-4 flex justify-between items-center shadow-lg z-50 relative">
-      <Link to="/" className="text-2xl font-bold">⚡ FlashProno</Link>
+    <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-black/60 bg-black/80 border-b border-[#141414]">
+      <nav className="container-mobile h-14 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-extrabold text-[#38ff73]">
+          ⚡ FlashProno
+        </Link>
 
-      <div className="flex gap-6 items-center">
-        <Link to="/pronostics" className="hover:text-white transition">Pronostics</Link>
-        <Link to="/abonnements" className="hover:text-white transition">Abonnements</Link>
-        {auth.user?.isAdmin && (
-          <Link to="/admin" className="hover:text-white transition">Admin</Link>
-        )}
+        <div className="hidden md:flex items-center gap-6">
+          <NavLink to="/" className="hover:text-[#38ff73]">Accueil</NavLink>
+          <NavLink to="/pronostics" className="hover:text-[#38ff73]">Pronostics</NavLink>
+          <NavLink to="/abonnements" className="hover:text-[#38ff73]">Abonnements</NavLink>
+        </div>
 
-        {auth.isAuth ? (
-          <>
-            <Link to="/dashboard" className="hover:text-white transition">Espace membre</Link>
-
-            <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
+        <div className="hidden md:flex items-center gap-3">
+          {!token ? (
+            <>
+              <Link to="/register" className="btn btn-outline px-4 py-2">Créer un compte</Link>
+              <Link to="/login" className="btn btn-primary px-4 py-2">Connexion</Link>
+            </>
+          ) : (
+            <div className="relative" ref={profileRef}>
               <button
-                onClick={toggleMenu}
-                className="flex items-center gap-2 bg-[#111] px-3 py-2 rounded-xl border border-primary hover:scale-105 transition"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center font-bold">
-                  {initials(auth.user?.name || "FP")}
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-full px-3 py-1.5 border border-[#1f1f1f] hover:border-[#38ff73]">
+                <div className="size-7 bg-[#131313] rounded-full grid place-items-center">
+                  {user?.name?.[0]?.toUpperCase() || "U"}
                 </div>
-                <span className="text-white hidden sm:inline">
-                  {auth.user?.name || "Mon profil"}
-                </span>
-                <svg
-                  className={`w-4 h-4 text-primary ml-1 hidden sm:block transition-transform ${menuOpen ? "rotate-180" : ""}`}
-                  viewBox="0 0 20 20" fill="currentColor"
-                >
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.108l3.71-3.877a.75.75 0 111.08 1.04l-4.24 4.43a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
-                </svg>
+                <span className="max-w-[120px] truncate">{user?.name || "Profil"}</span>
               </button>
-
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-black border border-primary rounded-xl shadow-lg transition-all duration-200">
-                  <Link
-                    to="/dashboard"
-                    className="block px-4 py-2 text-white hover:bg-[#111] transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Mon espace
-                  </Link>
-                  <a
-                    href="https://wa.me/33695962084"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block px-4 py-2 text-white hover:bg-[#111] transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Support WhatsApp
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-red-400 hover:bg-[#111] transition"
-                  >
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-56 card p-2">
+                  <Link className="block px-3 py-2 rounded hover:bg-white/5" to="/dashboard">Espace membre</Link>
+                  <a className="block px-3 py-2 rounded hover:bg-white/5" href="https://wa.me/33695962084" target="_blank" rel="noreferrer">Support WhatsApp</a>
+                  {user?.isAdmin && (
+                    <Link className="block px-3 py-2 rounded hover:bg-white/5" to="/admin">Admin</Link>
+                  )}
+                  <button onClick={logout} className="block w-full text-left px-3 py-2 rounded hover:bg-white/5 text-red-400">
                     Se déconnecter
                   </button>
                 </div>
               )}
             </div>
-          </>
-        ) : (
-          <>
-            <Link to="/register" className="underline hover:text-white transition">Créer un compte</Link>
-            <Link to="/login" className="bg-primary text-black px-4 py-2 rounded-lg hover:scale-105 transition">
-              Connexion
-            </Link>
-          </>
-        )}
-      </div>
-    </nav>
+          )}
+        </div>
+
+        <button
+          className="md:hidden inline-flex items-center justify-center size-10 rounded-lg border border-[#1f1f1f] active:scale-95"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Ouvrir le menu">
+          ☰
+        </button>
+      </nav>
+
+      {open && (
+        <div ref={menuRef} className="md:hidden border-t border-[#141414] bg-black/95">
+          <div className="container-mobile py-3 flex flex-col gap-1">
+            <NavLink to="/" onClick={() => setOpen(false)} className="px-2 py-2 rounded hover:bg-white/5">Accueil</NavLink>
+            <NavLink to="/pronostics" onClick={() => setOpen(false)} className="px-2 py-2 rounded hover:bg-white/5">Pronostics</NavLink>
+            <NavLink to="/abonnements" onClick={() => setOpen(false)} className="px-2 py-2 rounded hover:bg-white/5">Abonnements</NavLink>
+
+            {!token ? (
+              <div className="pt-2 grid gap-2">
+                <Link to="/register" onClick={() => setOpen(false)} className="btn btn-outline w-full px-4 py-3">Créer un compte</Link>
+                <Link to="/login" onClick={() => setOpen(false)} className="btn btn-primary w-full px-4 py-3">Connexion</Link>
+              </div>
+            ) : (
+              <div className="pt-2 grid gap-1">
+                <span className="px-2 py-2 text-sm text-gray-400">Connecté : {user?.name}</span>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="px-2 py-2 rounded hover:bg-white/5">Espace membre</Link>
+                {user?.isAdmin && (
+                  <Link to="/admin" onClick={() => setOpen(false)} className="px-2 py-2 rounded hover:bg-white/5">Admin</Link>
+                )}
+                <a className="px-2 py-2 rounded hover:bg-white/5" href="https://wa.me/33695962084" target="_blank" rel="noreferrer">Support WhatsApp</a>
+                <button onClick={() => { setOpen(false); logout(); }} className="px-2 py-2 text-left rounded hover:bg-white/5 text-red-400">Se déconnecter</button>
+              </div>
+            )}
+          </div>
+          <div style={{height: 'var(--safe-b)'}} />
+        </div>
+      )}
+    </header>
   );
 }
