@@ -1,14 +1,25 @@
-// frontend/src/config.js
-let base = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+// =========================================
+// ⚙️ CONFIGURATION API FLASHPRONO FRONTEND
+// =========================================
 
-// si on a "//domaine", ajoute https:
-if (base.startsWith("//")) base = "https:" + base;
+// URL backend en production (publique Railway)
+const PROD_API = "https://flashprono-production.up.railway.app";
 
-// si pas de protocole ET/OU un slash en début → force https://domaine
-if (!/^https?:\/\//i.test(base)) base = `https://${base.replace(/^\/+/, "")}`;
+// Détecte si on tourne sur un domaine Railway (production)
+const isProd =
+  typeof window !== "undefined" &&
+  /railway\.app$/i.test(window.location.hostname);
 
-// supprime le slash final
-export const API_BASE = base.replace(/\/+$/, "");
+// En dev (localhost), on garde la variable Vite si elle existe, sinon 5000
+let devBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-// petit log une fois en prod (utile pour vérifier)
-console.log("[FlashProno] API_BASE =", API_BASE);
+// Normalisation (au cas où)
+if (devBase.startsWith("//")) devBase = "https:" + devBase;
+if (!/^https?:\/\//i.test(devBase)) devBase = `https://${devBase.replace(/^\/+/, "")}`;
+devBase = devBase.replace(/\/+$/, "");
+
+// Choix final
+export const API_BASE = (isProd ? PROD_API : devBase).replace(/\/+$/, "");
+
+// Log de contrôle
+console.log("[FlashProno] API_BASE =", API_BASE, "| isProd =", isProd);
