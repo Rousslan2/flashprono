@@ -19,7 +19,7 @@ export default function Pronostics() {
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(`${API_BASE}/api/pronostics`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         setPronos(data || []);
       } catch (e) {
@@ -77,12 +77,17 @@ export default function Pronostics() {
               key={p._id}
               className="bg-black p-5 rounded-xl border border-primary"
             >
-              <div className="flex justify-between mb-2">
+              {/* En-tête : sport/date + badge label */}
+              <div className="flex justify-between items-center mb-2">
                 <span className="text-primary font-semibold">{p.sport}</span>
-                <span className="text-gray-400">
-                  {new Date(p.date).toLocaleString()}
-                </span>
+                <div className="flex items-center gap-2">
+                  <LabelBadge label={p.label} />
+                  <span className="text-gray-400">
+                    {p.date ? new Date(p.date).toLocaleString() : "—"}
+                  </span>
+                </div>
               </div>
+
               <h3 className="text-xl text-white mb-1">
                 {p.equipe1} vs {p.equipe2}
               </h3>
@@ -91,7 +96,15 @@ export default function Pronostics() {
                 <b className="text-primary">{p.cote}</b>
               </p>
               <p className="text-gray-400 mt-2">Résultat : {p.resultat}</p>
-              {p.details && (<p className="text-gray-300 mt-3 whitespace-pre-line">{p.details}</p>)}
+
+              {/* Détails / analyse */}
+              {p.details && (
+                <p className="text-gray-300 mt-3 whitespace-pre-line">
+                  {p.details}
+                </p>
+              )}
+
+              {/* Audio */}
               {p.audioUrl && (
                 <audio controls className="mt-3 w-full">
                   <source src={`${API_BASE}${p.audioUrl}`} />
@@ -102,5 +115,28 @@ export default function Pronostics() {
         </div>
       )}
     </section>
+  );
+}
+
+/** Badge selon le label : standard | prono_en_or | strategie_bankroll */
+function LabelBadge({ label }) {
+  if (label === "prono_en_or") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-400/20 text-yellow-300 border border-yellow-400/50">
+        🟡 Prono en or
+      </span>
+    );
+  }
+  if (label === "strategie_bankroll") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-400/20 text-blue-300 border border-blue-400/50">
+        🧠 Stratégie bankroll
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-400/20 text-emerald-300 border border-emerald-400/50">
+      ✅ Standard
+    </span>
   );
 }
