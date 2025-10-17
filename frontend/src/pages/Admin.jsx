@@ -13,9 +13,6 @@ export default function Admin() {
 
   // ---- FORM AJOUT PRONO (ancien) ----
   const [form, setForm] = useState({
-    label: "standard",
-    details: "",
-    audioUrl: "",
     sport: "Football",
     date: new Date().toISOString().slice(0, 16), // input datetime-local
     equipe1: "",
@@ -27,16 +24,6 @@ export default function Admin() {
 
   // ---- LISTE PRONOS (ancien) ----
   const [pronos, setPronos] = useState([]);
-  // 🎙️ Upload audio et récupérer URL
-  const uploadAudio = async (file) => {
-    const fd = new FormData();
-    fd.append("audio", file);
-    const { data } = await axios.post(`${API_BASE}/api/admin/upload/audio`, fd, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return data.url;
-  };
-
   const [loadingList, setLoadingList] = useState(true);
 
   // ---- USERS (nouveau) ----
