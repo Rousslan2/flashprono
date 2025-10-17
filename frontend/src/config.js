@@ -3,7 +3,7 @@
 // =========================================
 
 // URL backend en production (publique Railway)
-const PROD_API = "https://flashprono-production.up.railway.app";
+const PROD_API = import.meta.env.VITE_API_BASE || "https://flashprono-production.up.railway.app";
 
 // Détecte si on tourne sur un domaine Railway (production)
 const isProd =
