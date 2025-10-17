@@ -29,12 +29,11 @@ const app = express();
 // =============================
 // 🌐 CONFIGURATION GLOBALE
 // =============================
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // =============================
