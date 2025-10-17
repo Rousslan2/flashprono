@@ -91,6 +91,12 @@ export default function Pronostics() {
                 <b className="text-primary">{p.cote}</b>
               </p>
               <p className="text-gray-400 mt-2">Résultat : {p.resultat}</p>
+              {p.details && (<p className="text-gray-300 mt-3 whitespace-pre-line">{p.details}</p>)}
+              {p.audioUrl && (
+                <audio controls className="mt-3 w-full">
+                  <source src={`${API_BASE}${p.audioUrl}`} />
+                </audio>
+              )}
             </div>
           ))}
         </div>

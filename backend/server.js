@@ -8,9 +8,23 @@ import cors from "cors";
 import cron from "node-cron";
 import { connectDB } from "./config/db.js";
 
+const FRONT = process.env.FRONTEND_URL;
+app.use(cors({
+  origin: (origin, cb) => {
+    const allowed = [FRONT, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
+    if (!origin) return cb(null, true);
+    if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
+    return cb(null, true);
+  },
+  credentials: true,
+}));
+
+
 // 🔐 Middlewares
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import { logAdminAction } from "./middleware/logMiddleware.js";
+
+app.use('/uploads', express.static('uploads'));
 
 // 📦 Routes
 import authRoutes from "./routes/authRoutes.js";

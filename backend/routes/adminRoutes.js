@@ -4,8 +4,28 @@ import { protect, requireAdmin } from "../middleware/authMiddleware.js";
 import { logAdminAction } from "../middleware/logMiddleware.js";
 import User from "../models/User.js";
 import Pronostic from "../models/Pronostic.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
 
 const router = express.Router();
+
+// Upload audio (admin)
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const dir = path.join(process.cwd(), "uploads", "audio");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random()*1e9);
+    cb(null, unique + path.extname(file.originalname).toLowerCase());
+  }
+});
+const audioFilter = (_req, file, cb) => cb(null, /\.(mp3|wav|m4a|ogg)$/i.test(file.originalname));
+const upload = multer({ storage, fileFilter: audioFilter, limits: { fileSize: 25*1024*1024 } });
+
 
 // 🔒 garde global (auth + admin)
 router.use(protect);
@@ -235,6 +255,17 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+});
+
+
+// Upload audio
+router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
+  try {
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
+    if (!req.file) return res.status(400).json({ message: "Aucun fichier" });
+    const url = `/uploads/audio/${req.file.filename}`;
+    res.json({ ok: true, url });
+  } catch (e) { next(e); }
 });
 
 export default router;
