@@ -2,17 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile-friendly base */
-:root{
-  --safe-b: env(safe-area-inset-bottom);
-  --safe-t: env(safe-area-inset-top);
+body {
+  background-color: #0d0d0d;
 }
-html,body{height:100%}
-*{-webkit-tap-highlight-color:transparent}
-
-.container-mobile{@apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8}
-.card{@apply bg-black/70 border border-[#1f1f1f] rounded-xl}
-.btn{@apply inline-flex items-center justify-center rounded-lg font-semibold transition-transform active:scale-95}
-.btn-primary{@apply bg-[#38ff73] text-black hover:brightness-95}
-.btn-outline{@apply border border-[#38ff73] text-[#38ff73] hover:bg-[#132016]}
-.input{@apply w-full rounded-lg bg-[#0f0f0f] border border-[#1f1f1f] px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-[#38ff73]}

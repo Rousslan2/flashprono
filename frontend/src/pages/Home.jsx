@@ -1,43 +1,70 @@
-import React from "react";
+import { isAuthenticated, getUser } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  return (
-    <>
-      <section className="pt-8 sm:pt-10 md:pt-14">
-        <div className="container-mobile grid md:grid-cols-2 gap-6 md:gap-10 items-center">
-          <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight">
-              Le futur des <span className="text-[#38ff73]">pronostics</span> sportifs
-            </h1>
-            <p className="mt-3 text-gray-300 text-sm sm:text-base">
-              Accède aux analyses FlashProno, mises à jour quotidiennement. Essai gratuit et abonnements flexibles.
-            </p>
-            <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link to="/abonnements" className="btn btn-primary w-full sm:w-auto px-5 py-3 text-base">Voir les abonnements</Link>
-              <a href="https://wa.me/33695962084" target="_blank" rel="noreferrer" className="btn btn-outline w-full sm:w-auto px-5 py-3 text-base">WhatsApp</a>
-            </div>
-          </div>
-          <div className="order-first md:order-none">
-            <div className="aspect-video rounded-2xl border border-[#1f1f1f] bg-gradient-to-br from-[#0f1a12] to-[#0b0b0b]" />
-          </div>
-        </div>
-      </section>
+  const isAuth = isAuthenticated();
+  const user = getUser();
 
-      <section className="mt-10 sm:mt-12 md:mt-16">
-        <div className="container-mobile grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {[
-            ["Analyses quotidiennes","Pronostics mis à jour chaque jour."],
-            ["Essai gratuit","Testez 14 jours sans engagement."],
-            ["Paiement sécurisé","Stripe — mensuel ou annuel."],
-          ].map(([t,s],i)=>(
-            <div key={i} className="card p-5">
-              <h3 className="font-bold text-lg">{t}</h3>
-              <p className="text-gray-400 text-sm mt-1">{s}</p>
-            </div>
-          ))}
+  return (
+    <section className="text-center py-20">
+      {/* Titre principal */}
+      <h1 className="text-5xl font-extrabold mb-6 text-primary drop-shadow-lg">
+        Bienvenue sur <span className="text-white">FlashProno ⚡</span>
+      </h1>
+
+      {/* Description */}
+      <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
+        Analyse, précision et performance. FlashProno t’apporte chaque jour les meilleurs
+        pronostics sportifs, testés et validés par des experts.
+      </p>
+
+      {/* Bouton principal : change selon connexion */}
+      {isAuth ? (
+        <Link
+          to="/dashboard"
+          className="bg-primary text-black px-8 py-3 rounded-xl font-semibold hover:scale-105 transition-transform shadow-lg"
+        >
+          Accéder à mon espace
+        </Link>
+      ) : (
+        <Link
+          to="/register"
+          className="bg-primary text-black px-8 py-3 rounded-xl font-semibold hover:scale-105 transition-transform shadow-lg"
+        >
+          Commencer mon essai gratuit
+        </Link>
+      )}
+
+      {/* Section arguments */}
+      <div className="grid md:grid-cols-3 gap-8 mt-16 text-left max-w-5xl mx-auto">
+        <div className="bg-black border border-primary rounded-2xl p-6 shadow-md hover:shadow-primary/20 transition">
+          <h3 className="text-xl font-semibold mb-2 text-primary">🎯 Précision</h3>
+          <p className="text-gray-400">
+            Nos pronostics sont basés sur des analyses statistiques, la forme des équipes et des algorithmes exclusifs.
+          </p>
         </div>
-      </section>
-    </>
+
+        <div className="bg-black border border-primary rounded-2xl p-6 shadow-md hover:shadow-primary/20 transition">
+          <h3 className="text-xl font-semibold mb-2 text-primary">⚡ Rapidité</h3>
+          <p className="text-gray-400">
+            Des mises à jour quotidiennes, des alertes en temps réel et des résultats instantanés dès la fin des matchs.
+          </p>
+        </div>
+
+        <div className="bg-black border border-primary rounded-2xl p-6 shadow-md hover:shadow-primary/20 transition">
+          <h3 className="text-xl font-semibold mb-2 text-primary">💎 Simplicité</h3>
+          <p className="text-gray-400">
+            Une interface claire et intuitive, pour te concentrer sur ce qui compte : gagner tes paris.
+          </p>
+        </div>
+      </div>
+
+      {/* Message personnalisé si connecté */}
+      {isAuth && (
+        <p className="mt-12 text-gray-400">
+          Heureux de te revoir, <span className="text-primary font-semibold">{user?.name}</span> !
+        </p>
+      )}
+    </section>
   );
 }
