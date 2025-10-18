@@ -30,12 +30,12 @@ connectDB();
 const app = express();
 
 // =============================
-// 🌐 CONFIGURATION GLOBALE CORS
+// 🌐 CONFIGURATION GLOBALE CORS (robuste)
 // =============================
-const FRONT = process.env.FRONTEND_URL;
+const FRONT = (process.env.FRONTEND_URL || "").replace(/\/+$/, "");
 
-const allowed = [
-  FRONT, // ex. https://flashprono.com (défini dans .env backend)
+const baseWhitelist = [
+  FRONT, // depuis ton .env (ex. https://flashprono.com)
   "https://flashprono.com",
   "https://www.flashprono.com",
   "http://localhost:3000",
@@ -44,12 +44,17 @@ const allowed = [
   "https://frontend-production-14f9.up.railway.app",
 ].filter(Boolean);
 
+const WHITELIST = new Set(baseWhitelist.map((u) => u.replace(/\/+$/, "")));
+
 app.use(
   cors({
     origin: (origin, cb) => {
       if (!origin) return cb(null, true); // Postman / cURL
-      if (allowed.some((u) => origin.startsWith(u))) return cb(null, true);
-      return cb(null, false);
+      const cleanOrigin = origin.replace(/\/+$/, "");
+      if (WHITELIST.has(cleanOrigin)) return cb(null, true);
+      if (cleanOrigin.endsWith(".flashprono.com")) return cb(null, true);
+      console.warn("❌ CORS refusé pour :", origin);
+      return cb(new Error(`CORS bloqué pour ${origin}`), false);
     },
     credentials: true,
   })
@@ -68,7 +73,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     env: process.env.NODE_ENV || "development",
-    clientUrl: process.env.CLIENT_URL || FRONT,
+    clientUrl: process.env.FRONTEND_URL || FRONT,
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
     mongoUriSet: !!process.env.MONGO_URI,
     message: "✅ FlashProno API opérationnelle",
