@@ -85,12 +85,12 @@ export default function Dashboard() {
             desc="Conseils validés & mis à jour"
           />
           <QuickTile
-            href="/strategie-bankroll"
+            href="/bankroll"
             title="Gestion de Bankroll"
             desc="Optimisez vos mises avec nos outils dédiés"
           />
           <QuickTile
-            href="/strategie-bankroll"
+            href="/strategie"
             title="Stratégies & Apprentissage"
             desc="Découvrez nos méthodes gagnantes"
           />
