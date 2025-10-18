@@ -16,13 +16,19 @@ import Admin from "./pages/Admin";
 import PronosEnOr from "./pages/PronosEnOr";
 import StrategieBankroll from "./pages/StrategieBankroll";
 
+// 🔥 Nouvelles pages
+import Bankroll from "./pages/Bankroll";
+import Strategie from "./pages/Strategie";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
 import { startHeartbeat } from "./heartbeat"; // 👈 AJOUT
 
 export default function App() {
-  useEffect(() => { startHeartbeat(); }, []); // 👈 AJOUT
+  useEffect(() => {
+    startHeartbeat();
+  }, []); // 👈 AJOUT
 
   return (
     <div className="bg-dark min-h-screen text-white flex flex-col">
@@ -64,11 +70,31 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/strategie-bankroll"
             element={
               <ProtectedRoute>
                 <StrategieBankroll />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 🧠 Nouvelle section : Bankroll & Stratégies */}
+          <Route
+            path="/bankroll"
+            element={
+              <ProtectedRoute>
+                <Bankroll />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/strategies"
+            element={
+              <ProtectedRoute>
+                <Strategie />
               </ProtectedRoute>
             }
           />
