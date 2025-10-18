@@ -18,7 +18,6 @@ export default function Dashboard() {
   const expiresDate = sub.expiresAt ? new Date(sub.expiresAt) : null;
   const expiresStr = expiresDate ? expiresDate.toLocaleDateString() : "—";
 
-  // Jours restants (arrondi au supérieur)
   const daysLeft =
     expiresDate
       ? Math.max(0, Math.ceil((expiresDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -33,7 +32,7 @@ export default function Dashboard() {
         </p>
       </header>
 
-      {/* Cartes statut / plan / expiration */}
+      {/* Statut / plan / expiration */}
       <div className="grid gap-6 md:grid-cols-3">
         <InfoCard title="Abonnement" value={planLabel} />
         <InfoCard
@@ -47,7 +46,9 @@ export default function Dashboard() {
           extra={
             daysLeft !== null && (
               <span className="mt-1 inline-block text-xs px-2 py-0.5 rounded bg-[#111] border border-[#222] text-gray-300">
-                {daysLeft > 0 ? `${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}` : "Expire aujourd’hui"}
+                {daysLeft > 0
+                  ? `${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}`
+                  : "Expire aujourd’hui"}
               </span>
             )
           }
@@ -66,7 +67,10 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-300">
-            🔒 Aucun abonnement actif. <a href="/abonnements" className="underline text-primary">Voir les offres</a>
+            🔒 Aucun abonnement actif.{" "}
+            <a href="/abonnements" className="underline text-primary">
+              Voir les offres
+            </a>
           </div>
         )}
       </div>
@@ -75,33 +79,52 @@ export default function Dashboard() {
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-gray-200 mb-3">Accès rapide</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <QuickTile href="/pronostics" title="Pronostics du jour" desc="Conseils validés & mis à jour" />
-          <QuickTile href="/strategie-bankroll" title="Stratégie bankroll" desc="Calculateur & gestion" />
-          <QuickTile href="/abonnements" title="Mon offre" desc="Gérer / prolonger l’accès" />
+          <QuickTile
+            href="/pronostics"
+            title="Pronostics du jour"
+            desc="Conseils validés & mis à jour"
+          />
+          <QuickTile
+            href="/strategie-bankroll"
+            title="Gestion de Bankroll"
+            desc="Optimisez vos mises avec nos outils dédiés"
+          />
+          <QuickTile
+            href="/strategie-bankroll"
+            title="Stratégies & Apprentissage"
+            desc="Découvrez nos méthodes gagnantes"
+          />
+          <QuickTile
+            href="/abonnements"
+            title="Mon offre"
+            desc="Gérer ou prolonger mon accès"
+          />
         </div>
       </section>
 
       {/* Avantages inclus */}
       <section className="mt-12 grid gap-6 lg:grid-cols-2">
         <div className="bg-black rounded-xl border border-primary/50 p-6">
-          <h3 className="text-lg font-semibold text-primary mb-3">Ce que vous obtenez</h3>
+          <h3 className="text-lg font-semibold text-primary mb-3">
+            Ce que vous obtenez
+          </h3>
           <ul className="space-y-2 text-gray-300">
             <li>• Pronostics triés et justifiés, prêts à jouer</li>
-            <li>• Indication claire des résultats (vert = gagnant, rouge = perdu)</li>
-            <li>• Espace <b>Stratégie bankroll</b> avec outils pratiques</li>
-            <li>• Espace membre clair avec suivi d’expiration</li>
+            <li>• Outil complet de <b>Gestion de Bankroll</b></li>
+            <li>• Section <b>Stratégies & Apprentissage</b> interactive</li>
+            <li>• Interface claire avec suivi de votre abonnement</li>
           </ul>
           <p className="text-xs text-gray-500 mt-4">
-            ℹ️ <b>Pas de renouvellement automatique</b> : vous payez uniquement lorsque vous décidez de prolonger. Aucune
+            ℹ️ <b>Pas de renouvellement automatique</b> : vous payez uniquement quand vous décidez de prolonger. Aucune
             démarche d’annulation à faire.
           </p>
         </div>
 
-        {/* Aide & support */}
+        {/* Support */}
         <div className="bg-black rounded-xl border border-[#2a2a2a] p-6">
           <h3 className="text-lg font-semibold text-gray-200 mb-3">Besoin d’aide ?</h3>
           <p className="text-gray-300">
-            Une question sur votre accès, les pronostics ou la bankroll ? Contactez-nous :
+            Une question sur votre accès, les pronostics ou la stratégie ?
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <a
@@ -137,8 +160,7 @@ export default function Dashboard() {
   );
 }
 
-/* ---------- Petits composants ---------- */
-
+/* ---------- Composants ---------- */
 function InfoCard({ title, value, valueClass = "text-gray-300", extra = null }) {
   return (
     <div className="bg-black p-5 rounded-xl border border-primary shadow-md">
