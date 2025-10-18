@@ -17,10 +17,13 @@ import authRoutes from "./routes/authRoutes.js";
 import pronosticRoutes from "./routes/pronosticRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import presenceRoutes from "./routes/presenceRoutes.js"; // 👈 AJOUT
+import presenceRoutes from "./routes/presenceRoutes.js"; // 👈 déjà présent
 
 // 📊 Modèles
 import User from "./models/User.js";
+
+// ⚽ LIVE updater (AJOUT)
+import { syncLive } from "./services/liveUpdater.js"; // 👈 AJOUT pour le live
 
 // ⚙️ Initialisation
 dotenv.config();
@@ -35,15 +38,15 @@ const app = express();
 const FRONT = process.env.FRONTEND_URL;
 const allowed = [
   FRONT,
-  "http://localhost:3000",
-  "http://localhost:5173",
+  "http://localhost:3000",   // dev
+  "http://localhost:5173",   // Vite dev
   "http://127.0.0.1:5173",
-  "https://frontend-production-14f9.up.railway.app",
+  "https://frontend-production-14f9.up.railway.app", // ton front prod
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
+    if (!origin) return cb(null, true); // Postman / curl
     if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
     return cb(null, false);
   },
@@ -77,7 +80,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pronostics", pronosticRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/presence", presenceRoutes); // 👈 AJOUT
+app.use("/api/presence", presenceRoutes); // 👈 déjà présent
 
 // =============================
 // 🧾 LOG ADMIN TEST
@@ -91,6 +94,7 @@ app.post("/api/admin/log-test", (req, res) => {
 // =============================
 // 🕛 CRON JOB : NETTOYAGE AUTO
 // =============================
+// Tous les jours à 03:00 (heure Europe/Paris)
 cron.schedule(
   "0 3 * * *",
   async () => {
@@ -118,6 +122,22 @@ cron.schedule(
 );
 
 // =============================
+// ⚽ CRON LIVE MATCHES (AJOUT)
+// =============================
+// Toutes les 1 minute, on synchronise les scores/états via services/liveUpdater.js
+cron.schedule(
+  "*/1 * * * *",
+  async () => {
+    try {
+      await syncLive();
+    } catch (e) {
+      console.error("Cron syncLive error:", e?.message || e);
+    }
+  },
+  { timezone: "Europe/Paris" }
+);
+
+// =============================
 // 🧱 MIDDLEWARE ERREUR GLOBAL
 // =============================
 app.use(errorHandler);
@@ -132,7 +152,7 @@ app.get("/", (_req, res) => {
 // =============================
 // 🚀 LANCEMENT SERVEUR
 // =============================
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080; // ✅ Railway utilise 8080
 app.listen(PORT, () => {
   console.log(`✅ Serveur FlashProno actif sur le port ${PORT}`);
 });
