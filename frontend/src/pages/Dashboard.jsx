@@ -76,8 +76,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold text-gray-200 mb-3">Accès rapide</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <QuickTile href="/pronostics" title="Pronostics du jour" desc="Conseils validés & mis à jour" />
-          <QuickTile href="/strategie-bankroll" title="Bankroll" desc="Calculateur & gestion" />
-          <QuickTile href="/pronos-en-or" title="Pronos en or" desc="Sélections premium" />
+          <QuickTile href="/strategie-bankroll" title="Stratégie bankroll" desc="Calculateur & gestion" />
           <QuickTile href="/abonnements" title="Mon offre" desc="Gérer / prolonger l’accès" />
         </div>
       </section>
@@ -89,7 +88,7 @@ export default function Dashboard() {
           <ul className="space-y-2 text-gray-300">
             <li>• Pronostics triés et justifiés, prêts à jouer</li>
             <li>• Indication claire des résultats (vert = gagnant, rouge = perdu)</li>
-            <li>• Sections <b>Prono en or</b> & <b>Stratégie bankroll</b></li>
+            <li>• Espace <b>Stratégie bankroll</b> avec outils pratiques</li>
             <li>• Espace membre clair avec suivi d’expiration</li>
           </ul>
           <p className="text-xs text-gray-500 mt-4">
