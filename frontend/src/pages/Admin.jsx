@@ -45,8 +45,8 @@ export default function Admin() {
     const fd = new FormData();
     fd.append("audio", file);
     const token = localStorage.getItem("token");
-    const { data } = await axios.post(`${API_BASE}/api/admin/upload/audio`, fd, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await axios.post(\`\${API_BASE}/api/admin/upload/audio\`, fd, {
+      headers: { Authorization: \`Bearer \${token}\` },
     });
     return data.url; // ex: /uploads/audio/xxx.mp3
   };
@@ -55,8 +55,8 @@ export default function Admin() {
   const loadStats = async () => {
     try {
       setLoadingStats(true);
-      const { data } = await axios.get(`${API_BASE}/api/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axios.get(\`\${API_BASE}/api/admin/stats\`, {
+        headers: { Authorization: \`Bearer \${token}\` },
       });
       setStats(data);
     } catch {
@@ -69,8 +69,8 @@ export default function Admin() {
   const loadPronos = async () => {
     try {
       setLoadingList(true);
-      const { data } = await axios.get(`${API_BASE}/api/admin/pronostics`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axios.get(\`\${API_BASE}/api/admin/pronostics\`, {
+        headers: { Authorization: \`Bearer \${token}\` },
       });
       setPronos(data);
     } catch {
@@ -84,8 +84,8 @@ export default function Admin() {
     try {
       setLoadingUsers(true);
       const { data } = await axios.get(
-        `${API_BASE}/api/admin/users?page=${page}&limit=25`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        \`\${API_BASE}/api/admin/users?page=\${page}&limit=25\`,
+        { headers: { Authorization: \`Bearer \${token}\` } }
       );
       setUsers(data.items || []);
       setUsersPage(data.page);
@@ -100,8 +100,8 @@ export default function Admin() {
   const loadOnline = async () => {
     try {
       setOnline((o) => ({ ...o, loading: true }));
-      const { data } = await axios.get(`${API_BASE}/api/admin/online-users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axios.get(\`\${API_BASE}/api/admin/online-users\`, {
+        headers: { Authorization: \`Bearer \${token}\` },
       });
       setOnline({
         users: data.users || [],
@@ -147,9 +147,9 @@ export default function Admin() {
       if (editingId) {
         // Mise à jour
         const resp = await axios.put(
-          `${API_BASE}/api/admin/pronostics/${editingId}`,
+          \`\${API_BASE}/api/admin/pronostics/\${editingId}\`,
           payload,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: \`Bearer \${token}\` } }
         );
         data = resp.data;
         alert("Pronostic mis à jour ✅");
@@ -158,9 +158,9 @@ export default function Admin() {
       } else {
         // Création
         const resp = await axios.post(
-          `${API_BASE}/api/admin/pronostics`,
+          \`\${API_BASE}/api/admin/pronostics\`,
           payload,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: \`Bearer \${token}\` } }
         );
         data = resp.data;
         alert("Pronostic ajouté ✅");
@@ -187,8 +187,8 @@ export default function Admin() {
   const deleteProno = async (id) => {
     if (!confirm("Supprimer ce pronostic ?")) return;
     try {
-      await axios.delete(`${API_BASE}/api/admin/pronostics/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.delete(\`\${API_BASE}/api/admin/pronostics/\${id}\`, {
+        headers: { Authorization: \`Bearer \${token}\` },
       });
       setPronos((prev) => prev.filter((p) => p._id !== id));
     } catch {
@@ -220,9 +220,9 @@ export default function Admin() {
   const act = async (id, url, body = {}) => {
     try {
       const { data } = await axios.patch(
-        `${API_BASE}/api/admin/users/${id}/${url}`,
+        \`\${API_BASE}/api/admin/users/\${id}/\${url}\`,
         body,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: \`Bearer \${token}\` } }
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
       alert("Action effectuée ✅");
@@ -417,7 +417,7 @@ export default function Admin() {
           />
           {form.audioUrl && (
             <audio controls className="mt-2 w-full">
-              <source src={`${API_BASE}${form.audioUrl}`} />
+              <source src={\`\${API_BASE}\${form.audioUrl}\`} />
             </audio>
           )}
 
@@ -619,7 +619,7 @@ export default function Admin() {
 
           {online.loading ? (
             <p className="text-gray-400">Actualisation…</p>
-          ) : online.count === 0 ? (
+          ) : online.users.length === 0 ? (
             <p className="text-gray-400">Personne en ligne pour le moment.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -630,19 +630,34 @@ export default function Admin() {
                     <th className="py-2">Email</th>
                     <th className="py-2">Rôle</th>
                     <th className="py-2">Vu</th>
+                    <th className="py-2">Statut</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {online.users.map((u) => (
-                    <tr key={u._id} className="border-t border-[#222]">
-                      <td className="py-2">{u.name}</td>
-                      <td className="py-2">{u.email}</td>
-                      <td className="py-2">{u.isAdmin ? "Admin" : "Membre"}</td>
-                      <td className="py-2">
-                        {u.lastSeen ? new Date(u.lastSeen).toLocaleTimeString() : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {online.users.map((u) => {
+                    const last = u.lastSeen ? new Date(u.lastSeen) : null;
+                    const isOnline = last ? (Date.now() - last.getTime()) < 2 * 60 * 1000 : false;
+                    return (
+                      <tr key={u._id} className="border-t border-[#222]">
+                        <td className="py-2">{u.name}</td>
+                        <td className="py-2">{u.email}</td>
+                        <td className="py-2">{u.isAdmin ? "Admin" : "Membre"}</td>
+                        <td className="py-2">
+                          {last ? last.toLocaleTimeString() : "—"}
+                        </td>
+                        <td className="py-2">
+                          <span
+                            className={\`inline-flex items-center gap-2 font-semibold \${isOnline ? "text-green-400" : "text-red-400"}\`}
+                          >
+                            <span
+                              className={\`w-2.5 h-2.5 rounded-full \${isOnline ? "bg-green-400" : "bg-red-500"}\`}
+                            ></span>
+                            {isOnline ? "Online" : "Offline"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -658,11 +673,7 @@ function Tab({ tab, id, setTab, children }) {
   return (
     <button
       onClick={() => setTab(id)}
-      className={`px-4 py-2 rounded-lg ${
-        active
-          ? "bg-primary text-black"
-          : "bg-black border border-primary text-white"
-      }`}
+      className={\`px-4 py-2 rounded-lg \${active ? "bg-primary text-black" : "bg-black border border-primary text-white"}\`}
     >
       {children}
     </button>
@@ -696,7 +707,7 @@ function Btn({ onClick, label, variant = "primary" }) {
     gray: "bg-gray-600 text-white",
   }[variant];
   return (
-    <button onClick={onClick} className={`px-3 py-1 rounded ${styles} hover:opacity-90`}>
+    <button onClick={onClick} className={\`px-3 py-1 rounded \${styles} hover:opacity-90\`}>
       {label}
     </button>
   );
