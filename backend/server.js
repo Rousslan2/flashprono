@@ -17,7 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import pronosticRoutes from "./routes/pronosticRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import presenceRoutes from "./routes/presenceRoutes.js"; // 👈 AJOUT
+import presenceRoutes from "./routes/presenceRoutes.js"; // 👈 présence en ligne
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -30,26 +30,30 @@ connectDB();
 const app = express();
 
 // =============================
-// 🌐 CONFIGURATION GLOBALE
+// 🌐 CONFIGURATION GLOBALE CORS
 // =============================
 const FRONT = process.env.FRONTEND_URL;
+
 const allowed = [
-  FRONT,
+  FRONT, // ex. https://flashprono.com (défini dans .env backend)
+  "https://flashprono.com",
+  "https://www.flashprono.com",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://frontend-production-14f9.up.railway.app"
-  "https://flashprono.com",
+  "https://frontend-production-14f9.up.railway.app",
 ].filter(Boolean);
 
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
-    return cb(null, false);
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // Postman / cURL
+      if (allowed.some((u) => origin.startsWith(u))) return cb(null, true);
+      return cb(null, false);
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -78,7 +82,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pronostics", pronosticRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/presence", presenceRoutes); // 👈 AJOUT
+app.use("/api/presence", presenceRoutes); // 👈 présence
 
 // =============================
 // 🧾 LOG ADMIN TEST
@@ -110,7 +114,9 @@ cron.schedule(
           },
         }
       );
-      console.log(`🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`);
+      console.log(
+        `🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`
+      );
     } catch (e) {
       console.error("Cron error:", e);
     }
