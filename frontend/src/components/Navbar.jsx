@@ -77,6 +77,11 @@ export default function Navbar() {
           <div className="flex items-center gap-8 text-green-400 font-medium">
             <Link to="/pronostics" className="hover:text-white transition">Pronostics</Link>
             <Link to="/abonnements" className="hover:text-white transition">Abonnements</Link>
+
+            {/* 👉 Nouveaux liens */}
+            <Link to="/bankroll" className="hover:text-white transition">Bankroll</Link>
+            <Link to="/strategies" className="hover:text-white transition">Stratégies</Link>
+
             {auth.user?.isAdmin && (
               <Link to="/admin" className="hover:text-white transition">Admin</Link>
             )}
@@ -181,6 +186,23 @@ export default function Navbar() {
             >
               Abonnements
             </Link>
+
+            {/* 👉 Nouveaux liens (mobile) */}
+            <Link
+              to="/bankroll"
+              className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
+              onClick={() => setMenuOpen(false)}
+            >
+              Bankroll
+            </Link>
+            <Link
+              to="/strategies"
+              className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
+              onClick={() => setMenuOpen(false)}
+            >
+              Stratégies
+            </Link>
+
             {auth.user?.isAdmin && (
               <Link
                 to="/admin"
