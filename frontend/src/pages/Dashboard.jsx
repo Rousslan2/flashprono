@@ -90,7 +90,7 @@ export default function Dashboard() {
             desc="Optimisez vos mises avec nos outils dédiés"
           />
           <QuickTile
-            href="/strategie"
+            href="/strategies"
             title="Stratégies & Apprentissage"
             desc="Découvrez nos méthodes gagnantes"
           />
