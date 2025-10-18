@@ -1,10 +1,11 @@
+
 import axios from "axios";
 import { API_BASE } from "./config";
 
 axios.defaults.baseURL = API_BASE;
-axios.defaults.timeout = 7000; // ⏳ Moins long = plus réactif (7s au lieu de 15s)
+axios.defaults.timeout = 15000;
 
-// 🔐 Ajout automatique du token s’il existe
+// Inclure le token si présent
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -14,24 +15,18 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// ⚠️ Gestion claire des erreurs
 axios.interceptors.response.use(
   (res) => res,
   (err) => {
+    // Stopper tout "chargement infini" côté UI en exposant des erreurs claires
     const status = err?.response?.status;
-
-    // 401 = non autorisé → session expirée
     if (status === 401) {
-      console.warn("Session expirée ou non autorisée");
+      // Token expiré → on peut nettoyer
+      // localStorage.removeItem("token");
+      // localStorage.removeItem("user");
     }
-
-    // ❌ Timeout, réseau ou erreur serveur
-    if (err.code === "ECONNABORTED" || !err.response) {
-      console.warn("⏱️ Serveur injoignable ou trop lent");
-    }
-
     return Promise.reject(err);
   }
 );
 
-console.log(`[FlashProno] Axios initialisé → ${API_BASE}`);
+console.log("[FlashProno] Axios configuré →", API_BASE);

@@ -1,5 +1,4 @@
 import "./axiosSetup";
-import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -18,24 +17,7 @@ import StrategieBankroll from "./pages/StrategieBankroll";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
-// 🆕 présence (heartbeat)
-import { isAuthenticated } from "./hooks/useAuth";
-import { startHeartbeat, stopHeartbeat } from "./heartbeat";
-
 export default function App() {
-  // 🆕 Active/stoppe le heartbeat selon la connexion
-  useEffect(() => {
-    const boot = () => (isAuthenticated() ? startHeartbeat() : stopHeartbeat());
-    boot();
-    window.addEventListener("auth-update", boot);
-    window.addEventListener("storage", boot);
-    return () => {
-      window.removeEventListener("auth-update", boot);
-      window.removeEventListener("storage", boot);
-      stopHeartbeat();
-    };
-  }, []);
-
   return (
     <div className="bg-dark min-h-screen text-white flex flex-col">
       <Navbar />
@@ -67,24 +49,10 @@ export default function App() {
               </AdminRoute>
             }
           />
-
-          <Route
-            path="/pronos-en-or"
-            element={
-              <ProtectedRoute>
-                <PronosEnOr />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/strategie-bankroll"
-            element={
-              <ProtectedRoute>
-                <StrategieBankroll />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        
+  <Route path="/pronos-en-or" element={<ProtectedRoute><PronosEnOr/></ProtectedRoute>} />
+  <Route path="/strategie-bankroll" element={<ProtectedRoute><StrategieBankroll/></ProtectedRoute>} />
+</Routes>
       </main>
       <Footer />
     </div>

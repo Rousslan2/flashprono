@@ -8,11 +8,10 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+
 const router = express.Router();
 
-/* ============================
-   📦 CONFIG UPLOAD (audio)
-============================ */
+// Upload audio (admin)
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const dir = path.join(process.cwd(), "uploads", "audio");
@@ -20,31 +19,21 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const unique = Date.now() + "-" + Math.round(Math.random()*1e9);
     cb(null, unique + path.extname(file.originalname).toLowerCase());
-  },
+  }
 });
-const audioFilter = (_req, file, cb) => {
-  const ok =
-    /^audio\//.test(file.mimetype) ||
-    /\.(mp3|wav|m4a|ogg)$/i.test(file.originalname);
-  cb(null, ok);
-};
-const upload = multer({
-  storage,
-  fileFilter: audioFilter,
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
-});
+const audioFilter = (_req, file, cb) => cb(null, /\.(mp3|wav|m4a|ogg)$/i.test(file.originalname));
+const upload = multer({ storage, fileFilter: audioFilter, limits: { fileSize: 25*1024*1024 } });
 
-/* ============================
-   🔒 GUARDE GLOBALE
-============================ */
+
+// 🔒 garde global (auth + admin)
 router.use(protect);
 router.use(requireAdmin);
 
-/* ============================
-   📊 STATS
-============================ */
+// =====================
+// 📊 STATS (ANCIEN + OK)
+// =====================
 router.get("/stats", async (_req, res, next) => {
   try {
     const now = new Date();
@@ -52,19 +41,15 @@ router.get("/stats", async (_req, res, next) => {
     const [totalUsers, activeSubs, trialActive, totalPronos, recentUsers] =
       await Promise.all([
         User.countDocuments(),
-
         User.countDocuments({
           "subscription.status": "active",
           "subscription.expiresAt": { $gt: now },
         }),
-
         User.countDocuments({
           "subscription.status": "trial",
           "subscription.expiresAt": { $gt: now },
         }),
-
         Pronostic.countDocuments(),
-
         User.find({})
           .sort({ createdAt: -1 })
           .limit(10)
@@ -77,16 +62,12 @@ router.get("/stats", async (_req, res, next) => {
   }
 });
 
-/* ==================================
-   ⚽ PRONOSTICS CRUD (avec champs étendus)
-   Champs supportés : sport, date, equipe1, equipe2, type, cote, resultat,
-   + label (standard|prono_en_or|strategie_bankroll), details, audioUrl
-================================== */
+// ==============================
+// ⚽ PRONOSTICS CRUD (ANCIEN + OK)
+// ==============================
 router.get("/pronostics", async (_req, res, next) => {
   try {
-    const list = await Pronostic.find({})
-      .sort({ createdAt: -1 })
-      .limit(50);
+    const list = await Pronostic.find({}).sort({ createdAt: -1 }).limit(50);
     res.json(list);
   } catch (e) {
     next(e);
@@ -95,23 +76,10 @@ router.get("/pronostics", async (_req, res, next) => {
 
 router.post("/pronostics", async (req, res, next) => {
   try {
-    const {
-      sport,
-      date,
-      equipe1,
-      equipe2,
-      type,
-      cote,
-      resultat,
-      label,
-      details,
-      audioUrl,
-    } = req.body;
-
+    const { sport, date, equipe1, equipe2, type, cote, resultat } = req.body;
     if (!sport || !date || !equipe1 || !equipe2 || !type || !cote) {
       return res.status(400).json({ message: "Champs requis manquants." });
     }
-
     const prono = await Pronostic.create({
       sport,
       date,
@@ -120,11 +88,7 @@ router.post("/pronostics", async (req, res, next) => {
       type,
       cote,
       resultat: resultat || "En attente",
-      label: label || "standard",
-      details: details || "",
-      audioUrl: audioUrl || "",
     });
-
     res.json(prono);
   } catch (e) {
     next(e);
@@ -133,30 +97,8 @@ router.post("/pronostics", async (req, res, next) => {
 
 router.put("/pronostics/:id", async (req, res, next) => {
   try {
-    // On ne met à jour que les champs autorisés
-    const allowed = [
-      "sport",
-      "date",
-      "equipe1",
-      "equipe2",
-      "type",
-      "cote",
-      "resultat",
-      "label",
-      "details",
-      "audioUrl",
-    ];
-    const payload = {};
-    for (const k of allowed) {
-      if (k in req.body) payload[k] = req.body[k];
-    }
-
-    const prono = await Pronostic.findByIdAndUpdate(req.params.id, payload, {
-      new: true,
-    });
-    if (!prono)
-      return res.status(404).json({ message: "Pronostic introuvable." });
-
+    const prono = await Pronostic.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!prono) return res.status(404).json({ message: "Pronostic introuvable." });
     res.json(prono);
   } catch (e) {
     next(e);
@@ -166,27 +108,26 @@ router.put("/pronostics/:id", async (req, res, next) => {
 router.delete("/pronostics/:id", async (req, res, next) => {
   try {
     const prono = await Pronostic.findByIdAndDelete(req.params.id);
-    if (!prono)
-      return res.status(404).json({ message: "Pronostic introuvable." });
+    if (!prono) return res.status(404).json({ message: "Pronostic introuvable." });
     res.json({ ok: true });
   } catch (e) {
     next(e);
   }
 });
 
-/* ==================================
-   👥 UTILISATEURS (liste + actions)
-================================== */
+// ==================================
+// 👥 UTILISATEURS (NOUVEAU COMPLET)
+// ==================================
 
 // Liste paginée
 router.get("/users", async (req, res, next) => {
   try {
-    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "25", 10), 1), 100);
+    const page = Math.max(parseInt(req.query.page || "1"), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "25"), 1), 100);
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
-      User.find({}, "name email isAdmin isBanned createdAt subscription lastSeen")
+      User.find({}, "name email isAdmin isBanned createdAt subscription")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -316,33 +257,15 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
   }
 });
 
-/* ============================
-   ☁️ UPLOAD AUDIO (admin)
-============================ */
+
+// Upload audio
 router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
   try {
-    if (!req.user?.isAdmin) return res.status(403).json({ message: "Accès refusé" });
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
     if (!req.file) return res.status(400).json({ message: "Aucun fichier" });
     const url = `/uploads/audio/${req.file.filename}`;
     res.json({ ok: true, url });
-  } catch (e) {
-    next(e);
-  }
-});
-
-/* ============================
-   🟢 UTILISATEURS EN LIGNE
-============================ */
-router.get("/online-users", async (_req, res, next) => {
-  try {
-    const since = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes
-    const users = await User.find({ lastSeen: { $gte: since } })
-      .select("_id name email lastSeen isAdmin")
-      .sort({ lastSeen: -1 });
-    res.json({ items: users, ts: new Date() });
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 });
 
 export default router;

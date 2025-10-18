@@ -5,7 +5,7 @@ import { API_BASE } from "../config";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
-  const [tab, setTab] = useState("stats"); // stats | add | list | users | online
+  const [tab, setTab] = useState("stats"); // stats | add | list | users
   const [editingId, setEditingId] = useState(null); // id en modification
 
   // ---- STATS ----
@@ -35,10 +35,6 @@ export default function Admin() {
   const [usersPage, setUsersPage] = useState(1);
   const [usersPages, setUsersPages] = useState(1);
   const [loadingUsers, setLoadingUsers] = useState(true);
-
-  // ---- ONLINE (nouveau) ----
-  const [online, setOnline] = useState([]);
-  const [loadingOnline, setLoadingOnline] = useState(true);
 
   // 🎙️ Upload audio
   const uploadAudio = async (file) => {
@@ -97,33 +93,12 @@ export default function Admin() {
     }
   };
 
-  // 🔥 Online
-  const loadOnline = async () => {
-    try {
-      setLoadingOnline(true);
-      const { data } = await axios.get(`${API_BASE}/api/admin/online-users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOnline(data.items || []);
-    } catch {
-      // pas d'alert pour éviter le spam
-    } finally {
-      setLoadingOnline(false);
-    }
-  };
-
   useEffect(() => {
     loadStats();
     loadPronos();
     loadUsers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Charger la liste "online" quand l'onglet est ouvert
-  useEffect(() => {
-    if (tab === "online") loadOnline();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
 
   // ===== HANDLERS =====
   const onChange = (e) =>
@@ -242,11 +217,18 @@ export default function Admin() {
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-3 justify-center mb-8">
-        <Tab tab={tab} id="stats" setTab={setTab}>Statistiques</Tab>
-        <Tab tab={tab} id="add" setTab={setTab}>Ajouter un pronostic</Tab>
-        <Tab tab={tab} id="list" setTab={setTab}>Liste des pronostics</Tab>
-        <Tab tab={tab} id="users" setTab={setTab}>Utilisateurs</Tab>
-        <Tab tab={tab} id="online" setTab={setTab}>En ligne</Tab>
+        <Tab tab={tab} id="stats" setTab={setTab}>
+          Statistiques
+        </Tab>
+        <Tab tab={tab} id="add" setTab={setTab}>
+          Ajouter un pronostic
+        </Tab>
+        <Tab tab={tab} id="list" setTab={setTab}>
+          Liste des pronostics
+        </Tab>
+        <Tab tab={tab} id="users" setTab={setTab}>
+          Utilisateurs
+        </Tab>
       </div>
 
       {/* STATS */}
@@ -279,7 +261,9 @@ export default function Admin() {
                       <tr key={u._id} className="border-t border-[#222]">
                         <td className="py-2">{u.name}</td>
                         <td className="py-2">{u.email}</td>
-                        <td className="py-2">{new Date(u.createdAt).toLocaleString()}</td>
+                        <td className="py-2">
+                          {new Date(u.createdAt).toLocaleString()}
+                        </td>
                         <td className="py-2">{u.subscription?.status || "—"}</td>
                       </tr>
                     ))}
@@ -295,7 +279,7 @@ export default function Admin() {
       {tab === "add" && (
         <form
           onSubmit={createProno}
-          className="max-w-3xl mx-auto p-6 rounded-xl border border-primary bg-black"
+          className="max-w-3xl mx-auto bg黑 p-6 rounded-xl border border-primary bg-black"
         >
           <div className="grid md:grid-cols-2 gap-4">
             <Field label="Sport">
@@ -370,7 +354,9 @@ export default function Admin() {
           <select
             className="w-full bg-[#0b0b0b] border border-[#222] p-2 rounded"
             value={form.label}
-            onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, label: e.target.value }))
+            }
           >
             <option value="standard">Standard</option>
             <option value="prono_en_or">Prono en or</option>
@@ -384,8 +370,10 @@ export default function Admin() {
             className="w-full bg-[#0b0b0b] border border-[#222] p-2 rounded"
             placeholder="Analyse, justification, points clés..."
             value={form.details}
-            onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))}
-          />
+            onChange={(e) =>
+              setForm((f) => ({ ...f, details: e.target.value }))
+            }
+          ></textarea>
 
           {/* Vocal */}
           <label className="block mt-3">Vocal (MP3/WAV/M4A/OGG)</label>
@@ -400,7 +388,9 @@ export default function Admin() {
                 setForm((f) => ({ ...f, audioUrl: url }));
                 alert("Audio uploadé ✅");
               } catch (err) {
-                alert(err?.response?.data?.message || "Upload audio échoué");
+                alert(
+                  err?.response?.data?.message || "Upload audio échoué"
+                );
               }
             }}
           />
@@ -592,57 +582,6 @@ export default function Admin() {
                 </button>
               </div>
             </>
-          )}
-        </div>
-      )}
-
-      {/* EN LIGNE (nouveau) */}
-      {tab === "online" && (
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl text-primary">Utilisateurs en ligne (≤ 2 min)</h3>
-            <button
-              onClick={loadOnline}
-              className="px-3 py-1 rounded bg-[#111] border border-primary hover:opacity-90"
-            >
-              Rafraîchir
-            </button>
-          </div>
-
-          {loadingOnline ? (
-            <p className="text-center text-gray-400">Chargement…</p>
-          ) : online.length === 0 ? (
-            <p className="text-center text-gray-500">Personne en ligne.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="text-gray-400">
-                    <th className="py-2">Nom</th>
-                    <th className="py-2">Email</th>
-                    <th className="py-2">Rôle</th>
-                    <th className="py-2">Dernière activité</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {online.map((u) => (
-                    <tr key={u._id} className="border-t border-[#222]">
-                      <td className="py-2">
-                        <span className="inline-flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                          {u.name}
-                        </span>
-                      </td>
-                      <td className="py-2">{u.email}</td>
-                      <td className="py-2">{u.isAdmin ? "Admin" : "Membre"}</td>
-                      <td className="py-2">
-                        {u.lastSeen ? new Date(u.lastSeen).toLocaleString() : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           )}
         </div>
       )}

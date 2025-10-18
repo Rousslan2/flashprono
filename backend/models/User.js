@@ -17,12 +17,8 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },  // hashé (bcrypt) côté routes auth
     isAdmin:  { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false }, // ban global
-
     subscription: { type: SubscriptionSchema, default: () => ({}) },
     trialUsed:    { type: Boolean, default: false }, // essai gratuit déjà utilisé ?
-
-    // 🆕 Champ ajouté : dernière activité pour détecter qui est en ligne
-    lastSeen: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -1,5 +1,4 @@
 // frontend/src/heartbeat.js
-import axios from "axios";
 import { API_BASE } from "./config";
 import { isAuthenticated } from "./hooks/useAuth";
 
@@ -11,25 +10,22 @@ export function startHeartbeat() {
   const ping = () => {
     if (!isAuthenticated()) return;
     const token = localStorage.getItem("token");
-    const url = `${API_BASE}/api/presence/heartbeat`;
-    const headers = { Authorization: `Bearer ${token}` };
+    if (!token) return;
 
-    // ✅ Envoi “fire-and-forget” (ne bloque jamais l’UI)
-    try {
-      if (navigator.sendBeacon) {
-        const blob = new Blob([JSON.stringify({})], { type: "application/json" });
-        // sendBeacon ne permet pas d'ajouter des headers → fallback si besoin
-        const ok = navigator.sendBeacon(url, blob);
-        if (ok) return;
-      }
-    } catch {}
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
-    // Fallback Axios: timeout court, on n’attend pas (pas d’await)
-    axios.post(url, {}, { headers, timeout: 4000 }).catch(() => {});
+    fetch(`${API_BASE}/api/presence/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: "{}",
+      keepalive: true,
+      signal: controller.signal,
+    }).catch(() => {}).finally(() => clearTimeout(timeout));
   };
 
   ping();
-  intervalId = setInterval(ping, 30000); // 30s
+  intervalId = setInterval(ping, 10_000);
 }
 
 export function stopHeartbeat() {
