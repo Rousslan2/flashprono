@@ -5,7 +5,8 @@ import { API_BASE } from "../config";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
-  const [tab, setTab] = useState("stats"); // stats | add | list | users
+  // Onglets: stats | add | list | users | online
+  const [tab, setTab] = useState("stats");
   const [editingId, setEditingId] = useState(null); // id en modification
 
   // ---- STATS ----
@@ -36,7 +37,10 @@ export default function Admin() {
   const [usersPages, setUsersPages] = useState(1);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
-  // 🎙️ Upload audio
+  // ---- ONLINE (présence en ligne) ----
+  const [online, setOnline] = useState({ users: [], count: 0, loading: false });
+
+  // 🎙️ Upload audio (admin)
   const uploadAudio = async (file) => {
     const fd = new FormData();
     fd.append("audio", file);
@@ -93,12 +97,38 @@ export default function Admin() {
     }
   };
 
+  const loadOnline = async () => {
+    try {
+      setOnline((o) => ({ ...o, loading: true }));
+      const { data } = await axios.get(`${API_BASE}/api/admin/online-users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOnline({
+        users: data.users || [],
+        count: data.count || 0,
+        loading: false,
+      });
+    } catch {
+      setOnline((o) => ({ ...o, loading: false }));
+      alert("Erreur chargement des utilisateurs en ligne");
+    }
+  };
+
   useEffect(() => {
     loadStats();
     loadPronos();
     loadUsers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // recharge la liste “en ligne” quand on va sur l’onglet + auto-refresh 15s
+  useEffect(() => {
+    if (tab !== "online") return;
+    loadOnline();
+    const iv = setInterval(loadOnline, 15000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   // ===== HANDLERS =====
   const onChange = (e) =>
@@ -217,18 +247,11 @@ export default function Admin() {
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-3 justify-center mb-8">
-        <Tab tab={tab} id="stats" setTab={setTab}>
-          Statistiques
-        </Tab>
-        <Tab tab={tab} id="add" setTab={setTab}>
-          Ajouter un pronostic
-        </Tab>
-        <Tab tab={tab} id="list" setTab={setTab}>
-          Liste des pronostics
-        </Tab>
-        <Tab tab={tab} id="users" setTab={setTab}>
-          Utilisateurs
-        </Tab>
+        <Tab tab={tab} id="stats" setTab={setTab}>Statistiques</Tab>
+        <Tab tab={tab} id="add" setTab={setTab}>Ajouter un pronostic</Tab>
+        <Tab tab={tab} id="list" setTab={setTab}>Liste des pronostics</Tab>
+        <Tab tab={tab} id="users" setTab={setTab}>Utilisateurs</Tab>
+        <Tab tab={tab} id="online" setTab={setTab}>En ligne</Tab>
       </div>
 
       {/* STATS */}
@@ -261,9 +284,7 @@ export default function Admin() {
                       <tr key={u._id} className="border-t border-[#222]">
                         <td className="py-2">{u.name}</td>
                         <td className="py-2">{u.email}</td>
-                        <td className="py-2">
-                          {new Date(u.createdAt).toLocaleString()}
-                        </td>
+                        <td className="py-2">{new Date(u.createdAt).toLocaleString()}</td>
                         <td className="py-2">{u.subscription?.status || "—"}</td>
                       </tr>
                     ))}
@@ -279,7 +300,7 @@ export default function Admin() {
       {tab === "add" && (
         <form
           onSubmit={createProno}
-          className="max-w-3xl mx-auto bg黑 p-6 rounded-xl border border-primary bg-black"
+          className="max-w-3xl mx-auto bg-black p-6 rounded-xl border border-primary"
         >
           <div className="grid md:grid-cols-2 gap-4">
             <Field label="Sport">
@@ -582,6 +603,49 @@ export default function Admin() {
                 </button>
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {/* EN LIGNE */}
+      {tab === "online" && (
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl">Utilisateurs en ligne (≤ 2 min)</h3>
+            <span className="px-2 py-1 text-sm rounded bg-primary text-black font-semibold">
+              {online.count} en ligne
+            </span>
+          </div>
+
+          {online.loading ? (
+            <p className="text-gray-400">Actualisation…</p>
+          ) : online.count === 0 ? (
+            <p className="text-gray-400">Personne en ligne pour le moment.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="text-gray-400">
+                    <th className="py-2">Nom</th>
+                    <th className="py-2">Email</th>
+                    <th className="py-2">Rôle</th>
+                    <th className="py-2">Vu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {online.users.map((u) => (
+                    <tr key={u._id} className="border-t border-[#222]">
+                      <td className="py-2">{u.name}</td>
+                      <td className="py-2">{u.email}</td>
+                      <td className="py-2">{u.isAdmin ? "Admin" : "Membre"}</td>
+                      <td className="py-2">
+                        {u.lastSeen ? new Date(u.lastSeen).toLocaleTimeString() : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
