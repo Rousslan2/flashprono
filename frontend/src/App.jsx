@@ -1,4 +1,6 @@
+// frontend/src/App.jsx
 import "./axiosSetup";
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -17,7 +19,11 @@ import StrategieBankroll from "./pages/StrategieBankroll";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
+import { startHeartbeat } from "./heartbeat"; // 👈 AJOUT
+
 export default function App() {
+  useEffect(() => { startHeartbeat(); }, []); // 👈 AJOUT
+
   return (
     <div className="bg-dark min-h-screen text-white flex flex-col">
       <Navbar />
@@ -49,10 +55,24 @@ export default function App() {
               </AdminRoute>
             }
           />
-        
-  <Route path="/pronos-en-or" element={<ProtectedRoute><PronosEnOr/></ProtectedRoute>} />
-  <Route path="/strategie-bankroll" element={<ProtectedRoute><StrategieBankroll/></ProtectedRoute>} />
-</Routes>
+
+          <Route
+            path="/pronos-en-or"
+            element={
+              <ProtectedRoute>
+                <PronosEnOr />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strategie-bankroll"
+            element={
+              <ProtectedRoute>
+                <StrategieBankroll />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </main>
       <Footer />
     </div>

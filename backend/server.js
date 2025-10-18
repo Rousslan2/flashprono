@@ -17,6 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import pronosticRoutes from "./routes/pronosticRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import presenceRoutes from "./routes/presenceRoutes.js"; // 👈 AJOUT
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -34,15 +35,15 @@ const app = express();
 const FRONT = process.env.FRONTEND_URL;
 const allowed = [
   FRONT,
-  "http://localhost:3000",   // dev
-  "http://localhost:5173",   // Vite dev
+  "http://localhost:3000",
+  "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://frontend-production-14f9.up.railway.app", // ton front prod
+  "https://frontend-production-14f9.up.railway.app",
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman / curl
+    if (!origin) return cb(null, true);
     if (allowed.some(u => origin.startsWith(u))) return cb(null, true);
     return cb(null, false);
   },
@@ -76,6 +77,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pronostics", pronosticRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/presence", presenceRoutes); // 👈 AJOUT
 
 // =============================
 // 🧾 LOG ADMIN TEST
@@ -89,7 +91,6 @@ app.post("/api/admin/log-test", (req, res) => {
 // =============================
 // 🕛 CRON JOB : NETTOYAGE AUTO
 // =============================
-// Tous les jours à 03:00 (heure Europe/Paris)
 cron.schedule(
   "0 3 * * *",
   async () => {
@@ -131,7 +132,7 @@ app.get("/", (_req, res) => {
 // =============================
 // 🚀 LANCEMENT SERVEUR
 // =============================
-const PORT = process.env.PORT || 8080; // ✅ Railway utilise 8080
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ Serveur FlashProno actif sur le port ${PORT}`);
 });
