@@ -1,4 +1,3 @@
-import statsRoutes from './routes/statsRoutes.js';
 // =========================================
 // 🚀 FLASHPRONO - SERVER PRINCIPAL BACKEND
 // =========================================
@@ -27,8 +26,7 @@ import User from "./models/User.js";
 dotenv.config();
 connectDB();
 
-// ✅ Créer l'app AVANT tout app.use('/api/stats', statsRoutes);
-app.use(...)
+// ✅ Créer l'app AVANT tout app.use(...)
 const app = express();
 
 // Aide les proxies (Railway / Cloudflare) à passer l'IP et le protocole
