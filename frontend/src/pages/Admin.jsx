@@ -694,10 +694,10 @@ function Tab({ tab, id, setTab, children }) {
   return (
     <button
       onClick={() => setTab(id)}
-      className={`px-4 py-2 rounded-lg ${
+      className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
         active
-          ? "bg-primary text-black"
-          : "bg-black border border-primary text-white"
+          ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-xl"
+          : "bg-black border-2 border-red-500/30 text-white hover:bg-gray-900"
       }`}
     >
       {children}
@@ -708,7 +708,7 @@ function Tab({ tab, id, setTab, children }) {
 function Field({ label, children, className = "" }) {
   return (
     <div className={className}>
-      <label className="block text-sm mb-1 text-gray-300">{label}</label>
+      <label className="block text-sm mb-2 text-white font-semibold">{label}</label>
       {children}
     </div>
   );
@@ -716,23 +716,31 @@ function Field({ label, children, className = "" }) {
 
 function StatCard({ label, value }) {
   return (
-    <div className="bg-black p-5 rounded-xl border border-primary text-center">
-      <div className="text-gray-400 text-sm">{label}</div>
-      <div className="text-3xl font-bold text-white mt-1">{value ?? "—"}</div>
+    <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-red-500/30 rounded-2xl p-6 text-center hover:scale-105 transition-all">
+      <div className="text-gray-400 text-sm mb-2">{label}</div>
+      <div className="text-4xl font-extrabold text-white">{value ?? "—"}</div>
     </div>
   );
 }
 
+function StatusBadge({ status }) {
+  const s = (status || "").toLowerCase();
+  let cls = "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  if (s.includes("activ")) cls = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+  if (s.includes("trial") || s.includes("essai")) cls = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+  return <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${cls}`}>{status || "—"}</span>;
+}
+
 function Btn({ onClick, label, variant = "primary" }) {
   const styles = {
-    primary: "bg-primary text-black",
-    red: "bg-red-500/90 text-white",
-    green: "bg-green-500/90 text-white",
-    yellow: "bg-yellow-400 text-black",
-    gray: "bg-gray-600 text-white",
+    primary: "bg-primary/20 text-primary border-primary/30 hover:bg-primary/30",
+    red: "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30",
+    green: "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
+    yellow: "bg-yellow-400/20 text-yellow-400 border-yellow-400/30 hover:bg-yellow-400/30",
+    gray: "bg-gray-600/20 text-gray-400 border-gray-600/30 hover:bg-gray-600/30",
   }[variant];
   return (
-    <button onClick={onClick} className={`px-3 py-1 rounded ${styles} hover:opacity-90`}>
+    <button onClick={onClick} className={`px-3 py-1.5 rounded-lg border transition font-semibold text-xs ${styles}`}>
       {label}
     </button>
   );
