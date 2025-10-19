@@ -1,9 +1,9 @@
 // frontend/src/pages/Dashboard.jsx
-import { getUser, logout } from "../hooks/useAuth";
+import { useRealtimeUser, logout } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
-  const user = getUser();
+  const user = useRealtimeUser(); // 🔥 Utilise le hook temps réel
   const sub = user?.subscription || {};
 
   const planLabel =

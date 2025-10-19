@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { listenUserUpdate } from '../utils/userSync';
+
 export function getUser() {
   try {
     const raw = localStorage.getItem("user");
@@ -28,4 +31,30 @@ export function isSubscriptionActive() {
   if (!sub || !sub.expiresAt) return false;
   const notExpired = new Date(sub.expiresAt) > new Date();
   return notExpired && (sub.status === "active" || sub.status === "trial");
+}
+
+// 🔥 Hook pour écouter les changements d'utilisateur en temps réel
+export function useRealtimeUser() {
+  const [user, setUser] = useState(getUser());
+
+  useEffect(() => {
+    const unsubscribe = listenUserUpdate((userData) => {
+      setUser(userData);
+    });
+
+    // Écouter aussi les changements directs du localStorage (autre onglet)
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        setUser(getUser());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  return user;
 }

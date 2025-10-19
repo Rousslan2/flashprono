@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { API_BASE } from "../config";
+import { emitUserUpdate, getStoredUser } from "../utils/userSync";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
@@ -213,12 +214,10 @@ export default function Admin() {
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
       
-      // 🔥 NOUVEAU : Si c'est l'utilisateur connecté, mettre à jour localStorage
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser._id === id) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Recharger la page pour appliquer les changements
-        setTimeout(() => window.location.reload(), 500);
+      // 🔥 Si c'est l'utilisateur connecté, émettre l'événement de mise à jour
+      const currentUser = getStoredUser();
+      if (currentUser && currentUser._id === id) {
+        emitUserUpdate(data.user);
       }
       
       alert("Action effectuée ✅");
@@ -248,11 +247,10 @@ export default function Admin() {
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
       
-      // Si c'est l'utilisateur connecté, mettre à jour localStorage
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser._id === id) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setTimeout(() => window.location.reload(), 500);
+      // Si c'est l'utilisateur connecté, émettre l'événement
+      const currentUser = getStoredUser();
+      if (currentUser && currentUser._id === id) {
+        emitUserUpdate(data.user);
       }
       
       alert(`${days > 0 ? '+' : ''}${days} jours appliqués ✅`);

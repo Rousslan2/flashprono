@@ -1,30 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { getUser, isAuthenticated, logout } from "../hooks/useAuth";
+import { useRealtimeUser, isAuthenticated, logout } from "../hooks/useAuth";
 
 export default function Navbar() {
-  const [auth, setAuth] = useState({ isAuth: false, user: null });
+  const user = useRealtimeUser(); // 🔥 Hook temps réel
+  const isAuth = isAuthenticated();
   const [menuOpen, setMenuOpen] = useState(false); // mobile + dropdown
   const [profileOpen, setProfileOpen] = useState(false); // dropdown profil (desktop)
   const timerRef = useRef(null);
   const location = useLocation();
 
-  const refreshAuth = () =>
-    setAuth({ isAuth: isAuthenticated(), user: getUser() });
-
-  useEffect(() => {
-    refreshAuth();
-    window.addEventListener("auth-update", refreshAuth);
-    window.addEventListener("storage", refreshAuth);
-    return () => {
-      window.removeEventListener("auth-update", refreshAuth);
-      window.removeEventListener("storage", refreshAuth);
-    };
-  }, []);
-
   // Ferme menus quand la route change
   useEffect(() => {
-    refreshAuth();
     setMenuOpen(false);
     setProfileOpen(false);
   }, [location.pathname]);
@@ -34,7 +21,6 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
-    window.dispatchEvent(new Event("auth-update"));
   };
 
   // helpers dropdown profil (desktop)
@@ -82,10 +68,10 @@ export default function Navbar() {
             <Link to="/bankroll" className="hover:text-white transition">Bankroll</Link>
             <Link to="/strategies" className="hover:text-white transition">Stratégies</Link>
 
-            {auth.user?.isAdmin && (
+            {user?.isAdmin && (
               <Link to="/admin" className="hover:text-white transition">Admin</Link>
             )}
-            {auth.isAuth && (
+            {isAuth && (
               <Link to="/dashboard" className="hover:text-white transition">Espace membre</Link>
             )}
           </div>
@@ -93,7 +79,7 @@ export default function Navbar() {
 
         {/* Droite : actions (desktop) */}
         <div className="hidden md:flex items-center gap-3">
-          {auth.isAuth ? (
+          {isAuth ? (
             <div
               className="relative"
               onMouseEnter={openProfile}
@@ -104,10 +90,10 @@ export default function Navbar() {
                 className="flex items-center gap-2 bg-[#111] px-3 py-2 rounded-xl border border-primary hover:scale-105 transition"
               >
                 <div className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center font-bold">
-                  {initials(auth.user?.name || "FP")}
+                  {initials(user?.name || "FP")}
                 </div>
                 <span className="text-white hidden sm:inline">
-                  {auth.user?.name || "Mon profil"}
+                  {user?.name || "Mon profil"}
                 </span>
                 <svg
                   className={`w-4 h-4 text-primary ml-1 hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`}
@@ -203,7 +189,7 @@ export default function Navbar() {
               Stratégies
             </Link>
 
-            {auth.user?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 to="/admin"
                 className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
@@ -212,7 +198,7 @@ export default function Navbar() {
                 Admin
               </Link>
             )}
-            {auth.isAuth ? (
+            {isAuth ? (
               <>
                 <Link
                   to="/dashboard"
