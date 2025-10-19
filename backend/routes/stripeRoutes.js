@@ -100,7 +100,7 @@ router.post("/confirm", protect, async (req, res) => {
 });
 
 // =========================================
-// 🔹 ACTIVER UN ESSAI GRATUIT DE 14 JOURS
+// 🔹 ACTIVER UN ESSAI GRATUIT DE 7 JOURS
 // =========================================
 router.post("/trial", protect, async (req, res) => {
   try {
@@ -115,7 +115,7 @@ router.post("/trial", protect, async (req, res) => {
     }
 
     const expiresAt = new Date(now);
-    expiresAt.setDate(now.getDate() + 14);
+    expiresAt.setDate(now.getDate() + 7); // 🔥 Essai gratuit de 7 jours
 
     user.subscription = {
       plan: "trial",

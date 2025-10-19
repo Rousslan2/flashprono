@@ -13,12 +13,12 @@ export default function Abonnements() {
     {
       key: "trial",
       name: "Essai gratuit",
-      duration: "14 jours",
+      duration: "7 jours",
       price: "0€",
       desc: "Découvre tout tranquillement",
       icon: "🎁",
       features: [
-        "Accès complet pendant 2 semaines",
+        "Accès complet pendant 1 semaine",
         "Tous les pronostics quotidiens",
         "Scores live et analyses",
         "Stratégies & Bankroll",
@@ -79,7 +79,7 @@ export default function Abonnements() {
       );
       if (data?.ok) {
         localStorage.setItem("user", JSON.stringify(data.user));
-        alert("Essai gratuit activé pour 14 jours ✅");
+        alert("Essai gratuit activé pour 7 jours ✅");
         navigate("/pronostics");
       } else {
         alert("Impossible d'activer l'essai.");
