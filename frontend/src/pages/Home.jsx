@@ -36,6 +36,39 @@ export default function Home() {
         </Link>
       )}
 
+      {/* Statistiques impressionnantes */}
+      <div className="max-w-6xl mx-auto mt-16 mb-12">
+        <h2 className="text-3xl font-bold text-white mb-8">
+          Des résultats qui parlent d'eux-mêmes 📊
+        </h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          <StatCard
+            number="78%"
+            label="Taux de réussite"
+            sublabel="sur nos pronos en or"
+            icon="🏆"
+          />
+          <StatCard
+            number="2500+"
+            label="Pronostics analysés"
+            sublabel="depuis notre lancement"
+            icon="⚡"
+          />
+          <StatCard
+            number="1200+"
+            label="Membres actifs"
+            sublabel="qui nous font confiance"
+            icon="👥"
+          />
+          <StatCard
+            number="+45%"
+            label="ROI moyen"
+            sublabel="sur 3 mois (membres VIP)"
+            icon="💰"
+          />
+        </div>
+      </div>
+
       {/* Avantages clés */}
       <div className="grid md:grid-cols-3 gap-6 mt-14 text-left max-w-6xl mx-auto">
         <Feature
@@ -97,6 +130,19 @@ function Card({ title, children }) {
     <div className="bg-black border border-[#1d2f1f] rounded-2xl p-6">
       <h3 className="text-lg font-semibold mb-3 text-emerald-300">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+function StatCard({ number, label, sublabel, icon }) {
+  return (
+    <div className="bg-gradient-to-br from-black to-gray-900 border-2 border-primary rounded-2xl p-6 text-center hover:scale-105 transition-transform shadow-xl hover:shadow-primary/30">
+      <div className="text-4xl mb-3">{icon}</div>
+      <div className="text-4xl font-extrabold text-primary mb-2 drop-shadow-lg">
+        {number}
+      </div>
+      <div className="text-white font-semibold text-lg mb-1">{label}</div>
+      <div className="text-gray-400 text-sm">{sublabel}</div>
     </div>
   );
 }
