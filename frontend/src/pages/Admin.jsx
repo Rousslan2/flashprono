@@ -214,10 +214,23 @@ export default function Admin() {
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
       
-      // 🔥 Si c'est l'utilisateur connecté, émettre l'événement de mise à jour
+      // 🔥 Si c'est l'utilisateur connecté, forcer un rechargement complet
       const currentUser = getStoredUser();
       if (currentUser && currentUser._id === id) {
+        // Mettre à jour le localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Émettre l'événement ET recharger la page
         emitUserUpdate(data.user);
+        
+        // Message avant rechargement
+        alert("✅ Changements appliqués ! La page va se recharger...");
+        
+        // Rechargement après un court délai
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return; // Sortir pour éviter l'alerte en double
       }
       
       alert("Action effectuée ✅");
@@ -247,10 +260,16 @@ export default function Admin() {
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
       
-      // Si c'est l'utilisateur connecté, émettre l'événement
+      // Si c'est l'utilisateur connecté, forcer rechargement
       const currentUser = getStoredUser();
       if (currentUser && currentUser._id === id) {
+        localStorage.setItem('user', JSON.stringify(data.user));
         emitUserUpdate(data.user);
+        alert(`${days > 0 ? '+' : ''}${days} jours appliqués ✅ La page va se recharger...`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
       }
       
       alert(`${days > 0 ? '+' : ''}${days} jours appliqués ✅`);
