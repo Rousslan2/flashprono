@@ -30,7 +30,7 @@ connectDB();
 const app = express();
 
 // =============================
-// 🌐 CONFIGURATION GLOBALE CORS (robuste)
+// 🌐 CONFIGURATION GLOBALE CORS (robuste et compatible Railway)
 // =============================
 const FRONT = (process.env.FRONTEND_URL || "").replace(/\/+$/, "");
 
@@ -46,9 +46,17 @@ const baseWhitelist = [
 
 const WHITELIST = new Set(baseWhitelist.map((u) => u.replace(/\/+$/, "")));
 
-const corsHandler = cors({
+// Ajout des headers globaux pour OPTIONS (empêche les 404 sur preflight)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+// Middleware principal CORS
+const corsMiddleware = cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman / cURL
+    if (!origin) return cb(null, true); // Autorise Postman / cURL
     const cleanOrigin = origin.replace(/\/+$/, "");
     if (WHITELIST.has(cleanOrigin)) return cb(null, true);
     if (cleanOrigin.endsWith(".flashprono.com")) return cb(null, true);
@@ -56,17 +64,18 @@ const corsHandler = cors({
     return cb(new Error(`CORS bloqué pour ${origin}`), false);
   },
   credentials: true,
-  optionsSuccessStatus: 204, // ✅ important pour les pré-requêtes
+  optionsSuccessStatus: 204, // ✅ évite les erreurs sur preflight
 });
 
-app.use(corsHandler);
-// ✅ FIX preflight global (OPTIONS → 204 + headers)
-app.options("*", corsHandler); // <<< AJOUT CRUCIAL
+// Application du middleware CORS
+app.use(corsMiddleware);
+app.options("*", corsMiddleware); // ✅ Répond automatiquement aux requêtes OPTIONS
 
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 📁 Fichiers statiques (vocaux, etc.)
+// 📁 Fichiers statiques (vocaux, images, etc.)
 app.use("/uploads", express.static("uploads"));
 
 // =============================
@@ -102,10 +111,10 @@ app.post("/api/admin/log-test", (req, res) => {
 });
 
 // =============================
-// 🕛 CRON JOB : NETTOYAGE AUTO
+// 🕛 CRON JOB : NETTOYAGE AUTOMATIQUE
 // =============================
 cron.schedule(
-  "0 3 * * *",
+  "0 3 * * *", // tous les jours à 3h du matin
   async () => {
     try {
       const now = new Date();
@@ -126,26 +135,26 @@ cron.schedule(
         `🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`
       );
     } catch (e) {
-      console.error("Cron error:", e);
+      console.error("❌ Erreur dans le Cron :", e);
     }
   },
   { timezone: "Europe/Paris" }
 );
 
 // =============================
-// 🧱 MIDDLEWARE ERREUR GLOBAL
+// 🧱 MIDDLEWARE GLOBAL D’ERREUR
 // =============================
 app.use(errorHandler);
 
 // =============================
-// 🏁 ROUTE PAR DÉFAUT
+// 🏁 ROUTE PAR DÉFAUT (accueil backend)
 // =============================
 app.get("/", (_req, res) => {
   res.send("🌍 FlashProno Backend en ligne 🚀");
 });
 
 // =============================
-// 🚀 LANCEMENT SERVEUR
+// 🚀 LANCEMENT DU SERVEUR
 // =============================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
