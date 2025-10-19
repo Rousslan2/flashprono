@@ -51,20 +51,20 @@ export default function Home() {
           <StatCard
             number="2500+"
             label="Pronostics analysés"
-            sublabel="depuis notre lancement"
+            sublabel="années d'expérience"
             icon="⚡"
-          />
-          <StatCard
-            number="1200+"
-            label="Membres actifs"
-            sublabel="qui nous font confiance"
-            icon="👥"
           />
           <StatCard
             number="+45%"
             label="ROI moyen"
-            sublabel="sur 3 mois (membres VIP)"
+            sublabel="sur 3 mois"
             icon="💰"
+          />
+          <StatCard
+            number="100%"
+            label="Transparence"
+            sublabel="tous nos résultats visibles"
+            icon="✅"
           />
         </div>
       </div>
