@@ -2,24 +2,26 @@
 // ⚙️ CONFIGURATION API FLASHPRONO FRONTEND
 // =========================================
 
-// URL backend en production (publique Railway)
-const PROD_API = "https://flashprono-production.up.railway.app";
+// ✅ URL backend en production (ton vrai backend Railway)
+const PROD_API = "https://flashprono-backend-production.up.railway.app";
 
-// Détecte si on tourne sur un domaine Railway (production)
+// ✅ Détecte si on tourne sur ton domaine FlashProno ou Railway (production)
 const isProd =
   typeof window !== "undefined" &&
-  /railway\.app$/i.test(window.location.hostname);
+  (/flashprono\.com$/i.test(window.location.hostname) ||
+   /railway\.app$/i.test(window.location.hostname));
 
-// En dev (localhost), on garde la variable Vite si elle existe, sinon 5000
+// ✅ En dev (localhost), on garde la variable Vite si elle existe, sinon 5000
 let devBase = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-// Normalisation (au cas où)
+// ✅ Normalisation (évite les erreurs de syntaxe et de slashs)
 if (devBase.startsWith("//")) devBase = "https:" + devBase;
-if (!/^https?:\/\//i.test(devBase)) devBase = `https://${devBase.replace(/^\/+/, "")}`;
+if (!/^https?:\/\//i.test(devBase))
+  devBase = `https://${devBase.replace(/^\/+/, "")}`;
 devBase = devBase.replace(/\/+$/, "");
 
-// Choix final
+// ✅ Choix final (prod vs dev)
 export const API_BASE = (isProd ? PROD_API : devBase).replace(/\/+$/, "");
 
-// Log de contrôle
+// ✅ Log de contrôle
 console.log("[FlashProno] API_BASE =", API_BASE, "| isProd =", isProd);
