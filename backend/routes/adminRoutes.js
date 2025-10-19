@@ -1,16 +1,15 @@
-// backend/routes/adminRoutes.js
 import express from "express";
-import { protect, requireAdmin } from "../middleware/authMiddleware.js";
-import { logAdminAction } from "../middleware/logMiddleware.js";
-import User from "../models/User.js";
-import Pronostic from "../models/Pronostic.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+import { protect, requireAdmin } from "../middleware/authMiddleware.js";
+import { logAdminAction } from "../middleware/logMiddleware.js";
+import User from "../models/User.js";
+import Pronostic from "../models/Pronostic.js";
+
 const router = express.Router();
 
-// Upload audio (admin)
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const dir = path.join(process.cwd(), "uploads", "audio");
@@ -30,17 +29,12 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 },
 });
 
-// 🔒 garde global (auth + admin)
 router.use(protect);
 router.use(requireAdmin);
 
-// =====================
-// 📊 STATS
-// =====================
 router.get("/stats", async (_req, res, next) => {
   try {
     const now = new Date();
-
     const [totalUsers, activeSubs, trialActive, totalPronos, recentUsers] =
       await Promise.all([
         User.countDocuments(),
@@ -58,16 +52,12 @@ router.get("/stats", async (_req, res, next) => {
           .limit(10)
           .select("name email createdAt subscription.status isAdmin isBanned"),
       ]);
-
     res.json({ totalUsers, activeSubs, trialActive, totalPronos, recentUsers });
   } catch (e) {
     next(e);
   }
 });
 
-// ==============================
-// ⚽ PRONOSTICS CRUD
-// ==============================
 router.get("/pronostics", async (_req, res, next) => {
   try {
     const list = await Pronostic.find({}).sort({ createdAt: -1 }).limit(50);
@@ -121,36 +111,53 @@ router.delete("/pronostics/:id", async (req, res, next) => {
   }
 });
 
-// ==================================
-// 👥 UTILISATEURS (PAGINÉ + ACTIONS)
-// ==================================
-router.get("/users", async (req, res, next) => {
+router.patch("/pronostics/:id/live", async (req, res, next) => {
   try {
-    const page = Math.max(parseInt(req.query.page || "1"), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || "25"), 1), 100);
-    const skip = (page - 1) * limit;
-
-    const [items, total] = await Promise.all([
-      User.find({}, "name email isAdmin isBanned createdAt subscription lastSeen")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      User.countDocuments(),
-    ]);
-
-    res.json({ items, total, page, pages: Math.ceil(total / limit) });
+    const { isLive, homeScore, awayScore, minute, status } = req.body;
+    const update = {
+      "live.isLive": !!isLive,
+      "live.homeScore": typeof homeScore === "number" ? homeScore : 0,
+      "live.awayScore": typeof awayScore === "number" ? awayScore : 0,
+      "live.minute": minute ?? "",
+      "live.status": status ?? "",
+      "live.lastUpdate": new Date(),
+    };
+    const prono = await Pronostic.findByIdAndUpdate(
+      req.params.id,
+      { $set: update },
+      { new: true }
+    );
+    if (!prono) return res.status(404).json({ message: "Pronostic introuvable." });
+    res.json(prono);
   } catch (e) {
     next(e);
   }
 });
 
-// ✅ Nouvel endpoint: utilisateurs en ligne (vu dans les 2 dernières minutes)
-router.get("/online-users", async (_req, res, next) => {
+router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
   try {
-    const since = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes
-    const users = await User.find({ lastSeen: { $gte: since } })
-      .select("name email isAdmin lastSeen");
-    res.json({ count: users.length, users });
+    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
+    if (!req.file) return res.status(400).json({ message: "Aucun fichier" });
+    const url = `/uploads/audio/${req.file.filename}`;
+    res.json({ ok: true, url });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get("/users", async (req, res, next) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || "1"), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "25"), 1), 100);
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      User.find({}, "name email isAdmin isBanned createdAt subscription")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(),
+    ]);
+    res.json({ items, total, page, pages: Math.ceil(total / limit) });
   } catch (e) {
     next(e);
   }
@@ -166,7 +173,9 @@ router.patch("/users/:id/ban", async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("BAN", req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.patch("/users/:id/unban", async (req, res, next) => {
@@ -179,7 +188,9 @@ router.patch("/users/:id/unban", async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("UNBAN", req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.patch("/users/:id/make-admin", async (req, res, next) => {
@@ -192,7 +203,9 @@ router.patch("/users/:id/make-admin", async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("MAKE_ADMIN", req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.patch("/users/:id/remove-admin", async (req, res, next) => {
@@ -205,20 +218,21 @@ router.patch("/users/:id/remove-admin", async (req, res, next) => {
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("REMOVE_ADMIN", req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.patch("/users/:id/grant-subscription", async (req, res, next) => {
   try {
-    const { plan } = req.body; // "monthly" | "yearly"
+    const { plan } = req.body;
     if (!["monthly", "yearly"].includes(plan)) {
       return res.status(400).json({ message: "Plan invalide." });
     }
     const now = new Date();
     const expiresAt = new Date(now);
     if (plan === "monthly") expiresAt.setDate(now.getDate() + 30);
-    if (plan === "yearly")  expiresAt.setDate(now.getDate() + 365);
-
+    if (plan === "yearly") expiresAt.setDate(now.getDate() + 365);
     const user = await User.findByIdAndUpdate(
       req.params.id,
       {
@@ -230,11 +244,12 @@ router.patch("/users/:id/grant-subscription", async (req, res, next) => {
       },
       { new: true }
     ).select("-password");
-
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction(`GRANT_${plan.toUpperCase()}`, req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
@@ -250,20 +265,12 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
       },
       { new: true }
     ).select("-password");
-
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("REVOKE_SUBSCRIPTION", req.user, user);
     res.json({ ok: true, user });
-  } catch (e) { next(e); }
-});
-
-router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
-  try {
-    if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });
-    if (!req.file) return res.status(400).json({ message: "Aucun fichier" });
-    const url = `/uploads/audio/${req.file.filename}`;
-    res.json({ ok: true, url });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
 
 export default router;
