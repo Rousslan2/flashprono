@@ -46,19 +46,22 @@ const baseWhitelist = [
 
 const WHITELIST = new Set(baseWhitelist.map((u) => u.replace(/\/+$/, "")));
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // Postman / cURL
-      const cleanOrigin = origin.replace(/\/+$/, "");
-      if (WHITELIST.has(cleanOrigin)) return cb(null, true);
-      if (cleanOrigin.endsWith(".flashprono.com")) return cb(null, true);
-      console.warn("❌ CORS refusé pour :", origin);
-      return cb(new Error(`CORS bloqué pour ${origin}`), false);
-    },
-    credentials: true,
-  })
-);
+const corsHandler = cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // Postman / cURL
+    const cleanOrigin = origin.replace(/\/+$/, "");
+    if (WHITELIST.has(cleanOrigin)) return cb(null, true);
+    if (cleanOrigin.endsWith(".flashprono.com")) return cb(null, true);
+    console.warn("❌ CORS refusé pour :", origin);
+    return cb(new Error(`CORS bloqué pour ${origin}`), false);
+  },
+  credentials: true,
+  optionsSuccessStatus: 204, // ✅ important pour les pré-requêtes
+});
+
+app.use(corsHandler);
+// ✅ FIX preflight global (OPTIONS → 204 + headers)
+app.options("*", corsHandler); // <<< AJOUT CRUCIAL
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
