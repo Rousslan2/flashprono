@@ -1,22 +1,42 @@
+// =========================================
+// 💳 STRIPE - ROUTES PAIEMENT FLASHPRONO
+// =========================================
+
 import express from "express";
 import User from "../models/User.js";
 import { protect } from "../middleware/authMiddleware.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Import Stripe de façon compatible ESM
+// Import Stripe compatible ESM
 const Stripe = (await import("stripe")).default;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const router = express.Router();
 console.log("Stripe key loaded:", process.env.STRIPE_SECRET_KEY ? "✅ OK" : "❌ MISSING");
 
-// === Créer une session de paiement ===
+// 🧩 Utilitaires pour URLs sûres
+const trimSlash = (s = "") => s.replace(/\/+$/, "");
+const withHttps = (u = "") => (/^https?:\/\//i.test(u) ? u : `https://${u}`);
+const getFrontBase = (req) => {
+  const envBase = trimSlash(process.env.FRONTEND_URL || process.env.CLIENT_URL || "");
+  const origin = trimSlash(req.headers.origin || "");
+  const base = envBase || origin;
+  return withHttps(base);
+};
+
+// =========================================
+// 🔹 CRÉER UNE SESSION STRIPE CHECKOUT
+// =========================================
 router.post("/create-checkout-session", protect, async (req, res) => {
   try {
     const { plan } = req.body;
     const prices = { monthly: 2990, yearly: 29900 };
     if (!prices[plan]) return res.status(400).json({ message: "Plan invalide" });
+
+    const front = getFrontBase(req);
+    const success_url = `${front}/success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`;
+    const cancel_url = `${front}/abonnements`;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -31,8 +51,9 @@ router.post("/create-checkout-session", protect, async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.CLIENT_URL}/success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL}/abonnements`,
+      customer_email: req.user?.email,
+      success_url,
+      cancel_url,
     });
 
     return res.json({ url: session.url });
@@ -42,7 +63,9 @@ router.post("/create-checkout-session", protect, async (req, res) => {
   }
 });
 
-// === Confirmer la session et activer l'abonnement (mensuel/annuel) ===
+// =========================================
+// 🔹 CONFIRMER LA SESSION STRIPE
+// =========================================
 router.post("/confirm", protect, async (req, res) => {
   const { session_id, plan } = req.body;
   if (!session_id || !plan) return res.status(400).json({ message: "session_id ou plan manquant" });
@@ -76,24 +99,21 @@ router.post("/confirm", protect, async (req, res) => {
   }
 });
 
-// === Activer un ESSAI GRATUIT de 14 jours (une seule fois) ===
+// =========================================
+// 🔹 ACTIVER UN ESSAI GRATUIT DE 14 JOURS
+// =========================================
 router.post("/trial", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
 
-    // Déjà un essai consommé ?
-    if (user.trialUsed) {
-      return res.status(400).json({ message: "Essai déjà utilisé." });
-    }
+    if (user.trialUsed) return res.status(400).json({ message: "Essai déjà utilisé." });
 
-    // Si l'utilisateur a déjà un abonnement actif, inutile d'activer un essai
     const sub = user.subscription || {};
     const now = new Date();
     if (sub.expiresAt && new Date(sub.expiresAt) > now && (sub.status === "active" || sub.status === "trial")) {
       return res.status(400).json({ message: "Vous avez déjà un accès actif." });
     }
 
-    // Activer 14 jours
     const expiresAt = new Date(now);
     expiresAt.setDate(now.getDate() + 14);
 
