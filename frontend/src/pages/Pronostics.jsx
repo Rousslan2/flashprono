@@ -189,6 +189,8 @@ export default function Pronostics() {
   );
 }
 
+/* ---------- Composants ---------- */
+
 function HeaderIntro() {
   return (
     <div className="text-center mb-6">
@@ -367,6 +369,7 @@ function borderColorFor(result) {
   return "border-gray-600";
 }
 
+/* --------- Statut live / compte à rebours précis --------- */
 function computeMatchStatus(dateStr, now = new Date()) {
   if (!dateStr) return { kind: "unknown" };
   const start = new Date(dateStr);
