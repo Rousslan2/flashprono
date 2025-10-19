@@ -16,17 +16,19 @@ import Admin from "./pages/Admin";
 import PronosEnOr from "./pages/PronosEnOr";
 import StrategieBankroll from "./pages/StrategieBankroll";
 
+// 🔥 Nouvelles pages
+import Bankroll from "./pages/Bankroll";
+import Strategie from "./pages/Strategie";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
-import { startHeartbeat } from "./heartbeat"; // présence en ligne (déjà existant)
-
-// 👇👇👇 NOUVEAU : pages Stats (public) + Récap (membres)
-import Stats from "./pages/Stats";
-import Recap from "./pages/Recap";
+import { startHeartbeat } from "./heartbeat"; // 👈 AJOUT
 
 export default function App() {
-  useEffect(() => { startHeartbeat(); }, []);
+  useEffect(() => {
+    startHeartbeat();
+  }, []); // 👈 AJOUT
 
   return (
     <div className="bg-dark min-h-screen text-white flex flex-col">
@@ -40,25 +42,12 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/success" element={<Success />} />
 
-          {/* Public */}
-          <Route path="/stats" element={<Stats />} />      {/* 👈 NOUVEAU */}
-
           {/* Espace membre (protégé) */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Récap membre (protégé) */}
-          <Route
-            path="/recap"
-            element={
-              <ProtectedRoute>
-                <Recap />                                  {/* 👈 NOUVEAU */}
               </ProtectedRoute>
             }
           />
@@ -73,7 +62,6 @@ export default function App() {
             }
           />
 
-          {/* Pages existantes protégées */}
           <Route
             path="/pronos-en-or"
             element={
@@ -82,11 +70,31 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/strategie-bankroll"
             element={
               <ProtectedRoute>
                 <StrategieBankroll />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 🧠 Nouvelle section : Bankroll & Stratégies */}
+          <Route
+            path="/bankroll"
+            element={
+              <ProtectedRoute>
+                <Bankroll />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/strategies"
+            element={
+              <ProtectedRoute>
+                <Strategie />
               </ProtectedRoute>
             }
           />
