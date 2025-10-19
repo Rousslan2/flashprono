@@ -8,7 +8,6 @@ export default function Pronostics() {
   const [pronos, setPronos] = useState([]);
   const [error, setError] = useState("");
   const [showPast, setShowPast] = useState(false); // anciens repliés par défaut
-  const [statusFilter, setStatusFilter] = useState("all"); // all | attente | gagne | perdu
   const active = isSubscriptionActive();
 
   useEffect(() => {
@@ -39,7 +38,7 @@ export default function Pronostics() {
   }, [active]);
 
   // Regroupement: Aujourd’hui / À venir / Anciens
-  const groupsRaw = useMemo(() => {
+  const groups = useMemo(() => {
     const today = [];
     const future = [];
     const past = [];
@@ -58,26 +57,6 @@ export default function Pronostics() {
     }
     return { today, future, past };
   }, [pronos]);
-
-  // Filtrage par statut (barre sticky)
-  const groups = useMemo(() => {
-    const apply = (arr) => {
-      if (statusFilter === "all") return arr;
-      const toVal = (s = "") => s.toLowerCase();
-      return arr.filter(p => {
-        const r = toVal(p.resultat || "");
-        if (statusFilter === "attente") return !(r.includes("gagn") || r.includes("perd") || r.includes("win") || r.includes("lose"));
-        if (statusFilter === "gagne")  return (r.includes("gagn") || r.includes("win"));
-        if (statusFilter === "perdu")  return (r.includes("perd") || r.includes("lose"));
-        return true;
-      });
-    };
-    return {
-      today:  apply(groupsRaw.today),
-      future: apply(groupsRaw.future),
-      past:   apply(groupsRaw.past),
-    };
-  }, [groupsRaw, statusFilter]);
 
   if (!active) {
     return (
@@ -118,22 +97,12 @@ export default function Pronostics() {
 
   return (
     <section className="py-16">
-      <h1 className="text-3xl font-bold text-primary mb-4 text-center">Pronostics</h1>
-
-      {/* Barre de filtres sticky (positionnée sous la navbar) */}
-      <div className="sticky top-[56px] md:top-[72px] z-40 bg-black/85 backdrop-blur border-y border-[#111]">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto">
-          <FilterChip label="Tous" active={statusFilter === "all"} onClick={() => setStatusFilter("all")} />
-          <FilterChip label="En attente" active={statusFilter === "attente"} onClick={() => setStatusFilter("attente")} />
-          <FilterChip label="Gagnés" active={statusFilter === "gagne"} onClick={() => setStatusFilter("gagne")} />
-          <FilterChip label="Perdus" active={statusFilter === "perdu"} onClick={() => setStatusFilter("perdu")} />
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold text-primary mb-8 text-center">Pronostics</h1>
 
       {!hasAny ? (
-        <p className="text-center text-gray-400 mt-8">Aucun pronostic pour l’instant.</p>
+        <p className="text-center text-gray-400">Aucun pronostic pour l’instant.</p>
       ) : (
-        <div className="max-w-6xl mx-auto space-y-10 mt-6">
+        <div className="max-w-6xl mx-auto space-y-10">
           {/* AUJOURD’HUI */}
           {groups.today.length > 0 && (
             <Group title="Aujourd’hui" items={groups.today} />
@@ -152,7 +121,7 @@ export default function Pronostics() {
                   Anciens <span className="text-gray-500">({groups.past.length})</span>
                 </h2>
                 <button
-                  onClick={() => setShowPast(v => !v)}
+                  onClick={() => setShowPast((v) => !v)}
                   className="text-sm border border-[#333] rounded-lg px-3 py-1 hover:bg-[#0f0f0f]"
                 >
                   {showPast ? "Masquer" : "Afficher"}
@@ -168,18 +137,6 @@ export default function Pronostics() {
 }
 
 /* ---------- Composants ---------- */
-
-function FilterChip({ label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap border transition
-        ${active ? "bg-primary text-black border-primary" : "bg-[#0f0f0f] text-gray-300 border-[#222] hover:bg-[#141414]"}`}
-    >
-      {label}
-    </button>
-  );
-}
 
 function Group({ title, items }) {
   return (
@@ -283,3 +240,4 @@ function resultTextColor(result) {
   if (val.includes("perdu") || val.includes("lose")) return "text-red-400";
   return "text-gray-400";
 }
+// touch 
