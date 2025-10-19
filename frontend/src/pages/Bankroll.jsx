@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { isSubscriptionActive } from "../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 /**
- * Page : Gestion de Bankroll (simulateur simple)
+ * Page : Gestion de Bankroll (simulateur intelligent)
  * Accès : réservé aux abonnés
  */
 export default function Bankroll() {
@@ -14,12 +15,27 @@ export default function Bankroll() {
 
   if (!active) {
     return (
-      <section className="text-center py-20">
-        <h1 className="text-3xl font-bold text-primary mb-4">Gestion de Bankroll</h1>
-        <p className="text-gray-300 mb-6">🔒 Cette page est réservée aux abonnés.</p>
-        <a href="/abonnements" className="bg-primary text-black px-6 py-3 rounded-lg font-semibold hover:scale-105 transition">
-          Voir les abonnements
-        </a>
+      <section className="py-20 px-4 text-center">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-block w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6 text-4xl border-2 border-primary/30">
+            🔒
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
+            <span className="text-primary">Gestion de Bankroll</span>
+            <br />
+            <span className="text-white">Réservé aux membres</span>
+          </h1>
+          <p className="text-xl text-gray-300 leading-relaxed mb-8">
+            Accède au calculateur intelligent de bankroll, apprends les meilleures
+            stratégies de mise et protège ton capital.
+          </p>
+          <Link
+            to="/abonnements"
+            className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-black px-10 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-primary/50"
+          >
+            Voir les abonnements
+          </Link>
+        </div>
       </section>
     );
   }
@@ -46,74 +62,284 @@ export default function Bankroll() {
   }, [odds, confidence]);
 
   const winProfit = useMemo(() => Math.round((stake * (Number(odds) - 1)) * 100) / 100, [stake, odds]);
-  const loseLoss  = useMemo(() => stake, [stake]);
+  const loseLoss = useMemo(() => stake, [stake]);
+
+  const riskLevel = useMemo(() => {
+    if (stakePct <= 1) return { label: "Très prudent", color: "text-emerald-400", bg: "bg-emerald-500/10" };
+    if (stakePct <= 2) return { label: "Prudent", color: "text-green-400", bg: "bg-green-500/10" };
+    if (stakePct <= 3) return { label: "Modéré", color: "text-yellow-400", bg: "bg-yellow-500/10" };
+    if (stakePct <= 5) return { label: "Agressif", color: "text-orange-400", bg: "bg-orange-500/10" };
+    return { label: "Très risqué", color: "text-red-400", bg: "bg-red-500/10" };
+  }, [stakePct]);
 
   return (
-    <section className="py-10 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-primary mb-2 text-center">Gestion de Bankroll</h1>
-      <p className="text-gray-300 text-center mb-8">
-        Définissez un pourcentage fixe de mise (<span className="text-primary">stake</span>) et obtenez la mise conseillée.
-      </p>
+    <section className="py-16 px-4 max-w-6xl mx-auto">
+      {/* Hero Header */}
+      <div className="text-center mb-12">
+        <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
+          <span className="text-primary font-semibold text-sm">💰 Outil de gestion</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
+          <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+            Calculateur de Bankroll
+          </span>
+        </h1>
+        <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+          Définis ton <span className="text-primary font-semibold">capital</span>, ton{" "}
+          <span className="text-primary font-semibold">pourcentage de mise</span> et obtiens
+          des recommandations intelligentes pour protéger ta bankroll.
+        </p>
+      </div>
 
-      <div className="bg-black border border-primary/40 rounded-xl p-5 space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <Field label="Bankroll totale (€)">
-            <input type="number" min="0" step="1" value={bankroll} onChange={(e) => setBankroll(e.target.value)} className="w-full bg-[#0b0b0b] border border-[#222] rounded-lg p-2" />
-          </Field>
-          <Field label="Pourcentage de mise (%)">
-            <input type="number" min="0" step="0.1" value={stakePct} onChange={(e) => setStakePct(e.target.value)} className="w-full bg-[#0b0b0b] border border-[#222] rounded-lg p-2" />
-            <div className="text-xs text-gray-400 mt-1">Classique : 0.5% à 2% — Agressif : 3% à 5%</div>
-          </Field>
-          <Field label="Cote">
-            <input type="number" min="1.01" step="0.01" value={odds} onChange={(e) => setOdds(e.target.value)} className="w-full bg-[#0b0b0b] border border-[#222] rounded-lg p-2" />
-          </Field>
-          <Field label="Confiance (%)">
-            <input type="number" min="0" max="100" step="1" value={confidence} onChange={(e) => setConfidence(e.target.value)} className="w-full bg-[#0b0b0b] border border-[#222] rounded-lg p-2" />
-          </Field>
+      {/* Main Calculator */}
+      <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl p-8 mb-10">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <span>🎯</span>
+          Paramètres de calcul
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <InputField 
+            label="Bankroll totale (€)"
+            value={bankroll}
+            onChange={(e) => setBankroll(e.target.value)}
+            type="number"
+            min="0"
+            step="1"
+            icon="💵"
+            helper="Ton capital total disponible"
+          />
+          <InputField 
+            label="Pourcentage de mise (%)"
+            value={stakePct}
+            onChange={(e) => setStakePct(e.target.value)}
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            icon="📊"
+            helper={
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${riskLevel.bg} ${riskLevel.color}`}>
+                  {riskLevel.label}
+                </span>
+              </div>
+            }
+          />
+          <InputField 
+            label="Cote du pari"
+            value={odds}
+            onChange={(e) => setOdds(e.target.value)}
+            type="number"
+            min="1.01"
+            step="0.01"
+            icon="🎲"
+            helper="La cote proposée par le bookmaker"
+          />
+          <InputField 
+            label="Confiance dans le pari (%)"
+            value={confidence}
+            onChange={(e) => setConfidence(e.target.value)}
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            icon="💪"
+            helper="Ta probabilité estimée de gagner ce pari"
+          />
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 pt-2">
-          <Stat title="Mise conseillée (€)" value={stake.toFixed(2)} />
-          <Stat title="Gain si victoire (€)" value={winProfit.toFixed(2)} positive />
-          <Stat title="Perte si défaite (€)" value={`-${loseLoss.toFixed(2)}`} negative />
+        {/* Results Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <ResultCard 
+            title="Mise conseillée"
+            value={`${stake.toFixed(2)} €`}
+            icon="💰"
+            gradient="from-primary/20 to-yellow-500/20"
+          />
+          <ResultCard 
+            title="Gain potentiel"
+            value={`+${winProfit.toFixed(2)} €`}
+            icon="📈"
+            gradient="from-emerald-500/20 to-green-500/20"
+            positive
+          />
+          <ResultCard 
+            title="Perte potentielle"
+            value={`-${loseLoss.toFixed(2)} €`}
+            icon="📉"
+            gradient="from-red-500/20 to-orange-500/20"
+            negative
+          />
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          <InfoCard title="Valeur espérée (par € mis)"
-            body={<><div className={`text-xl font-semibold ${expectedValue >= 0 ? "text-emerald-400" : "text-red-400"}`}>{expectedValue >= 0 ? `+${expectedValue}` : expectedValue} €/€</div><p className="text-gray-400 text-sm mt-1">&rarr; Si positif, le pari a une valeur attendue favorable selon vos paramètres.</p></>} />
-          <InfoCard title="Suggestion (½ Kelly)"
-            body={<><div className="text-xl font-semibold text-primary">{kellyPct}%</div><p className="text-gray-400 text-sm mt-1">Approche prudente basée sur Kelly.</p></>} />
+        {/* Advanced Metrics */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <AdvancedCard 
+            title="Valeur espérée (EV)"
+            icon="🎯"
+            value={expectedValue >= 0 ? `+${expectedValue.toFixed(3)}` : expectedValue.toFixed(3)}
+            unit="€ par € misé"
+            valueColor={expectedValue >= 0 ? "text-emerald-400" : "text-red-400"}
+            description={
+              expectedValue >= 0 
+                ? "✅ Ce pari a une valeur attendue positive selon tes paramètres"
+                : "❌ Ce pari a une valeur attendue négative, méfiance"
+            }
+          />
+          <AdvancedCard 
+            title="Suggestion Kelly (prudente)"
+            icon="🧠"
+            value={kellyPct.toFixed(1)}
+            unit="%"
+            valueColor="text-primary"
+            description="Méthode mathématique pour optimiser la croissance de ta bankroll sur le long terme"
+          />
         </div>
       </div>
 
-      <div className="mt-8 text-sm text-gray-400">⚠️ Les résultats sont indicatifs. Pariez de manière responsable.</div>
+      {/* Info Cards */}
+      <div className="grid md:grid-cols-3 gap-6 mb-10">
+        <TipCard 
+          icon="🛡️"
+          title="Stratégie prudente"
+          desc="Mise entre 0.5% et 2% de ta bankroll par pari. Idéal pour débuter et protéger ton capital."
+          color="emerald"
+        />
+        <TipCard 
+          icon="⚖️"
+          title="Stratégie équilibrée"
+          desc="Mise entre 2% et 3% de ta bankroll. Un bon compromis entre sécurité et croissance."
+          color="yellow"
+        />
+        <TipCard 
+          icon="🚀"
+          title="Stratégie agressive"
+          desc="Mise entre 3% et 5% de ta bankroll. Plus de risque mais potentiel de gains plus rapide."
+          color="red"
+        />
+      </div>
+
+      {/* Best Practices */}
+      <div className="bg-gradient-to-br from-primary/10 via-black to-primary/10 border-2 border-primary/30 rounded-3xl p-10">
+        <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+          <span>💡</span>
+          Bonnes pratiques
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <BestPractice 
+            icon="✅"
+            title="Ne jamais miser plus de 5%"
+            desc="Même sur un 'coup sûr', limite-toi à 5% max de ta bankroll pour éviter la ruine."
+          />
+          <BestPractice 
+            icon="📊"
+            title="Tenir un journal de paris"
+            desc="Note chaque pari, les raisons, la cote, le résultat. Analyse tes performances régulièrement."
+          />
+          <BestPractice 
+            icon="🎯"
+            title="Se concentrer sur la value"
+            desc="Cherche les paris où ta probabilité estimée est supérieure à celle impliquée par la cote."
+          />
+          <BestPractice 
+            icon="⏰"
+            title="Réévaluer régulièrement"
+            desc="Ajuste ta bankroll et tes pourcentages selon ton évolution (gains ou pertes)."
+          />
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="mt-10 p-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl">
+        <p className="text-amber-300 text-center leading-relaxed">
+          <span className="font-bold">⚠️ Important :</span> Les résultats sont indicatifs et basés sur tes paramètres.
+          Aucun système ne garantit des gains. Parie de manière responsable et ne mise jamais plus que ce que tu peux te permettre de perdre.
+        </p>
+      </div>
     </section>
   );
 }
 
-function Field({ label, children }) {
+/* ---------- Composants ---------- */
+
+function InputField({ label, value, onChange, type, min, max, step, icon, helper }) {
   return (
-    <div>
-      <label className="block text-sm mb-1 text-gray-300">{label}</label>
-      {children}
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-white font-semibold">
+        <span>{icon}</span>
+        {label}
+      </label>
+      <input 
+        type={type}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={onChange}
+        className="w-full bg-black/50 border-2 border-primary/30 rounded-xl p-3 text-white font-semibold focus:border-primary focus:outline-none transition-all"
+      />
+      {helper && (
+        <div className="text-gray-400 text-sm">
+          {helper}
+        </div>
+      )}
     </div>
   );
 }
 
-function Stat({ title, value, positive, negative }) {
+function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
-    <div className="bg-[#0b0b0b] rounded-xl p-4 border border-[#222]">
-      <div className="text-gray-400 text-sm">{title}</div>
-      <div className={`text-2xl font-bold ${positive ? "text-emerald-400" : negative ? "text-red-400" : "text-white"}`}>{value}</div>
+    <div className={`bg-gradient-to-br ${gradient} border-2 border-primary/30 rounded-2xl p-6 text-center hover:scale-105 transition-all duration-300`}>
+      <div className="text-4xl mb-3">{icon}</div>
+      <div className="text-gray-300 text-sm mb-2">{title}</div>
+      <div className={`text-3xl font-extrabold ${positive ? "text-emerald-400" : negative ? "text-red-400" : "text-white"}`}>
+        {value}
+      </div>
     </div>
   );
 }
 
-function InfoCard({ title, body }) {
+function AdvancedCard({ title, icon, value, unit, valueColor, description }) {
   return (
-    <div className="bg-[#0b0b0b] rounded-xl p-4 border border-[#222]">
-      <div className="text-gray-300 font-semibold mb-1">{title}</div>
-      <div>{body}</div>
+    <div className="bg-black/50 border-2 border-primary/30 rounded-2xl p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="text-3xl">{icon}</div>
+        <h3 className="text-white font-bold text-lg">{title}</h3>
+      </div>
+      <div className="mb-3">
+        <span className={`text-4xl font-extrabold ${valueColor}`}>{value}</span>
+        <span className="text-gray-400 ml-2">{unit}</span>
+      </div>
+      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function TipCard({ icon, title, desc, color }) {
+  const colors = {
+    emerald: "from-emerald-500/20 to-green-500/20 border-emerald-500/30",
+    yellow: "from-yellow-500/20 to-amber-500/20 border-yellow-500/30",
+    red: "from-red-500/20 to-orange-500/20 border-red-500/30",
+  };
+
+  return (
+    <div className={`bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-105 transition-all duration-300`}>
+      <div className="text-4xl mb-3">{icon}</div>
+      <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
+      <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+function BestPractice({ icon, title, desc }) {
+  return (
+    <div className="flex items-start gap-4 p-4 bg-black/30 rounded-2xl border border-primary/20">
+      <div className="text-3xl flex-shrink-0">{icon}</div>
+      <div>
+        <h4 className="text-white font-bold mb-2">{title}</h4>
+        <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+      </div>
     </div>
   );
 }
