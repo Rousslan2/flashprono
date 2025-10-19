@@ -3,7 +3,7 @@
 // =========================================
 
 // ✅ URL backend en production (ton vrai backend Railway)
-const PROD_API = "https://flashprono-backend-production.up.railway.app";
+const PROD_API = "https://flashprono-production.up.railway.app";
 
 // ✅ Détecte si on tourne sur ton domaine FlashProno ou Railway (production)
 const isProd =
