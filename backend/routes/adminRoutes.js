@@ -257,6 +257,58 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// 🔥 NOUVEAU : Modifier les jours restants d'abonnement
+router.patch("/users/:id/modify-subscription-days", async (req, res, next) => {
+  try {
+    const { days } = req.body; // nombre de jours à ajouter ou retirer
+    if (typeof days !== 'number') {
+      return res.status(400).json({ message: "Nombre de jours invalide." });
+    }
+
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
+
+    const now = new Date();
+    let expiresAt = user.subscription?.expiresAt ? new Date(user.subscription.expiresAt) : new Date();
+    
+    // Si l'abo est expiré, on repart d'aujourd'hui
+    if (expiresAt < now) expiresAt = new Date(now);
+    
+    // Ajouter ou retirer les jours
+    expiresAt.setDate(expiresAt.getDate() + days);
+
+    user.subscription = user.subscription || {};
+    user.subscription.expiresAt = expiresAt;
+    
+    // Si l'abo était inactif et qu'on ajoute des jours, on le réactive
+    if (days > 0 && user.subscription.status === "inactive") {
+      user.subscription.status = "active";
+      user.subscription.plan = user.subscription.plan || "monthly";
+    }
+
+    await user.save();
+    logAdminAction(`MODIFY_DAYS_${days > 0 ? '+' : ''}${days}`, req.user, user);
+    res.json({ ok: true, user });
+  } catch (e) { next(e); }
+});
+
+// 🗑️ NOUVEAU : Supprimer complètement un compte utilisateur
+router.delete("/users/:id", async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
+    
+    // Empêcher la suppression de son propre compte
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "Vous ne pouvez pas supprimer votre propre compte." });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    logAdminAction("DELETE_USER", req.user, user);
+    res.json({ ok: true, message: "Utilisateur supprimé avec succès." });
+  } catch (e) { next(e); }
+});
+
 router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ message: "Accès refusé" });

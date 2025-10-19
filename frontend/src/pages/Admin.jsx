@@ -212,11 +212,21 @@ export default function Admin() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
+      
+      // 🔥 NOUVEAU : Si c'est l'utilisateur connecté, mettre à jour localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser._id === id) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        // Recharger la page pour appliquer les changements
+        setTimeout(() => window.location.reload(), 500);
+      }
+      
       alert("Action effectuée ✅");
     } catch (e) {
       alert(e?.response?.data?.message || "Erreur action admin");
     }
   };
+  
   const banUser = (id) => act(id, "ban");
   const unbanUser = (id) => act(id, "unban");
   const makeAdmin = (id) => act(id, "make-admin");
@@ -224,6 +234,49 @@ export default function Admin() {
   const grantMonthly = (id) => act(id, "grant-subscription", { plan: "monthly" });
   const grantYearly = (id) => act(id, "grant-subscription", { plan: "yearly" });
   const revokeSub = (id) => act(id, "revoke-subscription");
+  
+  // 🔥 NOUVEAU : Modifier les jours d'abonnement
+  const modifyDays = async (id) => {
+    const days = prompt("📆 Nombre de jours à ajouter ou retirer (ex: 7 ou -7) :");
+    if (!days || isNaN(days)) return;
+    
+    try {
+      const { data } = await axios.patch(
+        `${API_BASE}/api/admin/users/${id}/modify-subscription-days`,
+        { days: parseInt(days) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers((prev) => prev.map((u) => (u._id === id ? data.user : u)));
+      
+      // Si c'est l'utilisateur connecté, mettre à jour localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser._id === id) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setTimeout(() => window.location.reload(), 500);
+      }
+      
+      alert(`${days > 0 ? '+' : ''}${days} jours appliqués ✅`);
+    } catch (e) {
+      alert(e?.response?.data?.message || "Erreur modification");
+    }
+  };
+  
+  // 🗑️ NOUVEAU : Supprimer un utilisateur
+  const deleteUser = async (id) => {
+    const userName = users.find(u => u._id === id)?.name || 'cet utilisateur';
+    if (!confirm(`⚠️ Êtes-vous sûr de vouloir SUPPRIMER COMPLÈTEMENT le compte de ${userName} ? Cette action est IRRÉVERSIBLE !`)) return;
+    
+    try {
+      await axios.delete(
+        `${API_BASE}/api/admin/users/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+      alert("🗑️ Utilisateur supprimé avec succès");
+    } catch (e) {
+      alert(e?.response?.data?.message || "Erreur suppression");
+    }
+  };
 
   // ===== RENDER =====
   return (
@@ -585,9 +638,19 @@ export default function Admin() {
                                 variant="primary"
                               />
                               <Btn
+                                onClick={() => modifyDays(u._id)}
+                                label="📆 Modifier jours"
+                                variant="blue"
+                              />
+                              <Btn
                                 onClick={() => revokeSub(u._id)}
                                 label="Révoquer abo"
                                 variant="gray"
+                              />
+                              <Btn
+                                onClick={() => deleteUser(u._id)}
+                                label="🗑️ Supprimer"
+                                variant="red"
                               />
                             </div>
                           </td>
@@ -738,6 +801,7 @@ function Btn({ onClick, label, variant = "primary" }) {
     green: "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30",
     yellow: "bg-yellow-400/20 text-yellow-400 border-yellow-400/30 hover:bg-yellow-400/30",
     gray: "bg-gray-600/20 text-gray-400 border-gray-600/30 hover:bg-gray-600/30",
+    blue: "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30",
   }[variant];
   return (
     <button onClick={onClick} className={`px-3 py-1.5 rounded-lg border transition font-semibold text-xs ${styles}`}>
