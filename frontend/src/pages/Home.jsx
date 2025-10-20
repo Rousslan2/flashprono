@@ -32,7 +32,7 @@ export default function Home() {
         </div>
         
         {/* Titre principal MEGA */}
-        <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight animate-slide-in-up delay-100">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-8 leading-tight animate-slide-in-up delay-100">
           <span className="text-white drop-shadow-2xl">Bienvenue sur</span>
           <br />
           <span className="relative inline-block">
@@ -40,15 +40,15 @@ export default function Home() {
               FlashProno
             </span>
             {/* Étoiles décoratives */}
-            <span className="absolute -top-6 -right-8 text-4xl animate-spin-slow">⭐</span>
-            <span className="absolute -bottom-4 -left-8 text-3xl animate-bounce-slow">⚡</span>
+            <span className="absolute -top-3 md:-top-6 -right-4 md:-right-8 text-2xl md:text-4xl animate-spin-slow">⭐</span>
+            <span className="absolute -bottom-2 md:-bottom-4 -left-4 md:-left-8 text-2xl md:text-3xl animate-bounce-slow">⚡</span>
             {/* Glow effect */}
             <span className="absolute inset-0 blur-3xl bg-primary/30 -z-10 animate-pulse"></span>
           </span>
         </h1>
         
         {/* Description */}
-        <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed animate-slide-in-up delay-200">
+        <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed animate-slide-in-up delay-200 px-4">
           Des <span className="text-primary font-bold relative inline-block group">
             <span className="relative z-10">pronostics vérifiés</span>
             <span className="absolute inset-0 bg-primary/20 blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></span>
@@ -60,20 +60,20 @@ export default function Home() {
           <span className="text-blue-400 font-bold">scores live</span> et des{" "}
           <span className="text-green-400 font-bold">stratégies bankroll</span> expliquées pas à pas.
           <br />
-          <span className="text-white font-black mt-4 block text-2xl animate-pulse">
+          <span className="text-white font-black mt-4 block text-xl sm:text-2xl animate-pulse">
             Joue plus clair, pas au hasard. 🎯
           </span>
         </p>
 
         {/* CTA principal avec effet */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-in-up delay-300">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-in-up delay-300 px-4">
           {isAuth ? (
             <Link
               to="/dashboard"
-              className="group relative inline-block"
+              className="group relative inline-block w-full sm:w-auto"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-yellow-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-              <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
+              <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-8 sm:px-12 py-4 sm:py-5 rounded-2xl font-black text-lg sm:text-xl hover:scale-110 transition-all duration-300 shadow-2xl text-center">
                 ✨ Accéder à mon espace
               </div>
             </Link>
@@ -81,16 +81,16 @@ export default function Home() {
             <>
               <Link
                 to="/register"
-                className="group relative inline-block"
+                className="group relative inline-block w-full sm:w-auto"
               >
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-yellow-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-                <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
+                <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-8 sm:px-12 py-4 sm:py-5 rounded-2xl font-black text-lg sm:text-xl hover:scale-110 transition-all duration-300 shadow-2xl text-center">
                   🚀 Commencer gratuitement
                 </div>
               </Link>
               <Link
                 to="/login"
-                className="relative px-12 py-5 rounded-2xl font-bold text-xl border-2 border-primary text-primary hover:bg-primary hover:text-black transition-all duration-300 overflow-hidden group"
+                className="relative px-8 sm:px-12 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl border-2 border-primary text-primary hover:bg-primary hover:text-black transition-all duration-300 overflow-hidden group w-full sm:w-auto text-center"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
                 <span className="relative z-10">Se connecter</span>
@@ -105,20 +105,20 @@ export default function Home() {
       </div>
 
       {/* Statistiques impressionnantes */}
-      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10">
+      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10 px-4">
         <div className="mb-12 animate-slide-in-up">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4">
             Des résultats qui parlent d'eux-mêmes
           </h2>
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent to-primary rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-transparent to-primary rounded-full animate-pulse"></div>
             <div className="h-2 w-2 bg-primary rounded-full animate-ping"></div>
-            <div className="h-1 w-16 bg-gradient-to-l from-transparent to-primary rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-l from-transparent to-primary rounded-full animate-pulse"></div>
           </div>
-          <p className="text-gray-400 text-xl">La preuve par les chiffres 📊</p>
+          <p className="text-gray-400 text-lg sm:text-xl">La preuve par les chiffres 📊</p>
         </div>
         
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           <StatCard
             number="78%"
             label="Taux de réussite"
@@ -362,7 +362,7 @@ function OfferCard({ icon, title, features, highlight, delay }) {
 function StatCard({ number, label, sublabel, icon, delay }) {
   return (
     <div 
-      className="relative bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary rounded-3xl p-8 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-primary/50 group overflow-hidden animate-slide-in-up"
+      className="relative bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-center hover:scale-105 sm:hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-primary/50 group overflow-hidden animate-slide-in-up"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Halo lumineux */}
@@ -372,12 +372,12 @@ function StatCard({ number, label, sublabel, icon, delay }) {
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
       
       <div className="relative z-10">
-        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
-        <div className="text-5xl md:text-6xl font-black text-transparent bg-gradient-to-r from-primary to-yellow-400 bg-clip-text mb-3 drop-shadow-2xl animate-pulse">
+        <div className="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-4 group-hover:scale-110 sm:group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-gradient-to-r from-primary to-yellow-400 bg-clip-text mb-2 sm:mb-3 drop-shadow-2xl animate-pulse">
           {number}
         </div>
-        <div className="text-white font-black text-xl mb-2 group-hover:text-primary transition-colors">{label}</div>
-        <div className="text-gray-400">{sublabel}</div>
+        <div className="text-white font-black text-sm sm:text-base md:text-xl mb-1 sm:mb-2 group-hover:text-primary transition-colors">{label}</div>
+        <div className="text-gray-400 text-xs sm:text-sm">{sublabel}</div>
       </div>
     </div>
   );
