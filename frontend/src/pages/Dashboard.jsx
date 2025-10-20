@@ -77,7 +77,12 @@ export default function Dashboard() {
       : null;
 
   return (
-    <section className="py-16 px-4 max-w-7xl mx-auto">
+    <section className="py-16 px-4 max-w-7xl mx-auto relative overflow-hidden">
+      {/* Particules subtiles */}
+      <div className="absolute inset-0 pointer-events-none opacity-10 overflow-hidden">
+        <div className="absolute top-20 right-20 w-64 h-64 bg-primary rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
       {/* Hero Header avec gradient */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-black to-primary/10 border-2 border-primary/30 p-10 mb-12">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>

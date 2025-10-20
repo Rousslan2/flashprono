@@ -19,14 +19,12 @@ export default function MesStats() {
       try {
         const token = localStorage.getItem("token");
         
-        // Charger les stats
         const { data: statsData } = await axios.get(
           `${API_BASE}/api/stats/my-stats`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setStats(statsData);
 
-        // Charger les paris suivis
         const { data: betsData } = await axios.get(
           `${API_BASE}/api/stats/my-bets`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -41,7 +39,6 @@ export default function MesStats() {
 
     loadData();
 
-    // 🔥 Actualisation auto quand un prono est modifié
     socket.on("prono:updated", loadData);
     socket.on("prono:created", loadData);
 
@@ -61,7 +58,6 @@ export default function MesStats() {
       });
       setBets((prev) => prev.filter((b) => b.pronoId !== pronoId));
       
-      // Recharger les stats
       const { data: statsData } = await axios.get(
         `${API_BASE}/api/stats/my-stats`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -86,14 +82,23 @@ export default function MesStats() {
   }
 
   return (
-    <section className="py-16 px-4 max-w-6xl mx-auto">
+    <section className="py-16 px-4 max-w-6xl mx-auto relative overflow-hidden">
+      {/* Particules */}
+      <div className="absolute inset-0 pointer-events-none opacity-10 overflow-hidden">
+        <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-blue-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
       {/* Header */}
-      <div className="text-center mb-10">
-        <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-          <span className="text-primary font-semibold text-sm">📊 Statistiques</span>
+      <div className="text-center mb-10 relative z-10 animate-slide-in-up">
+        <div className="inline-block px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border-2 border-emerald-500 rounded-full mb-6 animate-pulse-slow relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <span className="relative z-10 text-emerald-400 font-bold text-sm flex items-center gap-2">
+            <span className="animate-bounce-slow">📊</span> STATISTIQUES
+          </span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-6 leading-tight">
+          <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent animate-gradient-x drop-shadow-2xl">
             Mes Performances
           </span>
         </h1>
@@ -103,12 +108,13 @@ export default function MesStats() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid md:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12 relative z-10">
         <StatCard
           icon="⚽"
           label="Pronos suivis"
           value={stats.pronosSuivis}
           gradient="from-blue-500/20 to-cyan-500/20"
+          delay="0"
         />
         <StatCard
           icon="🎯"
@@ -128,6 +134,7 @@ export default function MesStats() {
               ? "text-amber-400"
               : "text-red-400"
           }
+          delay="100"
         />
         <StatCard
           icon="📈"
@@ -139,6 +146,7 @@ export default function MesStats() {
               : "from-red-500/20 to-rose-500/20"
           }
           valueColor={stats.roi > 0 ? "text-emerald-400" : "text-red-400"}
+          delay="200"
         />
         <StatCard
           icon="💰"
@@ -150,12 +158,15 @@ export default function MesStats() {
               : "from-red-500/20 to-rose-500/20"
           }
           valueColor={stats.gains > 0 ? "text-emerald-400" : "text-red-400"}
+          delay="300"
         />
       </div>
 
       {/* Liste des paris */}
-      <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl p-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="relative bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl p-6 sm:p-8 overflow-hidden group animate-slide-in-up delay-200">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 blur-2xl opacity-0 group-hover:opacity-50 transition-opacity"></div>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 relative z-10">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <span>🎯</span>
             Mes pronos suivis
@@ -163,58 +174,64 @@ export default function MesStats() {
           </h2>
           <Link
             to="/pronostics"
-            className="px-4 py-2 bg-primary/20 border border-primary rounded-xl text-primary hover:bg-primary hover:text-black transition-all font-semibold text-sm"
+            className="px-4 py-2 bg-primary/20 border border-primary rounded-xl text-primary hover:bg-primary hover:text-black transition-all font-semibold text-sm hover:scale-105"
           >
             + Suivre des pronos
           </Link>
         </div>
 
         {bets.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">📭</div>
-            <h3 className="text-xl font-bold text-white mb-3">
+          <div className="text-center py-20 relative z-10">
+            <div className="text-8xl mb-6 animate-bounce">📭</div>
+            <h3 className="text-2xl font-bold text-white mb-3">
               Aucun prono suivi pour le moment
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 mb-6 text-lg">
               Va sur la page Pronostics et clique sur "Suivre" pour commencer à tracker tes paris !
             </p>
             <Link
               to="/pronostics"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-primary to-yellow-400 text-black rounded-xl font-bold hover:scale-105 transition-all"
+              className="group relative inline-block"
             >
-              Voir les pronostics
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-yellow-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 animate-pulse"></div>
+              <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-8 py-4 rounded-2xl font-bold hover:scale-110 transition-all duration-300 shadow-2xl">
+                Voir les pronostics
+              </div>
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {bets.map((bet) => (
-              <BetCard key={bet._id} bet={bet} onRemove={removeBet} />
+          <div className="space-y-4 relative z-10">
+            {bets.map((bet, index) => (
+              <div key={bet._id} className="animate-slide-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+                <BetCard bet={bet} onRemove={removeBet} />
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Conseils */}
-      <div className="mt-10 bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-          <span>💡</span>
+      <div className="mt-10 relative bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 overflow-hidden group animate-slide-in-up delay-300">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3 relative z-10">
+          <span className="text-3xl">💡</span>
           Conseils pour améliorer tes stats
         </h3>
-        <ul className="space-y-3 text-gray-300">
-          <li className="flex items-start gap-3">
-            <span className="text-primary text-lg flex-shrink-0 mt-0.5">✓</span>
+        <ul className="space-y-3 text-gray-300 relative z-10">
+          <li className="flex items-start gap-3 group/item hover:translate-x-2 transition-transform">
+            <span className="text-primary text-lg flex-shrink-0 mt-0.5 group-hover/item:scale-125 transition-transform">✓</span>
             <span>Suis uniquement les pronos qui correspondent à ta stratégie</span>
           </li>
-          <li className="flex items-start gap-3">
-            <span className="text-primary text-lg flex-shrink-0 mt-0.5">✓</span>
+          <li className="flex items-start gap-3 group/item hover:translate-x-2 transition-transform">
+            <span className="text-primary text-lg flex-shrink-0 mt-0.5 group-hover/item:scale-125 transition-transform">✓</span>
             <span>Adapte tes mises selon ton bankroll (max 5% par pari)</span>
           </li>
-          <li className="flex items-start gap-3">
-            <span className="text-primary text-lg flex-shrink-0 mt-0.5">✓</span>
+          <li className="flex items-start gap-3 group/item hover:translate-x-2 transition-transform">
+            <span className="text-primary text-lg flex-shrink-0 mt-0.5 group-hover/item:scale-125 transition-transform">✓</span>
             <span>Vise un taux de réussite minimum de 55% pour être rentable</span>
           </li>
-          <li className="flex items-start gap-3">
-            <span className="text-primary text-lg flex-shrink-0 mt-0.5">✓</span>
+          <li className="flex items-start gap-3 group/item hover:translate-x-2 transition-transform">
+            <span className="text-primary text-lg flex-shrink-0 mt-0.5 group-hover/item:scale-125 transition-transform">✓</span>
             <span>Analyse tes résultats régulièrement pour ajuster ta stratégie</span>
           </li>
         </ul>
@@ -223,16 +240,18 @@ export default function MesStats() {
   );
 }
 
-/* ========== COMPOSANTS ========== */
-
-function StatCard({ icon, label, value, gradient, valueColor = "text-white" }) {
+function StatCard({ icon, label, value, gradient, valueColor = "text-white", delay }) {
   return (
     <div
-      className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-primary/30 rounded-2xl p-6 hover:scale-105 transition-all duration-300 shadow-xl`}
+      className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-primary/30 rounded-2xl p-4 sm:p-6 hover:scale-105 sm:hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group animate-slide-in-up`}
+      style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="text-4xl mb-3">{icon}</div>
-      <div className={`text-4xl font-extrabold ${valueColor} mb-2`}>{value}</div>
-      <div className="text-sm text-gray-400 uppercase tracking-wider">{label}</div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="relative z-10">
+        <div className="text-3xl sm:text-4xl mb-3 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <div className={`text-3xl sm:text-4xl font-black ${valueColor} mb-2`}>{value}</div>
+        <div className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">{label}</div>
+      </div>
     </div>
   );
 }
@@ -252,11 +271,13 @@ function BetCard({ bet, onRemove }) {
   const gain = isWin ? (bet.mise * bet.cote - bet.mise).toFixed(2) : isLose ? -bet.mise : 0;
 
   return (
-    <div className={`border-2 ${bgColor} rounded-xl p-5 hover:scale-[1.01] transition-all`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-lg font-bold text-white">
+    <div className={`relative border-2 ${bgColor} rounded-xl p-4 sm:p-5 hover:scale-[1.02] transition-all duration-300 overflow-hidden group`}>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+      
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4 relative z-10">
+        <div className="flex-1 w-full">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
+            <h3 className="text-base sm:text-lg font-bold text-white">
               {bet.equipe1} <span className="text-primary">vs</span> {bet.equipe2}
             </h3>
             {isPending && (
@@ -266,7 +287,7 @@ function BetCard({ bet, onRemove }) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Prono:</span>
               <span className="text-white font-semibold">{bet.type}</span>
@@ -311,7 +332,7 @@ function BetCard({ bet, onRemove }) {
 
         <button
           onClick={() => onRemove(bet.pronoId)}
-          className="px-3 py-2 bg-red-500/20 border border-red-500/40 text-red-300 rounded-lg hover:bg-red-500/30 transition-all text-sm font-semibold"
+          className="w-full sm:w-auto px-3 py-2 bg-red-500/20 border border-red-500/40 text-red-300 rounded-lg hover:bg-red-500/30 transition-all text-sm font-semibold hover:scale-105"
         >
           🗑️ Retirer
         </button>
