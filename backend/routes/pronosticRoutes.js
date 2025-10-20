@@ -35,7 +35,7 @@ router.post("/", protect, async (req, res) => {
 router.put("/:id", protect, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const allowed = [
-    "sport","equipe1","equipe2","cote","type","resultat","date",
+    "sport","equipe1","equipe2","cote","type","resultat","scoreLive","date",
     "competition","bookmaker","confiance","image","analyse","statut","categorie"
   ];
   const update = {};

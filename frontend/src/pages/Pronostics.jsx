@@ -445,14 +445,31 @@ function PronoCard({ p, now }) {
       {/* Prono Info */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl">
-          <span className="text-xs text-gray-400 block mb-1">Pronostic</span>
+          <span className="text-xs text-gray-400 block mb-1">Type de pari</span>
           <span className="text-white font-bold">{p.type}</span>
         </div>
         <div className="px-4 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl">
           <span className="text-xs text-gray-400 block mb-1">Cote</span>
           <span className="text-yellow-400 font-bold text-lg">{p.cote}</span>
         </div>
-        <ResultPill value={p.resultat} />
+      </div>
+      
+      {/* Score Live */}
+      {p.scoreLive && (
+        <div className="mb-4">
+          <div className="px-4 py-3 bg-blue-500/10 border-2 border-blue-500/30 rounded-xl inline-flex items-center gap-2">
+            <span className="text-xs text-gray-400 font-semibold">📊 Score:</span>
+            <span className="text-blue-300 font-bold text-xl">{p.scoreLive}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Résultat du Pari */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400 font-semibold">Résultat du pari:</span>
+          <ResultPill value={p.resultat} />
+        </div>
       </div>
       
       {/* Bouton Suivre */}

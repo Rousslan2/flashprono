@@ -10,6 +10,7 @@ const pronosticSchema = new mongoose.Schema({
   cote: { type: Number, required: true },
   type: { type: String, required: true },
   resultat: { type: String, default: "en attente" },
+  scoreLive: { type: String, default: "" },
   date: { type: Date, default: Date.now },
   competition: { type: String },
   bookmaker: { type: String },

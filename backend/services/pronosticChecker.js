@@ -117,9 +117,10 @@ export async function checkAndUpdatePronosticResults() {
           );
 
           if (result && prono.statut !== result) {
-            // Mettre à jour le pronostic - SCORE FINAL UNIQUEMENT (sans minutes)
+            // Mettre à jour le pronostic
             prono.statut = result;
-            prono.resultat = `${homeScore}-${awayScore}`; // ❌ PAS de minutes quand terminé
+            prono.resultat = result; // ✅ "gagnant" ou "perdu"
+            prono.scoreLive = `${homeScore}-${awayScore}`; // ✅ Score final
             await prono.save();
 
             updatedCount++;
@@ -132,7 +133,8 @@ export async function checkAndUpdatePronosticResults() {
             io.emit("pronostic:updated", {
               pronosticId: prono._id,
               statut: result,
-              resultat: `${homeScore}-${awayScore}`, // Score sans minutes
+              resultat: result,
+              scoreLive: `${homeScore}-${awayScore}`,
               equipe1: prono.equipe1,
               equipe2: prono.equipe2,
               type: prono.type,
@@ -144,11 +146,12 @@ export async function checkAndUpdatePronosticResults() {
         // Match en cours (1H, HT, 2H, ET, P, etc.)
         else if (["1H", "HT", "2H", "ET", "BT", "P"].includes(status)) {
           // Mettre à jour le statut en "en cours" avec score live + minutes
-          const liveResult = `${homeScore}-${awayScore} (${elapsed}')`;
+          const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
           
-          if (prono.statut !== "en cours" || prono.resultat !== liveResult) {
+          if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
             prono.statut = "en cours";
-            prono.resultat = liveResult; // ✅ AVEC minutes pendant le match
+            prono.resultat = "en cours"; // ✅ Statut du pari
+            prono.scoreLive = liveScore; // ✅ Score live avec minutes
             await prono.save();
 
             console.log(
@@ -159,7 +162,8 @@ export async function checkAndUpdatePronosticResults() {
             io.emit("pronostic:live", {
               pronosticId: prono._id,
               statut: "en cours",
-              resultat: `${homeScore}-${awayScore}`,
+              resultat: "en cours",
+              scoreLive: liveScore,
               elapsed: elapsed,
               matchStatus: status,
               equipe1: prono.equipe1,
