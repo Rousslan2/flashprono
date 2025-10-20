@@ -20,6 +20,7 @@ import pronosticRoutes from "./routes/pronosticRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import presenceRoutes from "./routes/presenceRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js";
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -124,6 +125,7 @@ app.use("/api/pronostics", pronosticRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/presence", presenceRoutes);
+app.use("/api/stats", statsRoutes);
 
 // =============================
 // 🧾 LOG ADMIN TEST

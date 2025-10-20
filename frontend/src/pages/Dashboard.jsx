@@ -1,15 +1,43 @@
 // frontend/src/pages/Dashboard.jsx
 import { useRealtimeUser, logout } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import socket from "../services/socket";
+import axios from "axios";
+import { API_BASE } from "../config";
 
 export default function Dashboard() {
-  const user = useRealtimeUser(); // 🔥 Utilise le hook temps réel
+  const user = useRealtimeUser();
   const sub = user?.subscription || {};
+  
+  // 🔥 Stats en temps réel
+  const [stats, setStats] = useState({
+    pronosSuivis: 0,
+    tauxReussite: 0,
+    roi: 0,
+    gains: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // 🔥 Écouter les mises à jour de l'utilisateur
   useEffect(() => {
+    // Charger les stats
+    const loadStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const { data } = await axios.get(`${API_BASE}/api/stats/my-stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(data);
+      } catch (err) {
+        console.error('❌ Erreur chargement stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    
+    loadStats();
+    
     socket.on('user:updated', (updatedUser) => {
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       if (currentUser._id === updatedUser._id) {
@@ -18,9 +46,15 @@ export default function Dashboard() {
         window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: updatedUser }));
       }
     });
+    
+    // Recharger les stats quand un prono change
+    socket.on('prono:updated', loadStats);
+    socket.on('prono:created', loadStats);
 
     return () => {
       socket.off('user:updated');
+      socket.off('prono:updated');
+      socket.off('prono:created');
     };
   }, []);
 
@@ -212,20 +246,44 @@ export default function Dashboard() {
         />
       </section>
 
-      {/* Stats rapides (optionnel - à activer plus tard avec vraies données) */}
+      {/* Stats rapides avec vraies données */}
       <section className="mb-12">
         <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl p-8">
           <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
             <span>📊</span>
             Tes statistiques
-            <span className="ml-auto text-sm text-gray-500 font-normal">Bientôt disponible</span>
+            {loadingStats && <span className="ml-auto text-sm text-gray-500 font-normal animate-pulse">⏳ Chargement...</span>}
           </h3>
-          <div className="grid md:grid-cols-4 gap-4 opacity-50">
-            <MiniStat label="Pronos suivis" value="—" />
-            <MiniStat label="Taux réussite" value="—" />
-            <MiniStat label="ROI" value="—" />
-            <MiniStat label="Gains" value="—" />
+          <div className="grid md:grid-cols-4 gap-4">
+            <MiniStat 
+              label="Pronos suivis" 
+              value={loadingStats ? "—" : stats.pronosSuivis} 
+              icon="⚽" 
+            />
+            <MiniStat 
+              label="Taux réussite" 
+              value={loadingStats ? "—" : `${stats.tauxReussite}%`}
+              icon="🎯"
+              color={stats.tauxReussite >= 60 ? "text-emerald-400" : stats.tauxReussite >= 50 ? "text-amber-400" : "text-red-400"}
+            />
+            <MiniStat 
+              label="ROI" 
+              value={loadingStats ? "—" : `${stats.roi > 0 ? '+' : ''}${stats.roi}%`}
+              icon="📈"
+              color={stats.roi > 0 ? "text-emerald-400" : stats.roi < 0 ? "text-red-400" : "text-gray-400"}
+            />
+            <MiniStat 
+              label="Gains" 
+              value={loadingStats ? "—" : `${stats.gains > 0 ? '+' : ''}${stats.gains}€`}
+              icon="💰"
+              color={stats.gains > 0 ? "text-emerald-400" : stats.gains < 0 ? "text-red-400" : "text-gray-400"}
+            />
           </div>
+          {!loadingStats && stats.pronosSuivis === 0 && (
+            <div className="mt-6 text-center text-gray-400 text-sm">
+              💡 Les stats s'afficheront une fois que des pronos seront terminés
+            </div>
+          )}
         </div>
       </section>
 
@@ -331,11 +389,12 @@ function InfoBox({ icon, title, items, footer, gradient = "from-primary/10 to-pr
   );
 }
 
-function MiniStat({ label, value }) {
+function MiniStat({ label, value, icon = "📊", color = "text-primary" }) {
   return (
-    <div className="bg-black/50 border border-gray-700 rounded-xl p-4 text-center">
-      <div className="text-2xl font-bold text-primary mb-1">{value}</div>
-      <div className="text-xs text-gray-400">{label}</div>
+    <div className="bg-black/50 border-2 border-primary/30 rounded-xl p-5 text-center hover:scale-105 transition-all">
+      <div className="text-3xl mb-2">{icon}</div>
+      <div className={`text-3xl font-bold ${color} mb-1`}>{value}</div>
+      <div className="text-xs text-gray-400 uppercase tracking-wider">{label}</div>
     </div>
   );
 }

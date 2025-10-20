@@ -350,8 +350,65 @@ function CardGrid({ items, now }) {
 
 function PronoCard({ p, now }) {
   const [open, setOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(true);
+  const [showMiseModal, setShowMiseModal] = useState(false);
   const color = borderColorFor(p.resultat);
   const status = computeMatchStatus(p.date, now);
+  
+  // Vérifier si le prono est suivi
+  useEffect(() => {
+    const checkFollowing = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const { data } = await axios.get(
+          `${API_BASE}/api/stats/is-following/${p._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFollowing(data.isFollowing);
+      } catch (err) {
+        console.error('Erreur vérif suivi:', err);
+      } finally {
+        setLoadingFollow(false);
+      }
+    };
+    
+    checkFollowing();
+  }, [p._id]);
+  
+  const handleFollow = async (mise = 10) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API_BASE}/api/stats/follow/${p._id}`,
+        { mise },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsFollowing(true);
+      setShowMiseModal(false);
+      alert(`✅ Prono suivi avec ${mise}€ !`);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
+  
+  const handleUnfollow = async () => {
+    if (!confirm('Ne plus suivre ce prono ?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API_BASE}/api/stats/unfollow/${p._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsFollowing(false);
+      alert('❌ Prono retiré de tes suivis');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
 
   return (
     <article
@@ -395,6 +452,56 @@ function PronoCard({ p, now }) {
         </div>
         <ResultPill value={p.resultat} />
       </div>
+      
+      {/* Bouton Suivre */}
+      {!loadingFollow && (
+        <div className="mb-4">
+          {isFollowing ? (
+            <button
+              onClick={handleUnfollow}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border-2 border-red-500/40 text-red-300 rounded-xl hover:bg-red-500/30 transition-all font-semibold text-sm"
+            >
+              <span>✔️</span>
+              Suivi - Retirer
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowMiseModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary/20 border-2 border-primary/40 text-primary rounded-xl hover:bg-primary/30 transition-all font-semibold text-sm hover:scale-105"
+            >
+              <span>🎯</span>
+              Suivre ce prono
+            </button>
+          )}
+        </div>
+      )}
+      
+      {/* Modal Mise */}
+      {showMiseModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-primary rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">💰 Quelle mise ?</h3>
+            <p className="text-gray-400 text-sm mb-4">Entre ta mise pour suivre ce prono dans tes stats</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[5, 10, 20, 50, 100, 200].map(amount => (
+                <button
+                  key={amount}
+                  onClick={() => handleFollow(amount)}
+                  className="px-4 py-3 bg-primary/20 border border-primary/40 text-primary rounded-xl hover:bg-primary hover:text-black transition-all font-bold"
+                >
+                  {amount}€
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowMiseModal(false)}
+              className="w-full px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Analyse */}
       {(p.details || p.audioUrl) && (
