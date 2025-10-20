@@ -67,6 +67,7 @@ export default function Navbar() {
             {/* 👉 Nouveaux liens */}
             <Link to="/bankroll" className="hover:text-white transition">Bankroll</Link>
             <Link to="/strategies" className="hover:text-white transition">Stratégies</Link>
+            <Link to="/mes-stats" className="hover:text-white transition">📊 Stats</Link>
 
             {user?.isAdmin && (
               <Link to="/admin" className="hover:text-white transition">Admin</Link>
@@ -187,6 +188,13 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               Stratégies
+            </Link>
+            <Link
+              to="/mes-stats"
+              className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
+              onClick={() => setMenuOpen(false)}
+            >
+              📊 Mes Stats
             </Link>
 
             {user?.isAdmin && (

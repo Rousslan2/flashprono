@@ -19,6 +19,7 @@ import StrategieBankroll from "./pages/StrategieBankroll";
 // 🔥 Nouvelles pages
 import Bankroll from "./pages/Bankroll";
 import Strategie from "./pages/Strategie";
+import MesStats from "./pages/MesStats";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -95,6 +96,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Strategie />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/mes-stats"
+            element={
+              <ProtectedRoute>
+                <MesStats />
               </ProtectedRoute>
             }
           />
