@@ -345,8 +345,13 @@ function PronoCard({ p, now }) {
   const [loadingFollow, setLoadingFollow] = useState(true);
   const [showMiseModal, setShowMiseModal] = useState(false);
   const [customMise, setCustomMise] = useState("");
+  const [reactions, setReactions] = useState([]);
+  const [myReaction, setMyReaction] = useState(null);
+  const [showReactions, setShowReactions] = useState(false);
   const color = borderColorFor(p.resultat);
   const status = computeMatchStatus(p.date, now);
+  
+  const emojis = ["🔥", "💪", "⚽", "🎯", "👍", "❤️", "😍", "👑", "💰", "🚀"];
   
   // Vérifier si le prono est suivi
   useEffect(() => {
@@ -368,7 +373,61 @@ function PronoCard({ p, now }) {
     };
     
     checkFollowing();
+    loadReactions();
   }, [p._id]);
+  
+  // Charger les réactions
+  const loadReactions = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/reactions/${p._id}`);
+      setReactions(data.reactions || []);
+      
+      // Vérifier si l'utilisateur a déjà réagi
+      const token = localStorage.getItem('token');
+      if (token) {
+        const userId = JSON.parse(atob(token.split('.')[1])).id;
+        const myR = data.reactions.find(r => 
+          r.users.some(u => u.id === userId)
+        );
+        setMyReaction(myR?.emoji || null);
+      }
+    } catch (err) {
+      console.error('Erreur chargement réactions:', err);
+    }
+  };
+  
+  // Ajouter une réaction
+  const handleReaction = async (emoji) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('⚠️ Connecte-toi pour réagir !');
+        return;
+      }
+      
+      if (myReaction === emoji) {
+        // Retirer la réaction
+        await axios.delete(
+          `${API_BASE}/api/reactions/${p._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setMyReaction(null);
+      } else {
+        // Ajouter/modifier la réaction
+        await axios.post(
+          `${API_BASE}/api/reactions/${p._id}`,
+          { emoji },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setMyReaction(emoji);
+      }
+      
+      loadReactions();
+      setShowReactions(false);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur');
+    }
+  };
   
   const handleFollow = async (mise = 10) => {
     try {
@@ -457,7 +516,7 @@ function PronoCard({ p, now }) {
       
       {/* Bouton Suivre */}
       {!loadingFollow && (
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-3">
           {isFollowing ? (
             <button
               onClick={handleUnfollow}
@@ -475,6 +534,57 @@ function PronoCard({ p, now }) {
               Suivre ce prono
             </button>
           )}
+          
+          {/* Réactions */}
+          <div className="relative">
+            <button
+              onClick={() => setShowReactions(!showReactions)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border-2 border-gray-700 rounded-xl hover:bg-gray-700 transition-all text-sm"
+            >
+              {myReaction ? (
+                <span className="text-xl">{myReaction}</span>
+              ) : (
+                <span>😊</span>
+              )}
+              {reactions.length > 0 && (
+                <span className="text-gray-400 text-xs">({reactions.reduce((a, r) => a + r.count, 0)})</span>
+              )}
+            </button>
+            
+            {/* Menu des réactions */}
+            {showReactions && (
+              <div className="absolute top-full mt-2 left-0 bg-gray-900 border-2 border-primary/30 rounded-xl p-3 shadow-2xl z-10 flex gap-2">
+                {emojis.map(emoji => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleReaction(emoji)}
+                    className={`text-2xl hover:scale-125 transition-transform ${
+                      myReaction === emoji ? 'scale-125 drop-shadow-lg' : ''
+                    }`}
+                    title={myReaction === emoji ? 'Retirer' : 'Réagir'}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Affichage des réactions groupées */}
+      {reactions.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {reactions.map(r => (
+            <div
+              key={r.emoji}
+              className="flex items-center gap-1 px-3 py-1 bg-gray-800/50 border border-gray-700 rounded-full text-sm hover:bg-gray-700 transition cursor-pointer"
+              title={r.users.map(u => u.name).join(', ')}
+            >
+              <span className="text-lg">{r.emoji}</span>
+              <span className="text-gray-400">{r.count}</span>
+            </div>
+          ))}
         </div>
       )}
       

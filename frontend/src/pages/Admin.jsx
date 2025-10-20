@@ -692,41 +692,6 @@ export default function Admin() {
       {/* LISTE PRONOS */}
       {tab === "list" && (
         <div className="max-w-5xl mx-auto">
-          {/* Bouton Vérifier les résultats */}
-          <div className="mb-6 flex justify-end">
-            <button
-              onClick={async () => {
-                if (!confirm('🔄 Vérifier les résultats depuis l\'API Football ?')) return;
-                try {
-                  const { data } = await axios.post(
-                    `${API_BASE}/api/admin/check-results`,
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                  );
-                  
-                  // Afficher les détails
-                  let message = `✅ ${data.message}\n\n`;
-                  
-                  if (data.details && data.details.length > 0) {
-                    message += "Détails:\n";
-                    data.details.forEach(d => {
-                      message += `\n${d.prono}\n  ${d.status}\n  ${d.action}\n`;
-                    });
-                  }
-                  
-                  alert(message);
-                  loadPronos(); // Recharger la liste
-                  loadStats(); // Recharger les stats
-                } catch (err) {
-                  alert(err.response?.data?.message || 'Erreur lors de la vérification');
-                }
-              }}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-yellow-400 text-black rounded-xl font-bold hover:scale-105 transition-all shadow-lg"
-            >
-              🔄 Vérifier les résultats maintenant
-            </button>
-          </div>
-          
           {loadingList ? (
             <p className="text-center text-gray-400">Chargement…</p>
           ) : (
