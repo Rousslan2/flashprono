@@ -63,7 +63,7 @@ export default function Navbar() {
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
-                    ["/bankroll", "/strategies", "/mes-stats", "/admin"].includes(location.pathname)
+                    ["/bankroll", "/strategies", "/mes-stats", "/chat", "/admin"].includes(location.pathname)
                       ? "text-primary border-2 border-primary"
                       : "text-green-400 hover:text-white"
                   }`}
@@ -109,6 +109,13 @@ export default function Navbar() {
                       onClick={() => setDropdownOpen(false)}
                       active={isActive("/mes-stats")}
                     />
+                    <DropdownLink
+                      to="/chat"
+                      icon="💬"
+                      label="Chat"
+                      onClick={() => setDropdownOpen(false)}
+                      active={isActive("/chat")}
+                    />
                     {user?.isAdmin && (
                       <DropdownLink
                         to="/admin"
@@ -122,10 +129,6 @@ export default function Navbar() {
                 )}
               </div>
             )}
-
-            <NavLink to="/chat" active={isActive("/chat")}>
-              💬 Chat
-            </NavLink>
 
           </div>
 
@@ -263,6 +266,15 @@ export default function Navbar() {
                 >
                   📊 Mes Stats
                 </Link>
+                <Link
+                  to="/chat"
+                  className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                    isActive("/chat") ? "bg-primary/20 text-primary font-bold" : ""
+                  }`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  💬 Chat
+                </Link>
                 {user?.isAdmin && (
                   <Link
                     to="/admin"
@@ -276,16 +288,6 @@ export default function Navbar() {
                 )}
               </>
             )}
-
-            <Link
-              to="/chat"
-              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                isActive("/chat") ? "bg-primary/20 text-primary font-bold" : ""
-              }`}
-              onClick={() => setMenuOpen(false)}
-            >
-              💬 Chat
-            </Link>
 
             {isAuth ? (
               <>
