@@ -6,3 +6,4 @@ backend/.env
 .env
 frontend/.env
 .env.local
+node_modules/
