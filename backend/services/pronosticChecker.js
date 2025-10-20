@@ -139,30 +139,75 @@ export async function checkAndUpdatePronosticResults() {
 }
 
 /**
- * 🎲 Déterminer si un pronostic est gagné, perdu ou remboursé
+ * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé
  */
 function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
   const type = prono.type.toLowerCase();
   const equipe1Lower = prono.equipe1.toLowerCase();
+  const equipe2Lower = prono.equipe2.toLowerCase();
   const homeTeamLower = homeTeam.toLowerCase();
 
   // Déterminer quelle équipe est à domicile/extérieur
   const isEquipe1Home = 
     homeTeamLower.includes(equipe1Lower) || equipe1Lower.includes(homeTeamLower);
 
-  // 1X2 (Victoire / Nul / Défaite)
-  if (type.includes("victoire") || type.includes("1") || type.includes("win")) {
-    if (homeScore > awayScore && isEquipe1Home) return "gagnant";
-    if (awayScore > homeScore && !isEquipe1Home) return "gagnant";
-    return "perdu";
-  }
-
-  if (type.includes("nul") || type.includes("x") || type.includes("draw")) {
+  // === Nul / Draw / Match nul ===
+  if (type.includes("nul") || type.includes("draw") || type.includes("match nul") || type === "x") {
     return homeScore === awayScore ? "gagnant" : "perdu";
   }
 
-  // BTTS (Both Teams To Score)
-  if (type.includes("btts") || type.includes("les deux équipes marquent")) {
+  // === Victoire spécifique d'une équipe ===
+  if (type.includes("victoire")) {
+    // Vérifier quelle équipe doit gagner
+    const premierMotEquipe1 = equipe1Lower.split(" ")[0];
+    const premierMotEquipe2 = equipe2Lower.split(" ")[0];
+    
+    if (type.includes(premierMotEquipe1)) {
+      // Victoire de l'équipe 1
+      if (isEquipe1Home) {
+        return homeScore > awayScore ? "gagnant" : "perdu";
+      } else {
+        return awayScore > homeScore ? "gagnant" : "perdu";
+      }
+    }
+    
+    if (type.includes(premierMotEquipe2)) {
+      // Victoire de l'équipe 2
+      if (isEquipe1Home) {
+        return awayScore > homeScore ? "gagnant" : "perdu";
+      } else {
+        return homeScore > awayScore ? "gagnant" : "perdu";
+      }
+    }
+  }
+
+  // === 1 (Victoire domicile) ===
+  if (type === "1" || type.includes("home win")) {
+    return homeScore > awayScore ? "gagnant" : "perdu";
+  }
+
+  // === 2 (Victoire extérieur) ===
+  if (type === "2" || type.includes("away win")) {
+    return awayScore > homeScore ? "gagnant" : "perdu";
+  }
+
+  // === Double chance - 1X ===
+  if (type.includes("1x") || (type.includes("double") && type.includes("1") && type.includes("x"))) {
+    return homeScore >= awayScore ? "gagnant" : "perdu";
+  }
+
+  // === Double chance - X2 ===
+  if (type.includes("x2") || type.includes("2x") || (type.includes("double") && type.includes("x") && type.includes("2"))) {
+    return homeScore <= awayScore ? "gagnant" : "perdu";
+  }
+
+  // === Double chance - 12 ===
+  if (type.includes("12") || type.includes("21") || (type.includes("double") && type.includes("1") && type.includes("2"))) {
+    return homeScore !== awayScore ? "gagnant" : "perdu";
+  }
+
+  // === BTTS (Both Teams To Score) ===
+  if (type.includes("btts") || type.includes("les deux équipes marquent") || type.includes("both teams to score")) {
     const bothScored = homeScore > 0 && awayScore > 0;
     if (type.includes("oui") || type.includes("yes")) {
       return bothScored ? "gagnant" : "perdu";
@@ -172,20 +217,20 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
     }
   }
 
-  // Over / Under
-  if (type.includes("over") || type.includes("plus de")) {
-    const totalGoals = homeScore + awayScore;
+  // === Over / Under ===
+  if (type.includes("over") || type.includes("plus de") || type.includes("+")) {
     const threshold = parseFloat(type.match(/\d+\.?\d*/)?.[0] || "2.5");
+    const totalGoals = homeScore + awayScore;
     return totalGoals > threshold ? "gagnant" : "perdu";
   }
 
-  if (type.includes("under") || type.includes("moins de")) {
-    const totalGoals = homeScore + awayScore;
+  if (type.includes("under") || type.includes("moins de") || type.includes("-")) {
     const threshold = parseFloat(type.match(/\d+\.?\d*/)?.[0] || "2.5");
+    const totalGoals = homeScore + awayScore;
     return totalGoals < threshold ? "gagnant" : "perdu";
   }
 
-  // Score exact
+  // === Score exact ===
   if (type.includes("score exact") || type.includes("exact score")) {
     const expectedScore = type.match(/(\d+)-(\d+)/);
     if (expectedScore) {
@@ -204,26 +249,8 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
     }
   }
 
-  // Double chance
-  if (type.includes("double chance")) {
-    if (type.includes("1x")) {
-      return (homeScore >= awayScore && isEquipe1Home) || 
-             (awayScore >= homeScore && !isEquipe1Home) ? "gagnant" : "perdu";
-    }
-    if (type.includes("x2")) {
-      return (homeScore <= awayScore && isEquipe1Home) || 
-             (awayScore <= homeScore && !isEquipe1Home) ? "gagnant" : "perdu";
-    }
-    if (type.includes("12")) {
-      return homeScore !== awayScore ? "gagnant" : "perdu";
-    }
-  }
-
-  // Mi-temps / Fin de match
-  // Note: Nécessiterait les scores de mi-temps de l'API
-  
-  // Par défaut, si on ne peut pas déterminer
-  console.warn(`⚠️ Type de pari non reconnu: ${type}`);
+  // Par défaut, si on ne peut pas déterminer, retourner null pour ne pas marquer faussement
+  console.warn(`⚠️ Type de pari non reconnu ou ambigu: "${prono.type}" pour ${prono.equipe1} vs ${prono.equipe2} - Pronostic laissé en attente`);
   return null;
 }
 
