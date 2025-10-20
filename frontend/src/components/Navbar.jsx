@@ -50,6 +50,9 @@ export default function Navbar() {
             <NavLink to="/pronostics" active={isActive("/pronostics")}>
               ⚽ Pronostics
             </NavLink>
+            <NavLink to="/scores" active={isActive("/scores")}>
+              🟢 Scores
+            </NavLink>
             <NavLink to="/abonnements" active={isActive("/abonnements")}>
               👑 Abonnements
             </NavLink>
@@ -211,6 +214,15 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               ⚽ Pronostics
+            </Link>
+            <Link
+              to="/scores"
+              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                isActive("/scores") ? "bg-primary/20 text-primary font-bold" : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              🟢 Scores Live
             </Link>
             <Link
               to="/abonnements"

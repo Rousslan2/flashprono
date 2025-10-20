@@ -22,6 +22,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import presenceRoutes from "./routes/presenceRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import scoresRoutes from "./routes/scoresRoutes.js";
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -129,6 +130,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/presence", presenceRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/scores", scoresRoutes);
 
 // =============================
 // 🧾 LOG ADMIN TEST

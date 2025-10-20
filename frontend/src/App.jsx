@@ -21,6 +21,7 @@ import Bankroll from "./pages/Bankroll";
 import Strategie from "./pages/Strategie";
 import MesStats from "./pages/MesStats";
 import Chat from "./pages/Chat";
+import Scores from "./pages/Scores";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -118,6 +119,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          
+          <Route path="/scores" element={<Scores />} />
         </Routes>
       </main>
       <Footer />
