@@ -33,20 +33,20 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-black via-gray-900 to-black border-b-2 border-primary shadow-2xl backdrop-blur-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 group transition-transform hover:scale-105"
+            className="flex items-center gap-3 group transition-transform hover:scale-105"
           >
-            <div className="text-3xl">⚡</div>
-            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400">
+            <div className="text-4xl">⚡</div>
+            <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400">
               FlashProno
             </span>
           </Link>
 
           {/* Centre : Menu desktop */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-5">
             <NavLink to="/pronostics" active={isActive("/pronostics")}>
               ⚽ Pronostics
             </NavLink>
