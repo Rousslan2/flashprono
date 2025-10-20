@@ -11,13 +11,22 @@ export default function Scores() {
   useEffect(() => {
     loadScores();
     
-    // Actualiser toutes les 30 secondes
+    // Actualiser intelligemment : seulement si matchs LIVE et toutes les 2 minutes
     const interval = setInterval(() => {
-      loadScores();
-    }, 30000);
+      const hasLiveMatches = matches.some(m => 
+        ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
+      );
+      
+      if (hasLiveMatches) {
+        console.log('🔴 Matchs LIVE détectés - actualisation');
+        loadScores();
+      } else {
+        console.log('⏸️ Aucun match LIVE - pas d\'actualisation (economies API)');
+      }
+    }, 120000); // 2 minutes au lieu de 30 secondes
     
     return () => clearInterval(interval);
-  }, []);
+  }, [matches]); // Dépend de matches pour détecter les LIVE
 
   const loadScores = async () => {
     try {
@@ -81,8 +90,16 @@ export default function Scores() {
           </p>
           
           {lastUpdate && (
-            <div className="text-sm text-gray-400">
-              🕐 Mise à jour : {lastUpdate.toLocaleTimeString("fr-FR")}
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="text-gray-400">
+                🕐 Dernière mise à jour : {lastUpdate.toLocaleTimeString("fr-FR")}
+              </div>
+              <button
+                onClick={loadScores}
+                className="px-3 py-1.5 bg-primary/20 border border-primary/40 text-primary rounded-lg hover:bg-primary/30 transition-all text-xs font-semibold"
+              >
+                🔄 Actualiser
+              </button>
             </div>
           )}
         </div>
@@ -148,7 +165,7 @@ export default function Scores() {
         {/* Info */}
         <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
           <p className="text-sm text-blue-300 text-center">
-            💡 <strong>Économie d'API</strong> : Cache 5 min • Seulement tes pronos • Max 10 requêtes/jour
+            💡 <strong>Super optimisé API</strong> : Cache 5 min • Actualisation auto toutes les 2 min UNIQUEMENT si matchs LIVE • Seulement tes pronos • Max 5-10 requêtes/jour
           </p>
         </div>
       </div>
