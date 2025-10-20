@@ -895,10 +895,15 @@ export default function Admin() {
       {tab === "online" && (
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl">Utilisateurs en ligne (≤ 2 min)</h3>
-            <span className="px-2 py-1 text-sm rounded bg-primary text-black font-semibold">
-              {online.count} en ligne
-            </span>
+            <h3 className="text-xl">🟢 Utilisateurs en ligne - Temps réel</h3>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">
+                Actualisé il y a {online.timestamp ? Math.floor((Date.now() - new Date(online.timestamp).getTime()) / 1000) : 0}s
+              </span>
+              <span className="px-3 py-1.5 text-sm rounded-full bg-primary text-black font-semibold">
+                {online.count} {online.count > 1 ? 'connectés' : 'connecté'}
+              </span>
+            </div>
           </div>
           {online.loading ? (
             <p className="text-gray-400">Actualisation…</p>

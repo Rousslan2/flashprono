@@ -24,6 +24,7 @@ import statsRoutes from "./routes/statsRoutes.js";
 
 // 📊 Modèles
 import User from "./models/User.js";
+import ConnectionHistory from "./models/ConnectionHistory.js";
 
 // ⚙️ Initialisation
 dotenv.config();
