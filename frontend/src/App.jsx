@@ -20,6 +20,7 @@ import StrategieBankroll from "./pages/StrategieBankroll";
 import Bankroll from "./pages/Bankroll";
 import Strategie from "./pages/Strategie";
 import MesStats from "./pages/MesStats";
+import Chat from "./pages/Chat";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -105,6 +106,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MesStats />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
               </ProtectedRoute>
             }
           />

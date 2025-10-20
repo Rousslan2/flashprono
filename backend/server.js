@@ -21,6 +21,7 @@ import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import presenceRoutes from "./routes/presenceRoutes.js";
 import statsRoutes from "./routes/statsRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -127,6 +128,7 @@ app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/presence", presenceRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/chat", chatRoutes);
 
 // =============================
 // 🧾 LOG ADMIN TEST

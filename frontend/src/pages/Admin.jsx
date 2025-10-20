@@ -146,58 +146,62 @@ export default function Admin() {
     loadPronos();
     loadUsers(1);
     
-    // 🔥 Écouter les mises à jour en temps réel
-    socket.on('user:updated', (updatedUser) => {
-      console.log('🔄 Utilisateur mis à jour:', updatedUser.name);
+    // 🔥 ÉCOUTER LES ÉVÉNEMENTS SOCKET.IO (TOUJOURS ACTIFS)
+    const handleUserUpdate = (updatedUser) => {
+      console.log('🔄 User updated:', updatedUser.name);
       setUsers(prev => prev.map(u => u._id === updatedUser._id ? updatedUser : u));
-    });
-    
-    socket.on('prono:created', () => {
-      console.log('✨ Nouveau prono créé');
-      loadStats();
-      loadPronos();
-    });
-    
-    socket.on('prono:updated', () => {
-      console.log('✏️ Prono modifié');
-      loadPronos();
-    });
-    
-    socket.on('prono:deleted', () => {
-      console.log('🗑️ Prono supprimé');
-      loadStats();
-      loadPronos();
-    });
-    
-    return () => {
-      socket.off('user:updated');
-      socket.off('prono:created');
-      socket.off('prono:updated');
-      socket.off('prono:deleted');
     };
-  }, []);
-
-  // 🔥 Écouter les événements Socket.io GLOBAUX (pas dépendant de l'onglet)
-  useEffect(() => {
-    // Connexions/déconnexions
-    socket.on('connection:new', (newEntry) => {
-      console.log('✨ Nouvelle connexion/déconnexion:', newEntry.userName, newEntry.action);
-      setHistory(prev => [newEntry, ...prev].slice(0, 100));
-    });
     
-    // Utilisateurs en ligne
-    socket.on('online:update', () => {
-      console.log('🟢 Mise à jour utilisateurs en ligne');
+    const handlePronoCreated = () => {
+      console.log('✨ Prono created');
+      loadStats();
+      loadPronos();
+    };
+    
+    const handlePronoUpdated = () => {
+      console.log('✏️ Prono updated');
+      loadPronos();
+    };
+    
+    const handlePronoDeleted = () => {
+      console.log('🗑️ Prono deleted');
+      loadStats();
+      loadPronos();
+    };
+    
+    const handleConnectionNew = (newEntry) => {
+      console.log('🔥 NEW CONNECTION:', newEntry.userName, newEntry.action);
+      setHistory(prev => {
+        // Éviter les doublons
+        const exists = prev.some(h => h._id === newEntry._id);
+        if (exists) return prev;
+        return [newEntry, ...prev].slice(0, 100);
+      });
+    };
+    
+    const handleOnlineUpdate = () => {
+      console.log('🟢 Online update');
       if (tab === 'online') {
         loadOnline();
       }
-    });
+    };
+    
+    socket.on('user:updated', handleUserUpdate);
+    socket.on('prono:created', handlePronoCreated);
+    socket.on('prono:updated', handlePronoUpdated);
+    socket.on('prono:deleted', handlePronoDeleted);
+    socket.on('connection:new', handleConnectionNew);
+    socket.on('online:update', handleOnlineUpdate);
     
     return () => {
-      socket.off('connection:new');
-      socket.off('online:update');
+      socket.off('user:updated', handleUserUpdate);
+      socket.off('prono:created', handlePronoCreated);
+      socket.off('prono:updated', handlePronoUpdated);
+      socket.off('prono:deleted', handlePronoDeleted);
+      socket.off('connection:new', handleConnectionNew);
+      socket.off('online:update', handleOnlineUpdate);
     };
-  }, [tab]); // Dépend de tab pour recharger loadOnline
+  }, [tab]); // Dépend de tab pour recharger online
 
   // Auto-refresh online tab every 15s when visible
   useEffect(() => {

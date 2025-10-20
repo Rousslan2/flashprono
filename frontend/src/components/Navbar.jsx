@@ -68,6 +68,7 @@ export default function Navbar() {
             <Link to="/bankroll" className="hover:text-white transition">💰 Bankroll</Link>
             <Link to="/strategies" className="hover:text-white transition">🎯 Stratégies</Link>
             <Link to="/mes-stats" className="hover:text-white transition">📊 Stats</Link>
+            <Link to="/chat" className="hover:text-white transition">💬 Chat</Link>
 
             {user?.isAdmin && (
               <Link to="/admin" className="hover:text-white transition">🔧 Admin</Link>
@@ -195,6 +196,13 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             >
               📊 Mes Stats
+            </Link>
+            <Link
+              to="/chat"
+              className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
+              onClick={() => setMenuOpen(false)}
+            >
+              💬 Chat
             </Link>
 
             {user?.isAdmin && (
