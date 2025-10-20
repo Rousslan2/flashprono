@@ -3,66 +3,39 @@ import axios from "axios";
 import { API_BASE } from "../config";
 
 export default function Scores() {
-  const [liveMatches, setLiveMatches] = useState([]);
-  const [todayMatches, setTodayMatches] = useState([]);
-  const [tomorrowMatches, setTomorrowMatches] = useState([]);
-  const [myPronosMatches, setMyPronosMatches] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("my-pronos"); // my-pronos | live | today | tomorrow
-  const [selectedDate, setSelectedDate] = useState("");
-  const [apiStatus, setApiStatus] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [fromCache, setFromCache] = useState(false);
 
   useEffect(() => {
     loadScores();
     
-    // Actualiser toutes les 30 secondes pour les matchs en direct
-    if (tab === "live") {
-      const interval = setInterval(loadScores, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [tab, selectedDate]);
+    // Actualiser toutes les 30 secondes SEULEMENT s'il y a des matchs LIVE
+    const interval = setInterval(() => {
+      const hasLiveMatches = matches.some(m => 
+        ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
+      );
+      
+      if (hasLiveMatches) {
+        console.log("🔴 Matchs LIVE détectés - actualisation");
+        loadScores();
+      } else {
+        console.log("⏸️ Aucun match LIVE - pas d'actualisation");
+      }
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [matches]);
 
   const loadScores = async () => {
     try {
       setLoading(true);
-      let endpoint = "";
+      const { data } = await axios.get(`${API_BASE}/api/scores/my-matches`);
       
-      if (selectedDate) {
-        endpoint = `/api/scores/by-date/${selectedDate}`;
-      } else {
-        switch (tab) {
-          case "my-pronos":
-            endpoint = "/api/scores/my-pronos";
-            break;
-          case "live":
-            endpoint = "/api/scores/live";
-            break;
-          case "today":
-            endpoint = "/api/scores/today";
-            break;
-          case "tomorrow":
-            endpoint = "/api/scores/tomorrow";
-            break;
-          default:
-            endpoint = "/api/scores/my-pronos";
-        }
-      }
-      
-      const { data } = await axios.get(`${API_BASE}${endpoint}`);
-      
-      if (selectedDate) {
-        setTodayMatches(data.matches || []);
-      } else {
-        if (tab === "my-pronos") {
-          setMyPronosMatches(data.matches || []);
-        } else if (tab === "live") {
-          setLiveMatches(data.matches || []);
-        } else if (tab === "today") {
-          setTodayMatches(data.matches || []);
-        } else if (tab === "tomorrow") {
-          setTomorrowMatches(data.matches || []);
-        }
-      }
+      setMatches(data.matches || []);
+      setFromCache(data.fromCache || false);
+      setLastUpdate(new Date());
     } catch (err) {
       console.error("❌ Erreur chargement scores:", err);
     } finally {
@@ -70,39 +43,17 @@ export default function Scores() {
     }
   };
 
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setTab("today"); // Basculer sur l'onglet "today" lors de la sélection d'une date
-  };
-
-  const clearDate = () => {
-    setSelectedDate("");
-  };
-
-  const testApiConnection = async () => {
-    try {
-      const { data } = await axios.get(`${API_BASE}/api/scores/test`);
-      setApiStatus(data);
-      alert(
-        data.success
-          ? `✅ API connectée!\n\nRequests restantes: ${data.subscription?.requests?.current || "N/A"}/${data.subscription?.requests?.limit_day || "N/A"}`
-          : `❌ ${data.message}`
-      );
-    } catch (err) {
-      setApiStatus({ success: false, message: err.message });
-      alert(`❌ Erreur: ${err.response?.data?.message || err.message}`);
-    }
-  };
-
-  const matches = selectedDate 
-    ? todayMatches 
-    : tab === "my-pronos"
-      ? myPronosMatches
-      : tab === "live" 
-        ? liveMatches 
-        : tab === "today" 
-          ? todayMatches 
-          : tomorrowMatches;
+  const liveMatches = matches.filter(m => 
+    ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
+  );
+  
+  const upcomingMatches = matches.filter(m => 
+    ["TBD", "NS"].includes(m.status)
+  );
+  
+  const finishedMatches = matches.filter(m => 
+    ["FT", "AET", "PEN"].includes(m.status)
+  );
 
   return (
     <section className="pt-16 pb-12 px-4">
@@ -110,100 +61,31 @@ export default function Scores() {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-            <span className="text-primary font-semibold text-sm">⚽ Scores en Direct</span>
+            <span className="text-primary font-semibold text-sm">⚽ Scores de Mes Pronos</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
             <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-              Résultats Live
+              Suivi en Direct
             </span>
           </h1>
-          <p className="text-xl text-gray-300">
-            Suivez les matchs en temps réel
+          <p className="text-xl text-gray-300 mb-4">
+            Uniquement les matchs de tes pronostics du jour
           </p>
+          
+          {lastUpdate && (
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+              <span>🕐 Dernière mise à jour : {lastUpdate.toLocaleTimeString("fr-FR")}</span>
+              {fromCache && <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">📦 Cache</span>}
+            </div>
+          )}
         </div>
 
-        {/* Sélecteur de date */}
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-3 bg-black border-2 border-primary/30 rounded-xl p-3">
-            <label htmlFor="date-picker" className="text-sm font-semibold text-gray-300">
-              📅 Date personnalisée :
-            </label>
-            <input
-              id="date-picker"
-              type="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              className="px-3 py-2 bg-gray-900 border border-primary/40 rounded-lg text-white focus:outline-none focus:border-primary"
-            />
-            {selectedDate && (
-              <button
-                onClick={clearDate}
-                className="px-3 py-2 bg-red-500/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all font-medium text-sm"
-              >
-                ✕ Effacer
-              </button>
-            )}
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
+          <StatCard icon="🔴" label="En Direct" value={liveMatches.length} color="red" />
+          <StatCard icon="⏰" label="À venir" value={upcomingMatches.length} color="yellow" />
+          <StatCard icon="✅" label="Terminés" value={finishedMatches.length} color="green" />
         </div>
-
-        {/* Tabs */}
-        {!selectedDate && (
-          <div className="flex justify-center gap-3 mb-8 flex-wrap">
-            <button
-              onClick={() => setTab("my-pronos")}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                tab === "my-pronos"
-                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-              }`}
-            >
-              🎯 Mes Pronos ({myPronosMatches.length})
-            </button>
-            <button
-              onClick={() => setTab("live")}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                tab === "live"
-                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-              }`}
-            >
-              🔴 En Direct ({liveMatches.length})
-            </button>
-            <button
-              onClick={() => setTab("today")}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                tab === "today"
-                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-              }`}
-            >
-              📅 Aujourd'hui ({todayMatches.length})
-            </button>
-            <button
-              onClick={() => setTab("tomorrow")}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                tab === "tomorrow"
-                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-              }`}
-            >
-              🗓️ Demain ({tomorrowMatches.length})
-            </button>
-          </div>
-        )}
-
-        {selectedDate && (
-          <div className="text-center mb-6">
-            <p className="text-lg text-primary font-semibold">
-              📅 Matchs du {new Date(selectedDate).toLocaleDateString("fr-FR", { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </p>
-          </div>
-        )}
 
         {/* Loading */}
         {loading ? (
@@ -215,58 +97,77 @@ export default function Scores() {
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold text-white mb-3">
-              {tab === "my-pronos" ? "Aucun match avec pronostic" : tab === "live" ? "Aucun match en direct" : "Aucun match prévu"}
+              Aucun prono aujourd'hui
             </h3>
             <p className="text-gray-400">
-              {tab === "my-pronos"
-                ? "Aucun pronostic en attente pour le moment"
-                : tab === "live" 
-                  ? "Reviens plus tard pour suivre les matchs en direct !" 
-                  : "Aucun match trouvé pour cette période"}
+              Les scores apparaîtront quand tu ajouteras des pronos pour aujourd'hui !
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
+          <div className="space-y-8">
+            {/* Matchs LIVE */}
+            {liveMatches.length > 0 && (
+              <Section title="🔴 En Direct" matches={liveMatches} />
+            )}
+            
+            {/* Matchs à venir */}
+            {upcomingMatches.length > 0 && (
+              <Section title="⏰ À venir" matches={upcomingMatches} />
+            )}
+            
+            {/* Matchs terminés */}
+            {finishedMatches.length > 0 && (
+              <Section title="✅ Terminés" matches={finishedMatches} />
+            )}
           </div>
         )}
 
         {/* Info */}
-        <div className="mt-8 text-center space-y-4">
-          <p className="text-sm text-gray-500">
-            {tab === "live" ? "🔄 Actualisation automatique toutes les 30 secondes" : "💡 Sélectionnez une date personnalisée pour voir les matchs"}
+        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+          <p className="text-sm text-blue-300 text-center">
+            💡 <strong>Optimisé API</strong> : Actualisation automatique toutes les 30s uniquement si matchs en direct • Cache de 5 min • Seulement tes pronos
           </p>
-          
-          {/* Bouton test API */}
-          <button
-            onClick={testApiConnection}
-            className="px-4 py-2 bg-primary/20 border border-primary/40 text-primary rounded-lg hover:bg-primary/30 transition-all text-sm font-medium"
-          >
-            🧪 Tester la connexion API
-          </button>
-          
-          {apiStatus && (
-            <div className={`inline-block px-4 py-2 rounded-lg text-sm ${
-              apiStatus.success 
-                ? "bg-green-500/20 border border-green-500 text-green-400" 
-                : "bg-red-500/20 border border-red-500 text-red-400"
-            }`}>
-              {apiStatus.message}
-            </div>
-          )}
         </div>
       </div>
     </section>
   );
 }
 
+function Section({ title, matches }) {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+        {title}
+        <span className="text-gray-500 text-lg">({matches.length})</span>
+      </h2>
+      <div className="grid md:grid-cols-2 gap-4">
+        {matches.map((match) => (
+          <MatchCard key={match.id} match={match} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, color }) {
+  const colors = {
+    red: "bg-red-500/20 border-red-500/30 text-red-400",
+    yellow: "bg-yellow-500/20 border-yellow-500/30 text-yellow-400",
+    green: "bg-green-500/20 border-green-500/30 text-green-400",
+  };
+
+  return (
+    <div className={`${colors[color]} border-2 rounded-xl p-4 text-center`}>
+      <div className="text-3xl mb-2">{icon}</div>
+      <div className="text-2xl font-bold mb-1">{value}</div>
+      <div className="text-xs opacity-75">{label}</div>
+    </div>
+  );
+}
+
 function MatchCard({ match }) {
   const isLive = ["1H", "HT", "2H", "ET", "BT", "P"].includes(match.status);
-  const isFinished = match.status === "FT";
-  const isPending = ["TBD", "NS", "SUSP", "INT"].includes(match.status);
-  const hasProno = !!match.pronostic;
+  const isFinished = ["FT", "AET", "PEN"].includes(match.status);
 
   const getStatusLabel = () => {
     if (match.status === "1H") return `${match.elapsed}'`;
@@ -281,7 +182,7 @@ function MatchCard({ match }) {
     <div
       className={`bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 transition-all hover:scale-[1.02] ${
         isLive
-          ? "border-red-500 shadow-lg shadow-red-500/20"
+          ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse-slow"
           : isFinished
           ? "border-gray-600"
           : "border-primary/30"
@@ -289,7 +190,7 @@ function MatchCard({ match }) {
     >
       {/* League */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
             {match.league}
           </span>
@@ -297,11 +198,6 @@ function MatchCard({ match }) {
             <span className="flex items-center gap-1 text-xs text-red-400 font-semibold">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               LIVE
-            </span>
-          )}
-          {hasProno && (
-            <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30 font-semibold">
-              🎯 Prono actif
             </span>
           )}
         </div>
@@ -332,34 +228,6 @@ function MatchCard({ match }) {
           </span>
         </div>
       </div>
-
-      {/* Infos du pronostic */}
-      {hasProno && (
-        <div className="mt-4 pt-4 border-t-2 border-primary/20">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-primary">🎯 {match.pronostic.type}</span>
-              <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">
-                Cote {match.pronostic.cote}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-400">Confiance:</span>
-              <span className={`text-xs font-bold ${
-                match.pronostic.confiance >= 75 ? "text-green-400" :
-                match.pronostic.confiance >= 50 ? "text-yellow-400" : "text-orange-400"
-              }`}>
-                {match.pronostic.confiance}%
-              </span>
-            </div>
-          </div>
-          {match.pronostic.details && (
-            <p className="text-xs text-gray-400 mt-2 italic">
-              {match.pronostic.details}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }

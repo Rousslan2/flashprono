@@ -6,6 +6,15 @@ import { io } from "../server.js";
 const API_KEY = process.env.FOOTBALL_API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
 
+// Cache pour éviter les requêtes répétées
+let matchesCache = {
+  data: [],
+  timestamp: null,
+  date: null
+};
+
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
 /**
  * 🎯 Vérifier et mettre à jour automatiquement les résultats des pronostics
  */
@@ -31,34 +40,40 @@ export async function checkAndUpdatePronosticResults() {
 
     console.log(`📊 ${pendingPronostics.length} pronostic(s) en attente à vérifier`);
 
-    // 2. Récupérer les matchs des 2 derniers jours (pour capturer les matchs terminés)
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const twoDaysAgo = new Date(today);
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    // 2. Récupérer seulement les matchs d'aujourd'hui (avec cache)
+    const today = new Date().toISOString().split("T")[0];
+    const now = Date.now();
 
-    const dates = [
-      twoDaysAgo.toISOString().split("T")[0],
-      yesterday.toISOString().split("T")[0],
-      today.toISOString().split("T")[0],
-    ];
+    let allMatches = [];
 
-    // Récupérer les matchs de toutes ces dates
-    const allMatchesPromises = dates.map((date) =>
-      axios.get(`${API_BASE_URL}/fixtures`, {
-        params: { date },
+    // Vérifier si le cache est encore valide
+    if (
+      matchesCache.date === today &&
+      matchesCache.timestamp &&
+      (now - matchesCache.timestamp) < CACHE_DURATION
+    ) {
+      console.log("📋 Utilisation du cache (pas de requête API)");
+      allMatches = matchesCache.data;
+    } else {
+      console.log("🌐 Requête API pour les matchs du jour...");
+      // Une seule requête pour aujourd'hui
+      const { data: todayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
+        params: { date: today },
         headers: {
           "x-rapidapi-key": API_KEY,
           "x-rapidapi-host": "v3.football.api-sports.io",
         },
-      })
-    );
+      });
 
-    const allMatchesResponses = await Promise.all(allMatchesPromises);
-    const allMatches = allMatchesResponses.flatMap(
-      (response) => response.data.response || []
-    );
+      allMatches = todayData.response || [];
+      
+      // Mettre à jour le cache
+      matchesCache = {
+        data: allMatches,
+        timestamp: now,
+        date: today
+      };
+    }
 
     console.log(`⚽ ${allMatches.length} matchs récupérés pour vérification`);
 
