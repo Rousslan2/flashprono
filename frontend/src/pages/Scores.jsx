@@ -9,8 +9,12 @@ export default function Scores() {
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
+    // Premier chargement
     loadScores();
-    
+  }, []); // Une seule fois au montage
+  
+  // Interval séparé qui dépend de matches
+  useEffect(() => {
     // Actualiser intelligemment : seulement si matchs LIVE et toutes les 2 minutes
     const interval = setInterval(() => {
       const hasLiveMatches = matches.some(m => 
@@ -23,7 +27,7 @@ export default function Scores() {
       } else {
         console.log('⏸️ Aucun match LIVE - pas d\'actualisation (economies API)');
       }
-    }, 120000); // 2 minutes au lieu de 30 secondes
+    }, 120000); // 2 minutes
     
     return () => clearInterval(interval);
   }, [matches]); // Dépend de matches pour détecter les LIVE
