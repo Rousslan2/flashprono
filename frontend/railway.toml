@@ -1,5 +1,2 @@
-[build]
-buildCommand = "[ -f package-lock.json ] && rm package-lock.json; npm install --force && npm run build"
-
 [deploy]
-startCommand = "npm start"
+startCommand = "serve -s dist -l 8080"
