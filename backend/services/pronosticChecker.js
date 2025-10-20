@@ -117,9 +117,10 @@ export async function checkAndUpdatePronosticResults() {
           );
 
           if (result && prono.statut !== result) {
-            // Mettre à jour le pronostic - SCORE FINAL UNIQUEMENT (sans minutes)
+            // Mettre à jour le pronostic - Score dans champ séparé
             prono.statut = result;
-            prono.resultat = `${homeScore}-${awayScore}`; // ❌ PAS de minutes quand terminé
+            prono.score = `${homeScore}-${awayScore}`;
+            prono.resultat = result; // "gagnant" ou "perdu"
             await prono.save();
 
             updatedCount++;
@@ -143,12 +144,13 @@ export async function checkAndUpdatePronosticResults() {
         }
         // Match en cours (1H, HT, 2H, ET, P, etc.)
         else if (["1H", "HT", "2H", "ET", "BT", "P"].includes(status)) {
-          // Mettre à jour le statut en "en cours" avec score live + minutes
-          const liveResult = `${homeScore}-${awayScore} (${elapsed}')`;
+          // Score LIVE avec minutes dans champ séparé
+          const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
           
-          if (prono.statut !== "en cours" || prono.resultat !== liveResult) {
+          if (prono.statut !== "en cours" || prono.score !== liveScore) {
             prono.statut = "en cours";
-            prono.resultat = liveResult; // ✅ AVEC minutes pendant le match
+            prono.score = liveScore;
+            prono.resultat = "en cours";
             await prono.save();
 
             console.log(

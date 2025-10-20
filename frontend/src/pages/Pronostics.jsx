@@ -12,6 +12,10 @@ export default function Pronostics() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [now, setNow] = useState(new Date());
+  const [viewMode, setViewMode] = useState("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showStats, setShowStats] = useState(false);
+  const [notification, setNotification] = useState(null);
   const active = isSubscriptionActive();
 
   useEffect(() => {
@@ -58,12 +62,14 @@ export default function Pronostics() {
       console.log('🎉 Nouveau prono reçu:', newProno);
       if ((newProno.sport || "").toLowerCase().includes("foot")) {
         setPronos(prev => [newProno, ...prev].sort((a, b) => new Date(a.date) - new Date(b.date)));
+        showNotification("🎉 Nouveau pronostic ajouté !", "success");
       }
     });
 
     socket.on('prono:updated', (updatedProno) => {
       console.log('✏️ Prono mis à jour:', updatedProno);
       setPronos(prev => prev.map(p => p._id === updatedProno._id ? updatedProno : p));
+      showNotification("✏️ Pronostic mis à jour", "info");
     });
 
     socket.on('prono:deleted', ({ _id }) => {
@@ -79,16 +85,37 @@ export default function Pronostics() {
     };
   }, [active]);
 
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
   const filtered = useMemo(() => {
-    const f = (p) => {
-      const res = (p.resultat || "").toLowerCase();
-      if (filter === "pending") return !res || res.includes("attente");
-      if (filter === "win") return res.includes("gagnant") || res.includes("win");
-      if (filter === "lose") return res.includes("perdu") || res.includes("lose");
-      return true;
-    };
-    return pronos.filter(f);
-  }, [pronos, filter]);
+    let result = pronos;
+
+    // Filtre par résultat
+    if (filter !== "all") {
+      result = result.filter(p => {
+        const res = (p.resultat || "").toLowerCase();
+        if (filter === "pending") return !res || res.includes("attente");
+        if (filter === "win") return res.includes("gagnant") || res.includes("win");
+        if (filter === "lose") return res.includes("perdu") || res.includes("lose");
+        return true;
+      });
+    }
+
+    // Filtre par recherche
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(p => 
+        p.equipe1?.toLowerCase().includes(term) ||
+        p.equipe2?.toLowerCase().includes(term) ||
+        p.type?.toLowerCase().includes(term)
+      );
+    }
+
+    return result;
+  }, [pronos, filter, searchTerm]);
 
   const groups = useMemo(() => {
     const today = [];
@@ -114,18 +141,52 @@ export default function Pronostics() {
     return { today, future, past };
   }, [filtered, now]);
 
+  // Calcul des stats globales
+  const globalStats = useMemo(() => {
+    const wins = pronos.filter(p => {
+      const res = (p.resultat || "").toLowerCase();
+      return res.includes("gagnant") || res.includes("win");
+    });
+    const loses = pronos.filter(p => {
+      const res = (p.resultat || "").toLowerCase();
+      return res.includes("perdu") || res.includes("lose");
+    });
+    const total = wins.length + loses.length;
+    const winRate = total > 0 ? ((wins.length / total) * 100).toFixed(1) : 0;
+    
+    // Calcul du ROI
+    let totalMise = 0;
+    let totalGain = 0;
+    wins.forEach(p => {
+      totalMise += 10; // Mise par défaut
+      totalGain += 10 * (p.cote || 1);
+    });
+    loses.forEach(() => totalMise += 10);
+    const roi = totalMise > 0 ? (((totalGain - totalMise) / totalMise) * 100).toFixed(1) : 0;
+
+    return { wins: wins.length, loses: loses.length, total, winRate, roi };
+  }, [pronos]);
+
   if (!active) {
     return (
-      <section className="py-20 px-4 text-center">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-8">
-            <div className="inline-block w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6 text-4xl border-2 border-primary/30">
+      <section className="py-20 px-4 text-center relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-96 h-96 bg-primary/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
+          <div className="absolute w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse" style={{ animationDelay: "1s" }}></div>
+        </div>
+
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="mb-8 animate-float">
+            <div className="inline-block w-24 h-24 bg-gradient-to-br from-primary/30 to-yellow-400/30 rounded-3xl flex items-center justify-center mb-6 text-5xl border-2 border-primary/40 shadow-2xl backdrop-blur-sm transform hover:scale-110 transition-all duration-500">
               🔒
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-              <span className="text-primary">Pronostics Football</span>
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+              <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient">
+                Pronostics Football
+              </span>
               <br />
-              <span className="text-white">Réservés aux membres</span>
+              <span className="text-white drop-shadow-glow">Réservés aux membres</span>
             </h1>
             <p className="text-xl text-gray-300 leading-relaxed mb-8">
               Débloque l'accès aux <span className="text-primary font-semibold">pronos quotidiens</span>,
@@ -134,18 +195,43 @@ export default function Pronostics() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <FeaturePreview icon="⚽" title="Pronos vérifiés" desc="Sélection quotidienne analysée" />
-            <FeaturePreview icon="🏆" title="Pronos en or" desc="Les meilleures values" />
-            <FeaturePreview icon="📊" title="Scores live" desc="Suivi en temps réel" />
+            <FeaturePreview icon="⚽" title="Pronos vérifiés" desc="Sélection quotidienne analysée" delay="0" />
+            <FeaturePreview icon="🏆" title="Pronos en or" desc="Les meilleures values" delay="100" />
+            <FeaturePreview icon="📊" title="Scores live" desc="Suivi en temps réel" delay="200" />
           </div>
 
           <Link
             to="/abonnements"
-            className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-black px-10 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-primary/50"
+            className="inline-block bg-gradient-to-r from-primary via-yellow-400 to-primary text-black px-12 py-5 rounded-2xl font-bold text-lg hover:scale-110 hover:rotate-1 transition-all duration-300 shadow-2xl hover:shadow-primary/60 animate-gradient-slow"
           >
-            Voir les abonnements
+            🚀 Voir les abonnements
           </Link>
         </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          .animate-gradient {
+            background-size: 200% auto;
+            animation: gradient 3s linear infinite;
+          }
+          .animate-gradient-slow {
+            background-size: 200% auto;
+            animation: gradient 5s linear infinite;
+          }
+          .drop-shadow-glow {
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.3));
+          }
+        `}</style>
       </section>
     );
   }
@@ -159,10 +245,16 @@ export default function Pronostics() {
           setFilter={setFilter}
           stats={{ today: 0, future: 0, past: 0 }}
           loading
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          showStats={showStats}
+          setShowStats={setShowStats}
         />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 mt-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <SkeletonCard key={i} />
+            <SkeletonCard key={i} delay={i * 100} />
           ))}
         </div>
       </section>
@@ -172,15 +264,15 @@ export default function Pronostics() {
   if (error) {
     return (
       <section className="py-20 px-4 text-center">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-6xl mb-4">😕</div>
+        <div className="max-w-2xl mx-auto animate-shake">
+          <div className="text-7xl mb-6 animate-bounce">😕</div>
           <h1 className="text-3xl font-bold text-primary mb-4">Une erreur est survenue</h1>
-          <p className="text-red-400 mb-6">{error}</p>
+          <p className="text-red-400 mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-primary text-black px-6 py-3 rounded-xl font-semibold hover:scale-105 transition"
+            className="bg-gradient-to-r from-primary to-yellow-400 text-black px-8 py-4 rounded-xl font-semibold hover:scale-110 hover:rotate-3 transition-all duration-300 shadow-xl"
           >
-            Réessayer
+            🔄 Réessayer
           </button>
         </div>
       </section>
@@ -190,8 +282,20 @@ export default function Pronostics() {
   const hasAny = groups.today.length || groups.future.length || groups.past.length;
 
   return (
-    <section className="pt-16 pb-12 px-4">
+    <section className="pt-16 pb-12 px-4 relative">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-24 right-4 z-50 p-4 rounded-xl border-2 shadow-2xl backdrop-blur-xl animate-slide-in ${
+          notification.type === "success" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" :
+          notification.type === "info" ? "bg-blue-500/20 border-blue-500/50 text-blue-300" :
+          "bg-gray-500/20 border-gray-500/50 text-gray-300"
+        }`}>
+          <p className="font-semibold">{notification.message}</p>
+        </div>
+      )}
+
       <HeaderIntro />
+      
       <FilterBar
         filter={filter}
         setFilter={setFilter}
@@ -200,47 +304,125 @@ export default function Pronostics() {
           future: groups.future.length,
           past: groups.past.length,
         }}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        showStats={showStats}
+        setShowStats={setShowStats}
       />
 
+      {/* Stats globales */}
+      {showStats && (
+        <div className="max-w-6xl mx-auto mt-6 mb-6 animate-slide-down">
+          <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <span className="text-2xl">📊</span>
+              Statistiques globales
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <StatCard label="Total" value={globalStats.total} icon="⚽" color="primary" />
+              <StatCard label="Gagnés" value={globalStats.wins} icon="✅" color="emerald" />
+              <StatCard label="Perdus" value={globalStats.loses} icon="❌" color="red" />
+              <StatCard label="Win Rate" value={`${globalStats.winRate}%`} icon="🎯" color="yellow" />
+              <StatCard label="ROI" value={`${globalStats.roi}%`} icon="💰" color={parseFloat(globalStats.roi) >= 0 ? "emerald" : "red"} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {!hasAny ? (
-        <div className="max-w-2xl mx-auto text-center py-20">
-          <div className="text-6xl mb-4">⚽</div>
-          <h3 className="text-2xl font-bold text-white mb-3">Aucun pronostic pour le moment</h3>
-          <p className="text-gray-400">
-            Les nouveaux pronos arrivent bientôt. Reviens plus tard !
+        <div className="max-w-2xl mx-auto text-center py-20 animate-fade-in">
+          <div className="text-7xl mb-6 animate-bounce">⚽</div>
+          <h3 className="text-3xl font-bold text-white mb-4">Aucun pronostic pour le moment</h3>
+          <p className="text-gray-400 text-lg">
+            Les nouveaux pronos arrivent bientôt. Reviens plus tard ! 
           </p>
+          <div className="mt-8 inline-block">
+            <div className="flex items-center gap-2 px-6 py-3 bg-primary/10 border border-primary/30 rounded-full">
+              <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+              <span className="text-primary font-semibold">En veille...</span>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="max-w-6xl mx-auto space-y-12 mt-8">
           {groups.today.length > 0 && (
-            <Group title="Aujourd'hui" icon="🔥" items={groups.today} now={now} />
+            <Group title="Aujourd'hui" icon="🔥" items={groups.today} now={now} viewMode={viewMode} />
           )}
           {groups.future.length > 0 && (
-            <Group title="À venir" icon="📅" items={groups.future} now={now} />
+            <Group title="À venir" icon="📅" items={groups.future} now={now} viewMode={viewMode} />
           )}
           {groups.past.length > 0 && (
-            <div>
+            <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <span>📚</span>
                 Anciens{" "}
                 <span className="text-gray-500 text-lg">({groups.past.length})</span>
               </h2>
-              <CardGrid items={groups.past} now={now} />
+              <CardGrid items={groups.past} now={now} viewMode={viewMode} />
             </div>
           )}
         </div>
       )}
+
+      <style>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slide-down {
+          from {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-10px); }
+          75% { transform: translateX(10px); }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.5s ease-out;
+        }
+        .animate-slide-down {
+          animation: slide-down 0.4s ease-out;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
     </section>
   );
 }
 
 /* ---------- Composants ---------- */
 
-function FeaturePreview({ icon, title, desc }) {
+function FeaturePreview({ icon, title, desc, delay }) {
   return (
-    <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 text-center">
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-white font-bold mb-2">{title}</h3>
+    <div 
+      className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 text-center transform hover:scale-110 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/30 cursor-pointer"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="text-5xl mb-4 animate-bounce">{icon}</div>
+      <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
       <p className="text-gray-400 text-sm">{desc}</p>
     </div>
   );
@@ -248,12 +430,15 @@ function FeaturePreview({ icon, title, desc }) {
 
 function HeaderIntro() {
   return (
-    <div className="text-center mb-10 max-w-4xl mx-auto">
-      <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-        <span className="text-primary font-semibold text-sm">⚽ Section Pronostics</span>
+    <div className="text-center mb-10 max-w-4xl mx-auto animate-fade-in">
+      <div className="inline-block px-6 py-2 bg-primary/20 border-2 border-primary rounded-full mb-6 hover:scale-105 transition-transform cursor-pointer">
+        <span className="text-primary font-semibold text-sm flex items-center gap-2">
+          <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+          ⚽ Section Pronostics
+        </span>
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-        <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+      <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+        <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient">
           Pronostics Football
         </span>
       </h1>
@@ -265,15 +450,15 @@ function HeaderIntro() {
   );
 }
 
-function FilterBar({ filter, setFilter, stats, loading = false }) {
+function FilterBar({ filter, setFilter, stats, loading = false, viewMode, setViewMode, searchTerm, setSearchTerm, showStats, setShowStats }) {
   const Btn = ({ id, label, count }) => {
     const active = filter === id;
     return (
       <button
         onClick={() => setFilter(id)}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+        className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all duration-300 transform hover:scale-105 ${
           active
-            ? "bg-gradient-to-r from-primary to-yellow-400 text-black border-primary shadow-lg"
+            ? "bg-gradient-to-r from-primary to-yellow-400 text-black border-primary shadow-lg scale-105"
             : "border-primary/30 text-gray-300 hover:bg-primary/10 hover:border-primary/50"
         }`}
       >
@@ -286,21 +471,74 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
   const totalFiltered = stats.today + stats.future + stats.past;
 
   return (
-    <div className="sticky top-16 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 py-4 px-2">
-        <div className="flex items-center flex-wrap gap-2">
-          <Btn id="all" label="Tous" count={loading ? undefined : totalFiltered} />
-          <Btn id="pending" label="En attente" />
-          <Btn id="win" label="Gagnés" />
-          <Btn id="lose" label="Perdus" />
-        </div>
-        {!loading && (
-          <div className="hidden md:flex items-center gap-4 text-sm">
-            <StatBadge icon="🔥" label="Aujourd'hui" value={stats.today} />
-            <StatBadge icon="📅" label="À venir" value={stats.future} />
-            <StatBadge icon="📚" label="Archives" value={stats.past} />
+    <div className="sticky top-16 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-2xl">
+      <div className="max-w-6xl mx-auto py-4 px-2 space-y-4">
+        {/* Ligne 1: Filtres + Vue + Stats */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center flex-wrap gap-2">
+            <Btn id="all" label="Tous" count={loading ? undefined : totalFiltered} />
+            <Btn id="pending" label="En attente" />
+            <Btn id="win" label="Gagnés" />
+            <Btn id="lose" label="Perdus" />
           </div>
-        )}
+          
+          <div className="flex items-center gap-2">
+            {/* Toggle Stats */}
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className={`px-4 py-2 rounded-xl border-2 transition-all duration-300 ${
+                showStats 
+                  ? "bg-primary/20 border-primary text-primary" 
+                  : "border-gray-600 text-gray-400 hover:border-primary/50"
+              }`}
+              title="Afficher les statistiques"
+            >
+              📊
+            </button>
+
+            {/* Toggle View Mode */}
+            <button
+              onClick={() => setViewMode(viewMode === "grid" ? "compact" : "grid")}
+              className="px-4 py-2 rounded-xl border-2 border-primary/30 text-gray-300 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+              title={viewMode === "grid" ? "Vue compacte" : "Vue grille"}
+            >
+              {viewMode === "grid" ? "📋" : "🔲"}
+            </button>
+          </div>
+        </div>
+
+        {/* Ligne 2: Recherche + Badges stats */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Recherche */}
+          <div className="flex-1 min-w-[250px] max-w-md">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="🔍 Rechercher une équipe, un type..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 pl-10 bg-black/50 border-2 border-primary/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-all duration-300"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Stats badges */}
+          {!loading && (
+            <div className="hidden lg:flex items-center gap-3">
+              <StatBadge icon="🔥" label="Aujourd'hui" value={stats.today} />
+              <StatBadge icon="📅" label="À venir" value={stats.future} />
+              <StatBadge icon="📚" label="Archives" value={stats.past} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -308,38 +546,65 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
 
 function StatBadge({ icon, label, value }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/50 border border-primary/30 rounded-lg">
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/50 border border-primary/30 rounded-lg hover:scale-105 transition-transform">
       <span>{icon}</span>
-      <span className="text-gray-400">{label}:</span>
+      <span className="text-gray-400 text-sm">{label}:</span>
       <span className="text-primary font-bold">{value}</span>
     </div>
   );
 }
 
-function Group({ title, icon, items, now }) {
+function StatCard({ label, value, icon, color }) {
+  const colorClasses = {
+    primary: "from-primary/20 to-primary/5 border-primary/40 text-primary",
+    emerald: "from-emerald-500/20 to-emerald-500/5 border-emerald-500/40 text-emerald-400",
+    red: "from-red-500/20 to-red-500/5 border-red-500/40 text-red-400",
+    yellow: "from-yellow-400/20 to-yellow-400/5 border-yellow-400/40 text-yellow-400",
+  };
+
   return (
-    <div>
-      <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-        <span>{icon}</span>
-        {title}
-        <span className="text-gray-500 text-xl">({items.length})</span>
-      </h2>
-      <CardGrid items={items} now={now} />
+    <div className={`bg-gradient-to-br ${colorClasses[color]} border-2 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-300`}>
+      <div className="text-3xl mb-2">{icon}</div>
+      <div className={`text-2xl font-bold mb-1`}>{value}</div>
+      <div className="text-xs text-gray-400">{label}</div>
     </div>
   );
 }
 
-function CardGrid({ items, now }) {
+function Group({ title, icon, items, now, viewMode }) {
+  return (
+    <div className="animate-fade-in">
+      <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
+        <span className="text-4xl">{icon}</span>
+        {title}
+        <span className="text-gray-500 text-xl">({items.length})</span>
+      </h2>
+      <CardGrid items={items} now={now} viewMode={viewMode} />
+    </div>
+  );
+}
+
+function CardGrid({ items, now, viewMode }) {
+  if (viewMode === "compact") {
+    return (
+      <div className="space-y-3">
+        {items.map((p, i) => (
+          <PronoCardCompact key={p._id} p={p} now={now} delay={i * 50} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid lg:grid-cols-2 gap-6">
-      {items.map((p) => (
-        <PronoCard key={p._id} p={p} now={now} />
+      {items.map((p, i) => (
+        <PronoCard key={p._id} p={p} now={now} delay={i * 100} />
       ))}
     </div>
   );
 }
 
-function PronoCard({ p, now }) {
+function PronoCard({ p, now, delay }) {
   const [open, setOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loadingFollow, setLoadingFollow] = useState(true);
@@ -348,7 +613,6 @@ function PronoCard({ p, now }) {
   const color = borderColorFor(p.resultat);
   const status = computeMatchStatus(p.date, now);
   
-  // Vérifier si le prono est suivi
   useEffect(() => {
     const checkFollowing = async () => {
       try {
@@ -381,7 +645,6 @@ function PronoCard({ p, now }) {
       setIsFollowing(true);
       setShowMiseModal(false);
       setCustomMise("");
-      alert(`✅ Prono suivi avec ${mise}€ !`);
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur');
     }
@@ -406,7 +669,6 @@ function PronoCard({ p, now }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsFollowing(false);
-      alert('❌ Prono retiré de tes suivis');
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur');
     }
@@ -414,8 +676,13 @@ function PronoCard({ p, now }) {
 
   return (
     <article
-      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 ${color} transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20`}
+      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 ${color} transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-primary/30 animate-slide-up overflow-hidden`}
+      style={{ animationDelay: `${delay}ms` }}
     >
+      {/* Effet de brillance au hover */}
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+      </div>
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -669,9 +936,12 @@ function renderStatus(st) {
   return <span className="text-gray-500">—</span>;
 }
 
-function SkeletonCard() {
+function SkeletonCard({ delay }) {
   return (
-    <div className="bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 border-gray-700 animate-pulse">
+    <div 
+      className="bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 border-gray-700 animate-pulse"
+      style={{ animationDelay: `${delay}ms` }}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="h-6 w-24 bg-gray-800 rounded-full" />
         <div className="h-4 w-36 bg-gray-800 rounded" />
@@ -682,5 +952,71 @@ function SkeletonCard() {
         <div className="h-16 w-28 bg-gray-800 rounded-xl" />
       </div>
     </div>
+  );
+}
+
+function PronoCardCompact({ p, now, delay }) {
+  const [open, setOpen] = useState(false);
+  const color = borderColorFor(p.resultat);
+  const status = computeMatchStatus(p.date, now);
+
+  return (
+    <article
+      className={`group relative bg-gradient-to-r from-black to-gray-900 p-4 rounded-xl border-l-4 ${color} transition-all duration-300 hover:scale-[1.01] hover:shadow-lg hover:shadow-primary/20 animate-slide-up`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Info principale */}
+        <div className="flex-1 min-w-[250px]">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs px-2 py-1 rounded-full bg-emerald-400/15 text-emerald-300 border border-emerald-500/30">⚽</span>
+            <LabelBadge label={p.label} />
+            <ResultPill value={p.resultat} />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-1">
+            {p.equipe1} <span className="text-primary">vs</span> {p.equipe2}
+          </h3>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-gray-400">{p.type}</span>
+            <span className="text-yellow-400 font-bold">• {p.cote}</span>
+            <span className="text-gray-500">
+              {p.date ? new Date(p.date).toLocaleString("fr-FR", { 
+                day: "2-digit", 
+                month: "short", 
+                hour: "2-digit", 
+                minute: "2-digit" 
+              }) : "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <div className="text-xs">{renderStatus(status)}</div>
+          {(p.details || p.audioUrl) && (
+            <button
+              onClick={() => setOpen(!open)}
+              className="px-3 py-1.5 border border-primary/30 rounded-lg hover:bg-primary/10 transition text-xs font-semibold"
+            >
+              {open ? "👁️" : "🔍"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Analyse en mode compact */}
+      {open && (p.details || p.audioUrl) && (
+        <div className="mt-3 pt-3 border-t border-primary/20 space-y-2 animate-slide-down">
+          {p.details && (
+            <p className="text-sm text-gray-300">{p.details}</p>
+          )}
+          {p.audioUrl && (
+            <audio controls className="w-full h-8">
+              <source src={`${API_BASE}${p.audioUrl}`} />
+            </audio>
+          )}
+        </div>
+      )}
+    </article>
   );
 }

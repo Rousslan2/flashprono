@@ -9,6 +9,7 @@ const pronosticSchema = new mongoose.Schema({
   equipe2: { type: String, required: true },
   cote: { type: Number, required: true },
   type: { type: String, required: true },
+  score: { type: String, default: "" }, // Score séparé du type
   resultat: { type: String, default: "en attente" },
   date: { type: Date, default: Date.now },
   competition: { type: String },
