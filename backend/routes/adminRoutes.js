@@ -214,6 +214,10 @@ router.patch("/users/:id/ban", async (req, res, next) => {
     ).select("-password");
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("BAN", req.user, user);
+    
+    // 🔥 Émettre un événement Socket.io
+    io.emit("user:updated", user);
+    
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -227,6 +231,7 @@ router.patch("/users/:id/unban", async (req, res, next) => {
     ).select("-password");
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("UNBAN", req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -240,6 +245,7 @@ router.patch("/users/:id/make-admin", async (req, res, next) => {
     ).select("-password");
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("MAKE_ADMIN", req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -253,6 +259,7 @@ router.patch("/users/:id/remove-admin", async (req, res, next) => {
     ).select("-password");
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("REMOVE_ADMIN", req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -282,6 +289,7 @@ router.patch("/users/:id/grant-subscription", async (req, res, next) => {
 
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction(`GRANT_${plan.toUpperCase()}`, req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -302,6 +310,7 @@ router.patch("/users/:id/revoke-subscription", async (req, res, next) => {
 
     if (!user) return res.status(404).json({ message: "Utilisateur introuvable." });
     logAdminAction("REVOKE_SUBSCRIPTION", req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });
@@ -337,6 +346,7 @@ router.patch("/users/:id/modify-subscription-days", async (req, res, next) => {
 
     await user.save();
     logAdminAction(`MODIFY_DAYS_${days > 0 ? '+' : ''}${days}`, req.user, user);
+    io.emit("user:updated", user);
     res.json({ ok: true, user });
   } catch (e) { next(e); }
 });

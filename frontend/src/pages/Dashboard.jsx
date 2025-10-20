@@ -1,10 +1,28 @@
 // frontend/src/pages/Dashboard.jsx
 import { useRealtimeUser, logout } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import socket from "../services/socket";
 
 export default function Dashboard() {
   const user = useRealtimeUser(); // 🔥 Utilise le hook temps réel
   const sub = user?.subscription || {};
+
+  // 🔥 Écouter les mises à jour de l'utilisateur
+  useEffect(() => {
+    socket.on('user:updated', (updatedUser) => {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser._id === updatedUser._id) {
+        console.log('📥 Abonnement mis à jour en temps réel');
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new CustomEvent('userDataUpdated', { detail: updatedUser }));
+      }
+    });
+
+    return () => {
+      socket.off('user:updated');
+    };
+  }, []);
 
   const planLabel =
     sub.plan === "yearly"

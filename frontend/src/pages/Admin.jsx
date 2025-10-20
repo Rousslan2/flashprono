@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { API_BASE } from "../config";
 import { emitUserUpdate, getStoredUser } from "../utils/userSync";
+import socket from "../services/socket";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
@@ -144,6 +145,36 @@ export default function Admin() {
     loadStats();
     loadPronos();
     loadUsers(1);
+    
+    // 🔥 Écouter les mises à jour en temps réel
+    socket.on('user:updated', (updatedUser) => {
+      console.log('🔄 Utilisateur mis à jour:', updatedUser.name);
+      setUsers(prev => prev.map(u => u._id === updatedUser._id ? updatedUser : u));
+    });
+    
+    socket.on('prono:created', () => {
+      console.log('✨ Nouveau prono créé');
+      loadStats();
+      loadPronos();
+    });
+    
+    socket.on('prono:updated', () => {
+      console.log('✏️ Prono modifié');
+      loadPronos();
+    });
+    
+    socket.on('prono:deleted', () => {
+      console.log('🗑️ Prono supprimé');
+      loadStats();
+      loadPronos();
+    });
+    
+    return () => {
+      socket.off('user:updated');
+      socket.off('prono:created');
+      socket.off('prono:updated');
+      socket.off('prono:deleted');
+    };
   }, []);
 
   // Auto-refresh online tab every 15s when visible
