@@ -227,6 +227,44 @@ export default function Navbar() {
             >
               🟢 Scores Live
             </Link>
+            
+            {/* Toujours visible pour tous */}
+            <Link
+              to="/bankroll"
+              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                isActive("/bankroll") ? "bg-primary/20 text-primary font-bold" : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              💰 Bankroll
+            </Link>
+            <Link
+              to="/strategies"
+              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                isActive("/strategies") ? "bg-primary/20 text-primary font-bold" : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              🎯 Stratégies
+            </Link>
+            <Link
+              to="/mes-stats"
+              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                isActive("/mes-stats") ? "bg-primary/20 text-primary font-bold" : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              📊 Mes Stats
+            </Link>
+            <Link
+              to="/chat"
+              className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                isActive("/chat") ? "bg-primary/20 text-primary font-bold" : ""
+              }`}
+              onClick={() => setMenuOpen(false)}
+            >
+              💬 Chat
+            </Link>
             <Link
               to="/abonnements"
               className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
@@ -237,56 +275,17 @@ export default function Navbar() {
               👑 Abonnements
             </Link>
 
-            {isAuth && (
-              <>
-                <Link
-                  to="/bankroll"
-                  className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                    isActive("/bankroll") ? "bg-primary/20 text-primary font-bold" : ""
-                  }`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  💰 Bankroll
-                </Link>
-                <Link
-                  to="/strategies"
-                  className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                    isActive("/strategies") ? "bg-primary/20 text-primary font-bold" : ""
-                  }`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  🎯 Stratégies
-                </Link>
-                <Link
-                  to="/mes-stats"
-                  className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                    isActive("/mes-stats") ? "bg-primary/20 text-primary font-bold" : ""
-                  }`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  📊 Mes Stats
-                </Link>
-                <Link
-                  to="/chat"
-                  className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                    isActive("/chat") ? "bg-primary/20 text-primary font-bold" : ""
-                  }`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  💬 Chat
-                </Link>
-                {user?.isAdmin && (
-                  <Link
-                    to="/admin"
-                    className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
-                      isActive("/admin") ? "bg-primary/20 text-primary font-bold" : ""
-                    }`}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    🔧 Admin
-                  </Link>
-                )}
-              </>
+            {/* Admin uniquement pour les admins */}
+            {isAuth && user?.isAdmin && (
+              <Link
+                to="/admin"
+                className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
+                  isActive("/admin") ? "bg-primary/20 text-primary font-bold" : ""
+                }`}
+                onClick={() => setMenuOpen(false)}
+              >
+                🔧 Admin
+              </Link>
             )}
 
             {isAuth ? (
