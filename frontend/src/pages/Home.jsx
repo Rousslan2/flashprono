@@ -326,15 +326,17 @@ function Feature({ icon, title, desc, gradient, delay }) {
 function OfferCard({ icon, title, features, highlight, delay }) {
   return (
     <div 
-      className={`relative ${highlight ? 'border-2 border-primary shadow-2xl shadow-primary/30' : 'border-2 border-gray-700'} bg-gradient-to-br from-black via-gray-900 to-black rounded-3xl p-8 hover:scale-105 transition-all duration-500 overflow-hidden group animate-slide-in-up`}
-      style={{ animationDelay: `${delay}ms` }}
+      className={`relative ${highlight ? 'border-2 border-primary shadow-2xl shadow-primary/30' : 'border-2 border-gray-700'} bg-gradient-to-br from-black via-gray-900 to-black rounded-3xl p-6 sm:p-8 hover:scale-105 transition-all duration-500 group animate-slide-in-up ${
+        highlight ? "mt-12 sm:mt-10" : ""
+      }`}
+      style={{ animationDelay: `${delay}ms`, position: 'relative', zIndex: 1, overflow: 'visible' }}
     >
       {highlight && (
         <>
           {/* Halo animé */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-yellow-400/20 blur-2xl opacity-50 animate-pulse"></div>
           {/* Badge */}
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black px-6 py-2 rounded-full font-black text-sm shadow-lg z-20 animate-bounce-slow">
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black px-4 sm:px-6 py-2 rounded-full font-black text-sm shadow-2xl z-[100] animate-bounce-slow whitespace-nowrap">
             ⭐ POPULAIRE
           </div>
         </>

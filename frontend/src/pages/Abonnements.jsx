@@ -169,7 +169,7 @@ export default function Abonnements() {
         )}
       </div>
 
-      {/* Plans Grid */}
+      {/* Plans Grid - FIX Z-INDEX */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto mb-16 relative z-10 px-4">
         {plans.map((plan, index) => {
           const isCurrent = active && plan.key === currentPlan;
@@ -185,10 +185,10 @@ export default function Abonnements() {
                   : isCurrent 
                   ? "border-emerald-400 shadow-2xl shadow-emerald-400/30" 
                   : `${plan.borderColor} shadow-xl`
-              } rounded-3xl p-6 sm:p-8 hover:scale-105 transition-all duration-500 overflow-hidden group animate-slide-in-up ${
+              } rounded-3xl p-6 sm:p-8 hover:scale-105 transition-all duration-500 group animate-slide-in-up ${
                 disabled ? "opacity-75" : ""
-              } ${plan.popular || isCurrent ? "mt-8 sm:mt-0" : ""}`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              } ${plan.popular || isCurrent ? "mt-12 sm:mt-10" : ""}`}
+              style={{ animationDelay: `${index * 100}ms`, position: 'relative', zIndex: 1, overflow: 'visible' }}
             >
               {/* Halo lumineux */}
               <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-yellow-400/10 blur-2xl opacity-0 group-hover:opacity-50 transition-opacity"></div>
@@ -196,20 +196,20 @@ export default function Abonnements() {
               {/* Effet de brillance */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
 
-              {/* Ribbon */}
+              {/* Ribbon - VRAIMENT AU DESSUS */}
               {plan.ribbon && !isCurrent && (
-                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-bounce-slow whitespace-nowrap">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-2xl z-[100] animate-bounce-slow whitespace-nowrap">
                   ⭐ {plan.ribbon}
                 </div>
               )}
               {plan.popular && !isCurrent && (
-                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-[10px] sm:text-xs font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg z-20 animate-pulse whitespace-nowrap max-w-[90%] overflow-hidden text-ellipsis">
-                  🔥 LE + POPULAIRE
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-2xl z-[100] animate-pulse whitespace-nowrap">
+                  🔥 POPULAIRE
                 </div>
               )}
               {isCurrent && (
-                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-bounce-slow whitespace-nowrap">
-                  ✅ PLAN ACTIF
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-2xl z-[100] animate-bounce-slow whitespace-nowrap">
+                  ✅ ACTIF
                 </div>
               )}
 
