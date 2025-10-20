@@ -379,30 +379,6 @@ export default function Admin() {
             <p className="text-center text-gray-400">Chargement des stats…</p>
           ) : (
             <>
-              {/* Bouton vérification manuelle */}
-              <div className="mb-6 flex justify-center">
-                <button
-                  onClick={async () => {
-                    if (!confirm("🔄 Vérifier tous les résultats de pronostics maintenant ?")) return;
-                    try {
-                      const { data } = await axios.post(
-                        `${API_BASE}/api/pronostics/check-results`,
-                        {},
-                        { headers: { Authorization: `Bearer ${token}` } }
-                      );
-                      alert(data.message);
-                      loadStats();
-                      loadPronos();
-                    } catch (e) {
-                      alert(e?.response?.data?.message || "Erreur vérification");
-                    }
-                  }}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 text-white font-bold hover:scale-105 transition-all shadow-xl"
-                >
-                  🔄 Vérifier les résultats maintenant
-                </button>
-              </div>
-              
               <div className="grid md:grid-cols-4 gap-4">
                 <StatCard label="Utilisateurs" value={stats?.totalUsers} />
                 <StatCard label="Abonnés actifs" value={stats?.activeSubs} />
