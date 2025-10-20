@@ -116,24 +116,32 @@ export default function Pronostics() {
 
   if (!active) {
     return (
-      <section className="py-20 px-4 text-center">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-8">
-            <div className="inline-block w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6 text-4xl border-2 border-primary/30">
+      <section className="py-20 px-4 text-center relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="mb-8 animate-bounce-slow">
+            <div className="inline-block w-24 h-24 bg-gradient-to-br from-primary to-yellow-400 rounded-full flex items-center justify-center mb-6 text-5xl border-4 border-white/20 shadow-2xl">
               🔒
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-              <span className="text-primary">Pronostics Football</span>
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient-x">
+                Pronostics Football
+              </span>
               <br />
-              <span className="text-white">Réservés aux membres</span>
+              <span className="text-white drop-shadow-lg">Réservés aux membres VIP</span>
             </h1>
-            <p className="text-xl text-gray-300 leading-relaxed mb-8">
-              Débloque l'accès aux <span className="text-primary font-semibold">pronos quotidiens</span>,
+            <p className="text-2xl text-gray-300 leading-relaxed mb-8">
+              Débloque l'accès aux <span className="text-primary font-bold">pronos quotidiens</span>,
               analyses détaillées et suivi en temps réel.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
             <FeaturePreview icon="⚽" title="Pronos vérifiés" desc="Sélection quotidienne analysée" />
             <FeaturePreview icon="🏆" title="Pronos en or" desc="Les meilleures values" />
             <FeaturePreview icon="📊" title="Scores live" desc="Suivi en temps réel" />
@@ -141,9 +149,12 @@ export default function Pronostics() {
 
           <Link
             to="/abonnements"
-            className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-black px-10 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-primary/50"
+            className="group inline-block relative"
           >
-            Voir les abonnements
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-yellow-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-primary to-yellow-400 text-black px-12 py-5 rounded-2xl font-bold text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
+              ✨ Devenir membre VIP
+            </div>
           </Link>
         </div>
       </section>
@@ -238,9 +249,9 @@ export default function Pronostics() {
 
 function FeaturePreview({ icon, title, desc }) {
   return (
-    <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 text-center">
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-white font-bold mb-2">{title}</h3>
+    <div className="group bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 text-center hover:scale-110 hover:shadow-2xl hover:shadow-primary/50 transition-all duration-500 cursor-pointer">
+      <div className="text-5xl mb-4 group-hover:scale-125 transition-transform duration-300">{icon}</div>
+      <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
       <p className="text-gray-400 text-sm">{desc}</p>
     </div>
   );
@@ -248,17 +259,17 @@ function FeaturePreview({ icon, title, desc }) {
 
 function HeaderIntro() {
   return (
-    <div className="text-center mb-10 max-w-4xl mx-auto">
-      <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-        <span className="text-primary font-semibold text-sm">⚽ Section Pronostics</span>
+    <div className="text-center mb-12 max-w-5xl mx-auto relative z-10">
+      <div className="inline-block px-6 py-3 bg-gradient-to-r from-primary/20 to-yellow-400/20 border-2 border-primary rounded-full mb-6 animate-pulse-slow">
+        <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent font-bold text-sm">⚽ SECTION PRONOSTICS VIP</span>
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-        <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+      <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
+        <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient-x drop-shadow-2xl">
           Pronostics Football
         </span>
       </h1>
-      <p className="text-xl text-gray-300 leading-relaxed">
-        Sélection de paris <span className="text-primary font-semibold">simples & rentables</span>,
+      <p className="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+        Sélection de paris <span className="text-primary font-bold">simples & rentables</span>,
         analyses courtes et mises à jour en continu.
       </p>
     </div>
@@ -595,15 +606,15 @@ function PronoCard({ p, now }) {
 function LabelBadge({ label }) {
   if (label === "strategie_bankroll") {
     return (
-      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-400/15 text-blue-300 border border-blue-500/30">
+      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black bg-gradient-to-r from-blue-400/20 to-cyan-400/20 text-blue-300 border-2 border-blue-500/40 shadow-lg animate-pulse-slow">
         🧠 Stratégie
       </span>
     );
   }
   if (label === "prono_en_or") {
     return (
-      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-500/40 animate-pulse">
-        👑 PRONO EN OR
+      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black bg-gradient-to-r from-yellow-400/30 to-orange-400/30 text-yellow-300 border-2 border-yellow-500/50 animate-shimmer shadow-2xl shadow-yellow-500/50">
+        <span className="animate-spin-slow">👑</span> PRONO EN OR
       </span>
     );
   }
