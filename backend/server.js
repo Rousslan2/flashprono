@@ -28,6 +28,9 @@ import scoresRoutes from "./routes/scoresRoutes.js";
 import User from "./models/User.js";
 import ConnectionHistory from "./models/ConnectionHistory.js";
 
+// 🔧 Services
+import { checkAndUpdatePronosticResults } from "./services/pronosticChecker.js";
+
 // ⚙️ Initialisation
 dotenv.config();
 connectDB();
@@ -145,7 +148,22 @@ app.post("/api/admin/log-test", (req, res) => {
 // 🕛 CRON JOBS
 // =============================
 
-// Job 1 : Déconnexions automatiques (toutes les 5 minutes)
+// Job 1 : Vérification automatique des résultats de pronostics (toutes les 10 minutes)
+cron.schedule(
+  "*/10 * * * *",
+  async () => {
+    console.log("🔄 CRON: Vérification des résultats de pronostics...");
+    const result = await checkAndUpdatePronosticResults();
+    if (result) {
+      console.log(
+        `✅ CRON: ${result.updated}/${result.checked} pronostic(s) mis à jour`
+      );
+    }
+  },
+  { timezone: "Europe/Paris" }
+);
+
+// Job 2 : Déconnexions automatiques (toutes les 5 minutes)
 cron.schedule(
   "*/5 * * * *",
   async () => {
@@ -198,7 +216,7 @@ cron.schedule(
   { timezone: "Europe/Paris" }
 );
 
-// Job 2 : Nettoyage des abonnements expirés (tous les jours à 3h)
+// Job 3 : Nettoyage des abonnements expirés (tous les jours à 3h)
 cron.schedule(
   "0 3 * * *",
   async () => {

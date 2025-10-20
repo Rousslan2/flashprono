@@ -16,7 +16,7 @@ const pronosticSchema = new mongoose.Schema({
   confiance: { type: Number, min: 0, max: 100, default: 50 },
   image: { type: String },
   analyse: { type: String },
-  statut: { type: String, enum: ['en attente','gagné','perdu','remboursé'], default: 'en attente' },
+  statut: { type: String, enum: ['en attente','gagnant','perdu','remboursé'], default: 'en attente' },
   categorie: { type: String, enum: ['standard','pronos_en_or','strategie_bankroll'], default: 'standard' },
 }, { timestamps: true });
 

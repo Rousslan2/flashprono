@@ -1,6 +1,7 @@
 import express from "express";
 import Pronostic from "../models/Pronostic.js";
 import { protect, requireAdmin } from "../middleware/authMiddleware.js";
+import { checkAndUpdatePronosticResults } from "../services/pronosticChecker.js";
 
 const router = express.Router();
 
@@ -30,9 +31,6 @@ router.post("/", protect, async (req, res) => {
   res.json(prono);
 });
 
-export default router;
-
-
 // PUT pronostic — réservé admin
 router.put("/:id", protect, requireAdmin, async (req, res) => {
   const { id } = req.params;
@@ -46,3 +44,32 @@ router.put("/:id", protect, requireAdmin, async (req, res) => {
   if (!prono) return res.status(404).json({ message: "Pronostic introuvable" });
   res.json(prono);
 });
+
+// 🔄 Vérifier manuellement les résultats (admin uniquement)
+router.post("/check-results", protect, requireAdmin, async (req, res) => {
+  try {
+    console.log("🔄 Vérification manuelle des résultats lancée par", req.user.email);
+    const result = await checkAndUpdatePronosticResults();
+    
+    if (result) {
+      res.json({
+        success: true,
+        message: `${result.updated} pronostic(s) mis à jour sur ${result.checked} vérifié(s)`,
+        checked: result.checked,
+        updated: result.updated
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la vérification"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+export default router;
