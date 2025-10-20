@@ -353,6 +353,7 @@ function PronoCard({ p, now }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loadingFollow, setLoadingFollow] = useState(true);
   const [showMiseModal, setShowMiseModal] = useState(false);
+  const [customMise, setCustomMise] = useState("");
   const color = borderColorFor(p.resultat);
   const status = computeMatchStatus(p.date, now);
   
@@ -388,10 +389,20 @@ function PronoCard({ p, now }) {
       );
       setIsFollowing(true);
       setShowMiseModal(false);
+      setCustomMise("");
       alert(`✅ Prono suivi avec ${mise}€ !`);
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur');
     }
+  };
+  
+  const handleCustomFollow = () => {
+    const amount = parseFloat(customMise);
+    if (!amount || amount <= 0) {
+      alert("⚠️ Entre un montant valide");
+      return;
+    }
+    handleFollow(amount);
   };
   
   const handleUnfollow = async () => {
@@ -481,7 +492,9 @@ function PronoCard({ p, now }) {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-primary rounded-2xl p-6 max-w-md w-full">
             <h3 className="text-xl font-bold text-white mb-4">💰 Quelle mise ?</h3>
-            <p className="text-gray-400 text-sm mb-4">Entre ta mise pour suivre ce prono dans tes stats</p>
+            <p className="text-gray-400 text-sm mb-4">Choisis un montant prédéfini ou entre le tien</p>
+            
+            {/* Boutons prédéfinis */}
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[5, 10, 20, 50, 100, 200].map(amount => (
                 <button
@@ -493,8 +506,34 @@ function PronoCard({ p, now }) {
                 </button>
               ))}
             </div>
+            
+            {/* Input personnalisé */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">🖊️ Autre montant</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Ex: 15"
+                  value={customMise}
+                  onChange={(e) => setCustomMise(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-black border border-primary/40 rounded-xl text-white focus:outline-none focus:border-primary"
+                  min="0.01"
+                  step="0.01"
+                />
+                <button
+                  onClick={handleCustomFollow}
+                  className="px-4 py-2 bg-primary text-black rounded-xl hover:scale-105 transition-all font-bold"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+            
             <button
-              onClick={() => setShowMiseModal(false)}
+              onClick={() => {
+                setShowMiseModal(false);
+                setCustomMise("");
+              }}
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition"
             >
               Annuler

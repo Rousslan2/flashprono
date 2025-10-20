@@ -61,19 +61,19 @@ export default function Navbar() {
         {/* Centre : Menu desktop CENTRÉ */}
         <div className="hidden md:flex flex-1 justify-center">
           <div className="flex items-center gap-8 text-green-400 font-medium">
-            <Link to="/pronostics" className="hover:text-white transition">Pronostics</Link>
-            <Link to="/abonnements" className="hover:text-white transition">Abonnements</Link>
+            <Link to="/pronostics" className="hover:text-white transition">⚽ Pronostics</Link>
+            <Link to="/abonnements" className="hover:text-white transition">👑 Abonnements</Link>
 
             {/* 👉 Nouveaux liens */}
-            <Link to="/bankroll" className="hover:text-white transition">Bankroll</Link>
-            <Link to="/strategies" className="hover:text-white transition">Stratégies</Link>
+            <Link to="/bankroll" className="hover:text-white transition">💰 Bankroll</Link>
+            <Link to="/strategies" className="hover:text-white transition">🎯 Stratégies</Link>
             <Link to="/mes-stats" className="hover:text-white transition">📊 Stats</Link>
 
             {user?.isAdmin && (
-              <Link to="/admin" className="hover:text-white transition">Admin</Link>
+              <Link to="/admin" className="hover:text-white transition">🔧 Admin</Link>
             )}
             {isAuth && (
-              <Link to="/dashboard" className="hover:text-white transition">Espace membre</Link>
+              <Link to="/dashboard" className="hover:text-white transition">🏠 Espace membre</Link>
             )}
           </div>
         </div>
@@ -164,14 +164,14 @@ export default function Navbar() {
               className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
               onClick={() => setMenuOpen(false)}
             >
-              Pronostics
+              ⚽ Pronostics
             </Link>
             <Link
               to="/abonnements"
               className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
               onClick={() => setMenuOpen(false)}
             >
-              Abonnements
+              👑 Abonnements
             </Link>
 
             {/* 👉 Nouveaux liens (mobile) */}
@@ -180,14 +180,14 @@ export default function Navbar() {
               className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
               onClick={() => setMenuOpen(false)}
             >
-              Bankroll
+              💰 Bankroll
             </Link>
             <Link
               to="/strategies"
               className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
               onClick={() => setMenuOpen(false)}
             >
-              Stratégies
+              🎯 Stratégies
             </Link>
             <Link
               to="/mes-stats"
@@ -203,7 +203,7 @@ export default function Navbar() {
                 className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
                 onClick={() => setMenuOpen(false)}
               >
-                Admin
+                🔧 Admin
               </Link>
             )}
             {isAuth ? (
@@ -213,7 +213,7 @@ export default function Navbar() {
                   className="px-4 py-3 border-b border-white/10 hover:bg-[#111]"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Espace membre
+                  🏠 Espace membre
                 </Link>
                 <a
                   href="https://wa.me/33695962084"
