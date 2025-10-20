@@ -1,5 +1,5 @@
 [build]
-buildCommand = "npm install"
+buildCommand = "npm install --legacy-peer-deps --prefer-offline"
 
 [deploy]
 startCommand = "npm start"
