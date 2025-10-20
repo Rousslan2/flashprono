@@ -27,9 +27,9 @@ export async function checkAndUpdatePronosticResults() {
       return;
     }
 
-    // 1. Récupérer tous les pronostics en attente (Football uniquement)
+    // 1. Récupérer tous les pronostics en attente OU en cours (Football uniquement)
     const pendingPronostics = await Pronostic.find({
-      statut: "en attente",
+      statut: { $in: ["en attente", "en cours"] },
       sport: "Football",
     });
 
@@ -82,9 +82,6 @@ export async function checkAndUpdatePronosticResults() {
     // 3. Pour chaque pronostic, trouver le match correspondant et vérifier le résultat
     for (const prono of pendingPronostics) {
       const matchingMatch = allMatches.find((match) => {
-        // Match terminé uniquement
-        if (match.fixture.status.short !== "FT") return false;
-
         const homeTeam = match.teams.home.name.toLowerCase();
         const awayTeam = match.teams.away.name.toLowerCase();
         const equipe1 = prono.equipe1.toLowerCase();
@@ -105,38 +102,70 @@ export async function checkAndUpdatePronosticResults() {
         const awayScore = matchingMatch.goals.away;
         const homeTeam = matchingMatch.teams.home.name;
         const awayTeam = matchingMatch.teams.away.name;
+        const status = matchingMatch.fixture.status.short; // NS, 1H, HT, 2H, FT, etc.
+        const elapsed = matchingMatch.fixture.status.elapsed; // Minutes écoulées
 
-        // Déterminer le résultat du pronostic
-        const result = determinePronosticResult(
-          prono,
-          homeTeam,
-          awayTeam,
-          homeScore,
-          awayScore
-        );
-
-        if (result) {
-          // Mettre à jour le pronostic
-          prono.statut = result;
-          prono.resultat = `${homeScore}-${awayScore}`;
-          await prono.save();
-
-          updatedCount++;
-
-          console.log(
-            `✅ Pronostic mis à jour: ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
+        // Match terminé (FT)
+        if (status === "FT") {
+          // Déterminer le résultat du pronostic
+          const result = determinePronosticResult(
+            prono,
+            homeTeam,
+            awayTeam,
+            homeScore,
+            awayScore
           );
 
-          // Émettre un événement Socket.io pour notifier en temps réel
-          io.emit("pronostic:updated", {
-            pronosticId: prono._id,
-            statut: result,
-            resultat: `${homeScore}-${awayScore}`,
-            equipe1: prono.equipe1,
-            equipe2: prono.equipe2,
-            type: prono.type,
-            cote: prono.cote,
-          });
+          if (result && prono.statut !== result) {
+            // Mettre à jour le pronostic
+            prono.statut = result;
+            prono.resultat = `${homeScore}-${awayScore}`;
+            await prono.save();
+
+            updatedCount++;
+
+            console.log(
+              `✅ Pronostic terminé: ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
+            );
+
+            // Émettre un événement Socket.io pour notifier en temps réel
+            io.emit("pronostic:updated", {
+              pronosticId: prono._id,
+              statut: result,
+              resultat: `${homeScore}-${awayScore}`,
+              equipe1: prono.equipe1,
+              equipe2: prono.equipe2,
+              type: prono.type,
+              cote: prono.cote,
+              matchStatus: "FT",
+            });
+          }
+        }
+        // Match en cours (1H, HT, 2H, ET, P, etc.)
+        else if (["1H", "HT", "2H", "ET", "BT", "P"].includes(status)) {
+          // Mettre à jour le statut en "en cours" avec score live
+          if (prono.statut !== "en cours" || prono.resultat !== `${homeScore}-${awayScore} (${elapsed}')`) {
+            prono.statut = "en cours";
+            prono.resultat = `${homeScore}-${awayScore} (${elapsed}')`;
+            await prono.save();
+
+            console.log(
+              `🔴 Match en cours: ${prono.equipe1} vs ${prono.equipe2} - ${homeScore}-${awayScore} (${elapsed}')`
+            );
+
+            // Émettre un événement Socket.io pour le score live
+            io.emit("pronostic:live", {
+              pronosticId: prono._id,
+              statut: "en cours",
+              resultat: `${homeScore}-${awayScore}`,
+              elapsed: elapsed,
+              matchStatus: status,
+              equipe1: prono.equipe1,
+              equipe2: prono.equipe2,
+              type: prono.type,
+              cote: prono.cote,
+            });
+          }
         }
       }
     }

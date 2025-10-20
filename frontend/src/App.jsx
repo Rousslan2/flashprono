@@ -5,6 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PronosticNotifications from "./components/PronosticNotifications";
+import LiveScoreNotifications from "./components/LiveScoreNotifications";
 
 import Home from "./pages/Home";
 import Pronostics from "./pages/Pronostics";
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <div className="bg-dark min-h-screen text-white flex flex-col">
       <Navbar />
+      <LiveScoreNotifications />
       <PronosticNotifications />
       <main className="flex-grow container mx-auto px-4">
         <Routes>
