@@ -30,17 +30,7 @@ export function startHeartbeat() {
     send();
   });
   
-  // 🔥 Déconnexion automatique quand l'utilisateur ferme la page
-  window.addEventListener("beforeunload", async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    
-    try {
-      // Utiliser sendBeacon pour envoyer la requête même si la page se ferme
-      const blob = new Blob([JSON.stringify({ token })], { type: 'application/json' });
-      navigator.sendBeacon(`${API_BASE}/api/auth/logout`, blob);
-    } catch (e) {
-      // silencieux
-    }
-  });
+  // 🔥 NE PAS enregistrer de déconnexion automatique
+  // On se base sur lastSeen (2 min d'inactivité = offline)
+  // La déconnexion est enregistrée SEULEMENT si l'user clique sur "Se déconnecter"
 }
