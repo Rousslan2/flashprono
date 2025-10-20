@@ -33,7 +33,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-black via-gray-900 to-black border-b-2 border-primary shadow-2xl backdrop-blur-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
             to="/"
@@ -46,7 +46,7 @@ export default function Navbar() {
           </Link>
 
           {/* Centre : Menu desktop */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden md:flex items-center gap-3">
             <NavLink to="/pronostics" active={isActive("/pronostics")}>
               ⚽ Pronostics
             </NavLink>

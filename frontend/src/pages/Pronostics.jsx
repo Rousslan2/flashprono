@@ -10,7 +10,6 @@ export default function Pronostics() {
   const [loading, setLoading] = useState(true);
   const [pronos, setPronos] = useState([]);
   const [error, setError] = useState("");
-  const [showPast, setShowPast] = useState(false);
   const [filter, setFilter] = useState("all");
   const [now, setNow] = useState(new Date());
   const active = isSubscriptionActive();
@@ -221,20 +220,12 @@ export default function Pronostics() {
           )}
           {groups.past.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <span>📚</span>
-                  Anciens{" "}
-                  <span className="text-gray-500 text-lg">({groups.past.length})</span>
-                </h2>
-                <button
-                  onClick={() => setShowPast((v) => !v)}
-                  className="px-4 py-2 border-2 border-primary/30 rounded-xl hover:bg-primary/10 transition-all font-semibold text-sm"
-                >
-                  {showPast ? "Masquer" : "Afficher"}
-                </button>
-              </div>
-              {showPast && <CardGrid items={groups.past} now={now} />}
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <span>📚</span>
+                Anciens{" "}
+                <span className="text-gray-500 text-lg">({groups.past.length})</span>
+              </h2>
+              <CardGrid items={groups.past} now={now} />
             </div>
           )}
         </div>
@@ -295,7 +286,7 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
   const totalFiltered = stats.today + stats.future + stats.past;
 
   return (
-    <div className="sticky top-20 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
+    <div className="sticky top-16 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 py-4 px-2">
         <div className="flex items-center flex-wrap gap-2">
           <Btn id="all" label="Tous" count={loading ? undefined : totalFiltered} />
