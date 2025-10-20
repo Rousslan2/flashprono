@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import ConnectionHistory from "../models/ConnectionHistory.js";
 
 const router = express.Router();
 
@@ -31,6 +32,21 @@ router.post("/login", async (req, res) => {
     if (!isMatch) return res.status(401).json({ message: "Mot de passe incorrect" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+    
+    // 🔥 Enregistrer la connexion dans l'historique
+    try {
+      await ConnectionHistory.create({
+        userId: user._id,
+        userName: user.name,
+        userEmail: user.email,
+        action: "login",
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.headers['user-agent'] || 'Unknown',
+      });
+    } catch (err) {
+      console.error('❌ Erreur enregistrement historique:', err);
+    }
+    
     res.json({ token, user });
   } catch (err) {
     res.status(500).json({ message: err.message });

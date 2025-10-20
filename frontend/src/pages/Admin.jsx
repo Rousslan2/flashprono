@@ -5,7 +5,7 @@ import { emitUserUpdate, getStoredUser } from "../utils/userSync";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
-  const [tab, setTab] = useState("stats"); // stats | add | list | users | online
+  const [tab, setTab] = useState("stats"); // stats | add | list | users | online | history
   const [editingId, setEditingId] = useState(null);
 
   // ---- STATS ----
@@ -37,8 +37,14 @@ export default function Admin() {
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   // ---- ONLINE ----
-  const [online, setOnline] = useState({ users: [], count: 0, loading: false });
+  const [online, setOnline] = useState({ users: [], count: 0, loading: false, timestamp: null });
   const onlineIvRef = useRef(null);
+  
+  // ---- HISTORY ----
+  const [history, setHistory] = useState([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPages, setHistoryPages] = useState(1);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // 🎙️ Upload audio
   const uploadAudio = async (file) => {
@@ -106,11 +112,30 @@ export default function Admin() {
       setOnline({
         users: data.users || [],
         count: data.count || 0,
+        timestamp: data.timestamp || new Date(),
         loading: false,
       });
-    } catch {
+    } catch (err) {
+      console.error('❌ Erreur online users:', err);
       setOnline((o) => ({ ...o, loading: false }));
-      alert("Erreur chargement des utilisateurs en ligne");
+    }
+  };
+  
+  const loadHistory = async (page = 1) => {
+    try {
+      setLoadingHistory(true);
+      const { data } = await axios.get(
+        `${API_BASE}/api/admin/connection-history?page=${page}&limit=50`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistory(data.items || []);
+      setHistoryPage(data.page);
+      setHistoryPages(data.pages);
+    } catch (err) {
+      console.error('❌ Erreur history:', err);
+      alert("Erreur chargement historique");
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -123,18 +148,18 @@ export default function Admin() {
 
   // Auto-refresh online tab every 15s when visible
   useEffect(() => {
-    if (tab !== "online") {
+    if (tab === "online") {
+      loadOnline();
+      onlineIvRef.current = setInterval(loadOnline, 15000);
+    } else if (tab === "history") {
+      loadHistory(1);
+    }
+    
+    return () => {
       if (onlineIvRef.current) {
         clearInterval(onlineIvRef.current);
         onlineIvRef.current = null;
       }
-      return;
-    }
-    loadOnline();
-    onlineIvRef.current = setInterval(loadOnline, 15000);
-    return () => {
-      if (onlineIvRef.current) clearInterval(onlineIvRef.current);
-      onlineIvRef.current = null;
     };
   }, [tab]);
 
@@ -317,7 +342,10 @@ export default function Admin() {
           Utilisateurs
         </Tab>
         <Tab tab={tab} id="online" setTab={setTab}>
-          En ligne
+          En ligne ({online.count})
+        </Tab>
+        <Tab tab={tab} id="history" setTab={setTab}>
+          📜 Historique
         </Tab>
       </div>
 
@@ -359,6 +387,121 @@ export default function Admin() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* HISTORIQUE DES CONNEXIONS */}
+      {tab === "history" && (
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-2xl font-bold text-white">📜 Historique des connexions</h3>
+              <p className="text-gray-400 text-sm mt-1">Toutes les connexions enregistrées</p>
+            </div>
+            <button
+              onClick={() => loadHistory(1)}
+              className="px-4 py-2 bg-primary/20 border border-primary rounded-lg hover:bg-primary/30 transition"
+            >
+              🔄 Actualiser
+            </button>
+          </div>
+
+          {loadingHistory ? (
+            <div className="text-center py-20">
+              <div className="text-5xl mb-4">⏳</div>
+              <p className="text-gray-400">Chargement de l'historique...</p>
+            </div>
+          ) : history.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="text-5xl mb-4">📭</div>
+              <p className="text-gray-400">Aucune connexion enregistrée</p>
+            </div>
+          ) : (
+            <>
+              <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-red-500/30 rounded-2xl p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="text-gray-400 border-b border-gray-700">
+                        <th className="py-3 px-2">Date & Heure</th>
+                        <th className="py-3 px-2">Utilisateur</th>
+                        <th className="py-3 px-2">Email</th>
+                        <th className="py-3 px-2">Action</th>
+                        <th className="py-3 px-2">IP</th>
+                        <th className="py-3 px-2">Navigateur</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((h) => (
+                        <tr key={h._id} className="border-b border-gray-800 hover:bg-gray-900/50 transition">
+                          <td className="py-3 px-2 text-white">
+                            <div className="font-semibold">
+                              {new Date(h.timestamp).toLocaleDateString('fr-FR')}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {new Date(h.timestamp).toLocaleTimeString('fr-FR')}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-white font-semibold">
+                            {h.userName}
+                          </td>
+                          <td className="py-3 px-2 text-gray-400 text-xs">
+                            {h.userEmail}
+                          </td>
+                          <td className="py-3 px-2">
+                            {h.action === 'login' ? (
+                              <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-semibold">
+                                🟢 Connexion
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-semibold">
+                                🔴 Déconnexion
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-2 text-gray-400 text-xs font-mono">
+                            {h.ipAddress || '—'}
+                          </td>
+                          <td className="py-3 px-2 text-gray-400 text-xs max-w-xs truncate" title={h.userAgent}>
+                            {h.userAgent ? (
+                              h.userAgent.includes('Chrome') ? '🌐 Chrome' :
+                              h.userAgent.includes('Firefox') ? '🦊 Firefox' :
+                              h.userAgent.includes('Safari') ? '🧭 Safari' :
+                              h.userAgent.includes('Edge') ? '⚡ Edge' :
+                              '🌐 Autre'
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-between items-center mt-6">
+                <div className="text-gray-400 text-sm">
+                  Page {historyPage} sur {historyPages}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    disabled={historyPage <= 1}
+                    onClick={() => loadHistory(historyPage - 1)}
+                    className="px-4 py-2 rounded-lg bg-black border-2 border-primary/30 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-900 transition"
+                  >
+                    ← Précédent
+                  </button>
+                  <button
+                    disabled={historyPage >= historyPages}
+                    onClick={() => loadHistory(historyPage + 1)}
+                    className="px-4 py-2 rounded-lg bg-black border-2 border-primary/30 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-900 transition"
+                  >
+                    Suivant →
+                  </button>
+                </div>
               </div>
             </>
           )}

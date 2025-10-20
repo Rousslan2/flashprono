@@ -4,6 +4,7 @@ import { protect, requireAdmin } from "../middleware/authMiddleware.js";
 import { logAdminAction } from "../middleware/logMiddleware.js";
 import User from "../models/User.js";
 import Pronostic from "../models/Pronostic.js";
+import ConnectionHistory from "../models/ConnectionHistory.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -148,9 +149,44 @@ router.get("/users", async (req, res, next) => {
 router.get("/online-users", async (_req, res, next) => {
   try {
     const since = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes
-    const users = await User.find({ lastSeen: { $gte: since } })
-      .select("name email isAdmin lastSeen");
-    res.json({ count: users.length, users });
+    const users = await User.find({ 
+      lastSeen: { $gte: since } 
+    })
+    .select("name email isAdmin lastSeen")
+    .sort({ lastSeen: -1 })
+    .limit(100); // Limite à 100 pour la performance
+    
+    res.json({ 
+      count: users.length, 
+      users,
+      timestamp: new Date()
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// 🔥 NOUVEAU : Historique des connexions
+router.get("/connection-history", async (req, res, next) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || "1"), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "50"), 1), 200);
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      ConnectionHistory.find({})
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit),
+      ConnectionHistory.countDocuments(),
+    ]);
+
+    res.json({ 
+      items, 
+      total, 
+      page, 
+      pages: Math.ceil(total / limit) 
+    });
   } catch (e) {
     next(e);
   }
