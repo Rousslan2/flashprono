@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "preinstall": "npm install -g vite",
     "dev": "vite",
-    "build": "npx vite build",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite preview --port 8080 --host 0.0.0.0"
   },
   "dependencies": {
     "axios": "^1.6.0",
