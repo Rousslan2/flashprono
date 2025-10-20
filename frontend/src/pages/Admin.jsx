@@ -703,7 +703,18 @@ export default function Admin() {
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                   );
-                  alert(`✅ ${data.message}`);
+                  
+                  // Afficher les détails
+                  let message = `✅ ${data.message}\n\n`;
+                  
+                  if (data.details && data.details.length > 0) {
+                    message += "Détails:\n";
+                    data.details.forEach(d => {
+                      message += `\n${d.prono}\n  ${d.status}\n  ${d.action}\n`;
+                    });
+                  }
+                  
+                  alert(message);
                   loadPronos(); // Recharger la liste
                   loadStats(); // Recharger les stats
                 } catch (err) {
