@@ -7,11 +7,11 @@ export default function Home() {
 
   return (
     <section className="text-center py-20 px-4 relative overflow-hidden">
-      {/* Particules animées d'arrière-plan */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-60 right-20 w-72 h-72 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-40 left-1/3 w-64 h-64 bg-blue-500 rounded-full blur-3xl animate-pulse delay-500"></div>
+      {/* Particules animées d'arrière-plan - FIXÉES */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+        <div className="absolute top-20 left-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-60 right-10 md:right-20 w-48 sm:w-60 md:w-72 h-48 sm:h-60 md:h-72 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-40 left-1/3 w-48 sm:w-56 md:w-64 h-48 sm:h-56 md:h-64 bg-blue-500 rounded-full blur-3xl animate-pulse delay-500"></div>
         
         {/* Petites particules */}
         <div className="absolute top-40 left-1/4 w-3 h-3 bg-primary rounded-full animate-float"></div>

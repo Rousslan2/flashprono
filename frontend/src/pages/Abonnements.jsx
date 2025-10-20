@@ -117,11 +117,11 @@ export default function Abonnements() {
 
   return (
     <section className="py-20 px-4 text-center relative overflow-hidden">
-      {/* Particules animées */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-purple-500 rounded-full blur-3xl animate-pulse delay-500"></div>
+      {/* Particules animées - FIXÉES */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+        <div className="absolute top-20 left-5 sm:left-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-primary rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-5 sm:right-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 sm:w-60 md:w-72 h-48 sm:h-60 md:h-72 bg-purple-500 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       {/* Hero Header */}
@@ -181,13 +181,13 @@ export default function Abonnements() {
               key={plan.key}
               className={`relative bg-gradient-to-br ${plan.gradient} backdrop-blur-sm border-2 ${
                 plan.popular 
-                  ? "border-primary shadow-2xl shadow-primary/50 md:scale-110" 
+                  ? "border-primary shadow-2xl shadow-primary/50 md:scale-105" 
                   : isCurrent 
                   ? "border-emerald-400 shadow-2xl shadow-emerald-400/30" 
                   : `${plan.borderColor} shadow-xl`
-              } rounded-3xl p-8 hover:scale-105 transition-all duration-500 overflow-hidden group animate-slide-in-up ${
+              } rounded-3xl p-6 sm:p-8 hover:scale-105 transition-all duration-500 overflow-hidden group animate-slide-in-up ${
                 disabled ? "opacity-75" : ""
-              }`}
+              } ${plan.popular || isCurrent ? "mt-8 sm:mt-0" : ""}`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Halo lumineux */}
@@ -198,17 +198,17 @@ export default function Abonnements() {
 
               {/* Ribbon */}
               {plan.ribbon && !isCurrent && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-black px-4 py-2 rounded-full shadow-lg z-20 animate-bounce-slow">
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-bounce-slow whitespace-nowrap">
                   ⭐ {plan.ribbon}
                 </div>
               )}
               {plan.popular && !isCurrent && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-xs font-black px-4 py-2 rounded-full shadow-lg z-20 animate-pulse">
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-pulse whitespace-nowrap">
                   🔥 LE PLUS POPULAIRE
                 </div>
               )}
               {isCurrent && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-black text-xs font-black px-4 py-2 rounded-full shadow-lg z-20 animate-bounce-slow">
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-bounce-slow whitespace-nowrap">
                   ✅ PLAN ACTIF
                 </div>
               )}
