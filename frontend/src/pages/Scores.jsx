@@ -109,6 +109,20 @@ export default function Scores() {
             <div className="text-6xl mb-4 animate-bounce">⚽</div>
             <p className="text-gray-400">Chargement des scores...</p>
           </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-bold text-red-400 mb-3">
+              Erreur de chargement
+            </h3>
+            <p className="text-gray-300 mb-4 max-w-lg mx-auto">{error}</p>
+            <button
+              onClick={loadScores}
+              className="px-6 py-3 bg-primary text-black rounded-xl font-bold hover:scale-105 transition"
+            >
+              🔄 Réessayer
+            </button>
+          </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📭</div>
