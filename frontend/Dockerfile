@@ -11,9 +11,9 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 COPY package.json ./
 COPY .npmrc ./
 
-# Nettoyer et installer TOUTES les dépendances sans cache
+# Nettoyer et installer TOUTES les dépendances (incluant devDependencies pour le build)
 RUN npm cache clean --force && \
-    npm install --no-optional=false --force
+    npm install --include=dev --no-optional=false
 
 # Copier le code source
 COPY . .
