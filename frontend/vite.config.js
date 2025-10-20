@@ -5,5 +5,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
+  },
+  preview: {
+    port: 8080,
+    host: '0.0.0.0',
+    allowedHosts: [
+      'flashprono.com',
+      'www.flashprono.com',
+      '.railway.app',
+      'localhost'
+    ]
   },
 });
