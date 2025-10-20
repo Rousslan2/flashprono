@@ -23,12 +23,13 @@ router.get("/my-matches", async (req, res) => {
     if (!API_KEY) {
       console.log('⚠️ API_KEY manquante');
       return res.json({ 
+        success: false,
         message: "API Football non configurée - Ajoute FOOTBALL_API_KEY dans .env",
         matches: [] 
       });
     }
 
-    console.log('✅ API_KEY présente');
+    console.log('✅ API_KEY présente:', API_KEY.substring(0, 10) + '...');
     const now = new Date();
     
     // Vérifier le cache
@@ -36,7 +37,11 @@ router.get("/my-matches", async (req, res) => {
       const cacheAge = (now - cache.lastUpdate) / 1000 / 60; // en minutes
       if (cacheAge < cache.cacheMinutes && Object.keys(cache.data).length > 0) {
         console.log('📦 Cache utilisé - économie de requête API');
-        return res.json({ matches: Object.values(cache.data), fromCache: true });
+        return res.json({ 
+          success: true,
+          matches: Object.values(cache.data), 
+          fromCache: true 
+        });
       }
     }
 
@@ -52,23 +57,39 @@ router.get("/my-matches", async (req, res) => {
       sport: { $regex: /football/i },
     }).select('equipe1 equipe2 date');
 
-    if (activePronos.length === 0) {
-      return res.json({ matches: [], message: "Aucun prono aujourd'hui" });
-    }
-
     console.log(`🔍 ${activePronos.length} pronos trouvés pour aujourd'hui`);
+
+    if (activePronos.length === 0) {
+      return res.json({ 
+        success: true,
+        matches: [], 
+        message: "Aucun prono football aujourd'hui" 
+      });
+    }
 
     // Récupérer les matchs du jour depuis l'API
     const todayStr = now.toISOString().split("T")[0];
+    
+    console.log('📡 Appel API Football pour le', todayStr);
+    
     const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
       params: { date: todayStr },
       headers: {
         "x-rapidapi-key": API_KEY,
         "x-rapidapi-host": "v3.football.api-sports.io",
       },
+      timeout: 10000, // 10 secondes max
     });
 
     console.log(`⚽ ${data.response?.length || 0} matchs reçus de l'API`);
+
+    if (!data.response || data.response.length === 0) {
+      return res.json({
+        success: true,
+        matches: [],
+        message: "Aucun match aujourd'hui dans l'API"
+      });
+    }
 
     // Filtrer pour garder UNIQUEMENT les matchs de nos pronos
     const apiMatches = data.response || [];
@@ -118,21 +139,29 @@ router.get("/my-matches", async (req, res) => {
     cache.lastUpdate = now;
     console.log(`✅ ${matchedMatches.length} matchs trouvés pour nos pronos`);
 
-    res.json({ matches: matchedMatches, fromCache: false });
+    res.json({ 
+      success: true,
+      matches: matchedMatches, 
+      fromCache: false 
+    });
+    
   } catch (error) {
     console.error("❌ Erreur API Football:", error.message);
+    console.error("Stack:", error.stack);
     
     // En cas d'erreur, retourner le cache si disponible
     if (Object.keys(cache.data).length > 0) {
       return res.json({ 
+        success: true,
         matches: Object.values(cache.data), 
         fromCache: true,
-        error: "API temporairement indisponible - données du cache"
+        warning: "API temporairement indisponible - données du cache"
       });
     }
     
-    res.status(500).json({ 
-      message: "Erreur récupération scores",
+    res.json({ 
+      success: false,
+      message: error.message || "Erreur lors de la récupération des scores",
       matches: [] 
     });
   }

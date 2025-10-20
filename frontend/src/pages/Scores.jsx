@@ -5,55 +5,47 @@ import { API_BASE } from "../config";
 export default function Scores() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     loadScores();
     
-    // Actualiser toutes les 30 secondes SEULEMENT s'il y a des matchs LIVE
+    // Actualiser toutes les 30 secondes
     const interval = setInterval(() => {
-      const hasLiveMatches = matches.some(m => 
-        ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
-      );
-      
-      if (hasLiveMatches) {
-        console.log("🔴 Matchs LIVE détectés - actualisation");
-        loadScores();
-      } else {
-        console.log("⏸️ Aucun match LIVE - pas d'actualisation");
-      }
+      loadScores();
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [matches]);
+  }, []);
 
   const loadScores = async () => {
     try {
       setLoading(true);
       setError(null);
       
+      console.log('📡 Chargement des scores...');
+      
       const { data } = await axios.get(`${API_BASE}/api/scores/my-matches`);
       
-      console.log('✅ Scores reçus:', data);
+      console.log('✅ Réponse reçue:', data);
       
-      if (data.message && data.matches.length === 0) {
-        setError(data.message);
+      if (!data.success) {
+        setError(data.message || "Erreur inconnue");
+        setMatches([]);
+      } else {
+        setMatches(data.matches || []);
+        setLastUpdate(new Date());
+        
+        if (data.message) {
+          setError(data.message);
+        }
       }
       
-      setMatches(data.matches || []);
-      setFromCache(data.fromCache || false);
-      setLastUpdate(new Date());
     } catch (err) {
-      console.error("❌ Erreur chargement scores:", err);
-      console.error("Détails:", err.response?.data);
-      
-      const errorMsg = err.response?.data?.message || 
-        err.message || 
-        "Impossible de charger les scores. Vérifie que le backend est démarré.";
-      
-      setError(errorMsg);
+      console.error("❌ Erreur:", err);
+      setError(err.response?.data?.message || err.message || "Erreur de connexion au serveur");
+      setMatches([]);
     } finally {
       setLoading(false);
     }
@@ -89,22 +81,23 @@ export default function Scores() {
           </p>
           
           {lastUpdate && (
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-              <span>🕐 Dernière mise à jour : {lastUpdate.toLocaleTimeString("fr-FR")}</span>
-              {fromCache && <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">📦 Cache</span>}
+            <div className="text-sm text-gray-400">
+              🕐 Mise à jour : {lastUpdate.toLocaleTimeString("fr-FR")}
             </div>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-          <StatCard icon="🔴" label="En Direct" value={liveMatches.length} color="red" />
-          <StatCard icon="⏰" label="À venir" value={upcomingMatches.length} color="yellow" />
-          <StatCard icon="✅" label="Terminés" value={finishedMatches.length} color="green" />
-        </div>
+        {!loading && !error && matches.length > 0 && (
+          <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
+            <StatCard icon="🔴" label="En Direct" value={liveMatches.length} />
+            <StatCard icon="⏰" label="À venir" value={upcomingMatches.length} />
+            <StatCard icon="✅" label="Terminés" value={finishedMatches.length} />
+          </div>
+        )}
 
         {/* Loading */}
-        {loading ? (
+        {loading && matches.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4 animate-bounce">⚽</div>
             <p className="text-gray-400">Chargement des scores...</p>
@@ -112,8 +105,8 @@ export default function Scores() {
         ) : error ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">⚠️</div>
-            <h3 className="text-2xl font-bold text-red-400 mb-3">
-              Erreur de chargement
+            <h3 className="text-2xl font-bold text-yellow-400 mb-3">
+              Information
             </h3>
             <p className="text-gray-300 mb-4 max-w-lg mx-auto">{error}</p>
             <button
@@ -127,10 +120,10 @@ export default function Scores() {
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold text-white mb-3">
-              Aucun prono aujourd'hui
+              Aucun match aujourd'hui
             </h3>
             <p className="text-gray-400">
-              Les scores apparaîtront quand tu ajouteras des pronos pour aujourd'hui !
+              Ajoute des pronos football pour aujourd'hui pour voir les scores en direct !
             </p>
           </div>
         ) : (
@@ -155,7 +148,7 @@ export default function Scores() {
         {/* Info */}
         <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
           <p className="text-sm text-blue-300 text-center">
-            💡 <strong>Optimisé API</strong> : Actualisation automatique toutes les 30s uniquement si matchs en direct • Cache de 5 min • Seulement tes pronos
+            💡 <strong>Économie d'API</strong> : Cache 5 min • Seulement tes pronos • Max 10 requêtes/jour
           </p>
         </div>
       </div>
@@ -179,18 +172,12 @@ function Section({ title, matches }) {
   );
 }
 
-function StatCard({ icon, label, value, color }) {
-  const colors = {
-    red: "bg-red-500/20 border-red-500/30 text-red-400",
-    yellow: "bg-yellow-500/20 border-yellow-500/30 text-yellow-400",
-    green: "bg-green-500/20 border-green-500/30 text-green-400",
-  };
-
+function StatCard({ icon, label, value }) {
   return (
-    <div className={`${colors[color]} border-2 rounded-xl p-4 text-center`}>
+    <div className="bg-primary/10 border-2 border-primary/30 rounded-xl p-4 text-center">
       <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-2xl font-bold mb-1">{value}</div>
-      <div className="text-xs opacity-75">{label}</div>
+      <div className="text-2xl font-bold text-primary mb-1">{value}</div>
+      <div className="text-xs text-gray-400">{label}</div>
     </div>
   );
 }
@@ -212,7 +199,7 @@ function MatchCard({ match }) {
     <div
       className={`bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 transition-all hover:scale-[1.02] ${
         isLive
-          ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse-slow"
+          ? "border-red-500 shadow-lg shadow-red-500/20"
           : isFinished
           ? "border-gray-600"
           : "border-primary/30"
@@ -220,18 +207,18 @@ function MatchCard({ match }) {
     >
       {/* League */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
-            {match.league}
+        <span className="text-xs px-3 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
+          {match.league}
+        </span>
+        {isLive && (
+          <span className="flex items-center gap-1 text-xs text-red-400 font-semibold">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            LIVE {getStatusLabel()}
           </span>
-          {isLive && (
-            <span className="flex items-center gap-1 text-xs text-red-400 font-semibold">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              LIVE
-            </span>
-          )}
-        </div>
-        <span className="text-sm text-gray-400 font-medium">{getStatusLabel()}</span>
+        )}
+        {!isLive && (
+          <span className="text-sm text-gray-400 font-medium">{getStatusLabel()}</span>
+        )}
       </div>
 
       {/* Teams */}
