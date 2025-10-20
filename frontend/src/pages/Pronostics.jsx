@@ -201,7 +201,16 @@ export default function Pronostics() {
   const hasAny = groups.today.length || groups.future.length || groups.past.length;
 
   return (
-    <section className="pt-16 pb-12 px-4">
+    <section className="pt-16 pb-12 px-4 relative overflow-hidden">
+      {/* Particules animées en arrière-plan */}
+      <div className="absolute inset-0 pointer-events-none opacity-30">
+        <div className="absolute top-20 left-1/4 w-2 h-2 bg-primary rounded-full animate-float"></div>
+        <div className="absolute top-40 right-1/3 w-3 h-3 bg-yellow-400 rounded-full animate-float-delayed"></div>
+        <div className="absolute bottom-40 left-1/3 w-2 h-2 bg-primary rounded-full animate-float-slow"></div>
+        <div className="absolute top-60 right-1/4 w-2 h-2 bg-yellow-400 rounded-full animate-float"></div>
+        <div className="absolute bottom-60 left-1/2 w-3 h-3 bg-primary rounded-full animate-float-delayed"></div>
+      </div>
+
       <HeaderIntro />
       <FilterBar
         filter={filter}
@@ -215,29 +224,22 @@ export default function Pronostics() {
 
       {!hasAny ? (
         <div className="max-w-2xl mx-auto text-center py-20">
-          <div className="text-6xl mb-4">⚽</div>
-          <h3 className="text-2xl font-bold text-white mb-3">Aucun pronostic pour le moment</h3>
-          <p className="text-gray-400">
+          <div className="text-8xl mb-6 animate-bounce">⚽</div>
+          <h3 className="text-3xl font-bold text-white mb-4">Aucun pronostic pour le moment</h3>
+          <p className="text-gray-400 text-lg">
             Les nouveaux pronos arrivent bientôt. Reviens plus tard !
           </p>
         </div>
       ) : (
         <div className="max-w-6xl mx-auto space-y-12 mt-8">
           {groups.today.length > 0 && (
-            <Group title="Aujourd'hui" icon="🔥" items={groups.today} now={now} />
+            <Group title="Aujourd'hui" icon="🔥" items={groups.today} now={now} gradient="from-red-500/20 to-orange-500/20" />
           )}
           {groups.future.length > 0 && (
-            <Group title="À venir" icon="📅" items={groups.future} now={now} />
+            <Group title="À venir" icon="📅" items={groups.future} now={now} gradient="from-blue-500/20 to-cyan-500/20" />
           )}
           {groups.past.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <span>📚</span>
-                Anciens{" "}
-                <span className="text-gray-500 text-lg">({groups.past.length})</span>
-              </h2>
-              <CardGrid items={groups.past} now={now} />
-            </div>
+            <Group title="Archives" icon="📚" items={groups.past} now={now} gradient="from-gray-500/20 to-gray-600/20" />
           )}
         </div>
       )}
@@ -327,14 +329,19 @@ function StatBadge({ icon, label, value }) {
   );
 }
 
-function Group({ title, icon, items, now }) {
+function Group({ title, icon, items, now, gradient }) {
   return (
-    <div>
-      <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-        <span>{icon}</span>
-        {title}
-        <span className="text-gray-500 text-xl">({items.length})</span>
-      </h2>
+    <div className="relative">
+      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} blur-3xl opacity-20 -z-10`}></div>
+      <div className="flex items-center gap-4 mb-8">
+        <div className="text-5xl animate-bounce-slow">{icon}</div>
+        <div>
+          <h2 className="text-4xl font-black text-white flex items-center gap-3">
+            {title}
+            <span className="px-4 py-1 bg-primary text-black rounded-full text-xl">{items.length}</span>
+          </h2>
+        </div>
+      </div>
       <CardGrid items={items} now={now} />
     </div>
   );
@@ -343,8 +350,14 @@ function Group({ title, icon, items, now }) {
 function CardGrid({ items, now }) {
   return (
     <div className="grid lg:grid-cols-2 gap-6">
-      {items.map((p) => (
-        <PronoCard key={p._id} p={p} now={now} />
+      {items.map((p, index) => (
+        <div
+          key={p._id}
+          className="animate-slide-in-up"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          <PronoCard p={p} now={now} />
+        </div>
       ))}
     </div>
   );
@@ -425,8 +438,29 @@ function PronoCard({ p, now }) {
 
   return (
     <article
-      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-2xl border-2 ${color} transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20`}
+      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-8 rounded-3xl border-2 ${color} transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-primary/30 overflow-hidden transform-gpu perspective-1000`}
+      style={{
+        transformStyle: 'preserve-3d',
+      }}
+      onMouseMove={(e) => {
+        const card = e.currentTarget;
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / 20;
+        const rotateY = (centerX - x) / 20;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+      }}
     >
+      {/* Effet de brillance au survol */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
+      </div>
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -448,39 +482,24 @@ function PronoCard({ p, now }) {
         </div>
       </div>
 
-      {/* Match Teams */}
-      <h3 className="text-xl md:text-2xl font-bold text-white mb-4">
-        {p.equipe1} <span className="text-primary mx-2">VS</span> {p.equipe2}
+      {/* Match Teams - PLUS GROS */}
+      <h3 className="text-2xl md:text-3xl font-black text-white mb-6 relative z-10 leading-tight">
+        <span className="hover:text-primary transition-colors">{p.equipe1}</span>
+        <span className="text-primary mx-3 animate-pulse">VS</span>
+        <span className="hover:text-primary transition-colors">{p.equipe2}</span>
       </h3>
 
-      {/* Prono Info */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl">
-          <span className="text-xs text-gray-400 block mb-1">Type de pari</span>
-          <span className="text-white font-bold">{p.type}</span>
+      {/* Prono Info - Style carte */}
+      <div className="flex flex-wrap items-center gap-3 mb-6 relative z-10">
+        <div className="px-5 py-3 bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/40 rounded-2xl hover:scale-110 transition-transform shadow-lg">
+          <span className="text-xs text-gray-400 block mb-1 font-semibold">Pronostic</span>
+          <span className="text-white font-black text-lg">{p.type}</span>
         </div>
-        <div className="px-4 py-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl">
-          <span className="text-xs text-gray-400 block mb-1">Cote</span>
-          <span className="text-yellow-400 font-bold text-lg">{p.cote}</span>
+        <div className="px-5 py-3 bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 border-2 border-yellow-400/40 rounded-2xl hover:scale-110 transition-transform shadow-lg">
+          <span className="text-xs text-gray-400 block mb-1 font-semibold">Cote</span>
+          <span className="text-yellow-400 font-black text-xl">{p.cote}</span>
         </div>
-      </div>
-      
-      {/* Score Live */}
-      {p.scoreLive && (
-        <div className="mb-4">
-          <div className="px-4 py-3 bg-blue-500/10 border-2 border-blue-500/30 rounded-xl inline-flex items-center gap-2">
-            <span className="text-xs text-gray-400 font-semibold">📊 Score:</span>
-            <span className="text-blue-300 font-bold text-xl">{p.scoreLive}</span>
-          </div>
-        </div>
-      )}
-      
-      {/* Résultat du Pari */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 font-semibold">Résultat du pari:</span>
-          <ResultPill value={p.resultat} />
-        </div>
+        <ResultPill value={p.resultat} />
       </div>
       
       {/* Bouton Suivre */}
