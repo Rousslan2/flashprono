@@ -377,4 +377,131 @@ router.post("/upload/audio", upload.single("audio"), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// 🔄 Vérifier et mettre à jour les résultats depuis l'API
+router.post("/check-results", async (req, res, next) => {
+  try {
+    const axios = (await import("axios")).default;
+    const API_KEY = process.env.FOOTBALL_API_KEY;
+    
+    if (!API_KEY) {
+      return res.status(400).json({ 
+        message: "API Football non configurée",
+        updated: 0 
+      });
+    }
+
+    // Récupérer les pronos d'aujourd'hui et hier
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const pronos = await Pronostic.find({
+      date: { $gte: yesterday },
+      sport: { $regex: /football/i },
+      resultat: { $in: ["En attente", "en attente", ""] },
+    });
+
+    console.log(`🔍 ${pronos.length} pronos à vérifier`);
+
+    if (pronos.length === 0) {
+      return res.json({ message: "Aucun prono à vérifier", updated: 0 });
+    }
+
+    // Appeler l'API pour les matchs d'aujourd'hui et hier
+    const todayStr = new Date().toISOString().split("T")[0];
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    
+    const [todayData, yesterdayData] = await Promise.all([
+      axios.get(`https://v3.football.api-sports.io/fixtures`, {
+        params: { date: todayStr },
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      }),
+      axios.get(`https://v3.football.api-sports.io/fixtures`, {
+        params: { date: yesterdayStr },
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      }),
+    ]);
+
+    const allMatches = [
+      ...(todayData.data.response || []),
+      ...(yesterdayData.data.response || []),
+    ];
+
+    console.log(`⚽ ${allMatches.length} matchs reçus de l'API`);
+
+    let updated = 0;
+
+    for (const prono of pronos) {
+      const team1 = prono.equipe1.toLowerCase().trim();
+      const team2 = prono.equipe2.toLowerCase().trim();
+
+      // Chercher le match
+      const match = allMatches.find((m) => {
+        const home = m.teams.home.name.toLowerCase();
+        const away = m.teams.away.name.toLowerCase();
+        return (
+          (home.includes(team1) || team1.includes(home)) &&
+          (away.includes(team2) || team2.includes(away))
+        );
+      });
+
+      if (match && match.fixture.status.short === "FT") {
+        // Match terminé, déterminer le résultat
+        const homeScore = match.goals.home;
+        const awayScore = match.goals.away;
+        const type = prono.type.toLowerCase();
+
+        let resultat = "En attente";
+
+        // Logique simple pour 1N2
+        if (type.includes("1") || type.includes("home") || type.includes("domicile")) {
+          resultat = homeScore > awayScore ? "Gagnant" : "Perdu";
+        } else if (type.includes("2") || type.includes("away") || type.includes("extérieur")) {
+          resultat = awayScore > homeScore ? "Gagnant" : "Perdu";
+        } else if (type.includes("n") || type.includes("nul") || type.includes("draw")) {
+          resultat = homeScore === awayScore ? "Gagnant" : "Perdu";
+        } else if (type.includes("btts") || type.includes("both")) {
+          resultat = homeScore > 0 && awayScore > 0 ? "Gagnant" : "Perdu";
+        } else if (type.includes("over")) {
+          const totalGoals = homeScore + awayScore;
+          const threshold = parseFloat(type.match(/[0-9.]+/)?.[0] || "2.5");
+          resultat = totalGoals > threshold ? "Gagnant" : "Perdu";
+        } else if (type.includes("under")) {
+          const totalGoals = homeScore + awayScore;
+          const threshold = parseFloat(type.match(/[0-9.]+/)?.[0] || "2.5");
+          resultat = totalGoals < threshold ? "Gagnant" : "Perdu";
+        }
+
+        // Mettre à jour le prono
+        prono.resultat = resultat;
+        await prono.save();
+        updated++;
+
+        console.log(
+          `✅ ${prono.equipe1} vs ${prono.equipe2}: ${homeScore}-${awayScore} → ${resultat}`
+        );
+        
+        // 🔥 Émettre un événement Socket.io
+        io.emit("prono:updated", prono);
+      }
+    }
+
+    res.json({ 
+      message: `${updated} résultat(s) mis à jour`,
+      updated 
+    });
+  } catch (e) {
+    console.error("❌ Erreur check-results:", e.message);
+    next(e);
+  }
+});
+
 export default router;
