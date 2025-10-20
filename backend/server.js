@@ -140,8 +140,63 @@ app.post("/api/admin/log-test", (req, res) => {
 });
 
 // =============================
-// 🕛 CRON JOB
+// 🕛 CRON JOBS
 // =============================
+
+// Job 1 : Déconnexions automatiques (toutes les 5 minutes)
+cron.schedule(
+  "*/5 * * * *",
+  async () => {
+    try {
+      const now = new Date();
+      const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+      
+      // Trouver les utilisateurs inactifs (lastSeen > 2 min)
+      const inactiveUsers = await User.find({
+        lastSeen: { $lt: twoMinutesAgo, $ne: null },
+      }).select('_id name email lastSeen');
+      
+      let disconnectCount = 0;
+      
+      // Vérifier s'ils ont déjà une déconnexion enregistrée récemment
+      for (const user of inactiveUsers) {
+        const recentLogout = await ConnectionHistory.findOne({
+          userId: user._id,
+          action: 'logout',
+          timestamp: { $gte: user.lastSeen }
+        });
+        
+        // Si pas de logout enregistré depuis le lastSeen, on l'ajoute
+        if (!recentLogout) {
+          const logoutEntry = await ConnectionHistory.create({
+            userId: user._id,
+            userName: user.name,
+            userEmail: user.email,
+            action: 'logout',
+            ipAddress: 'auto',
+            userAgent: 'Auto-disconnect (2min inactivity)',
+            timestamp: user.lastSeen,
+          });
+          
+          disconnectCount++;
+          
+          // Émettre événement Socket.io
+          io.emit('connection:new', logoutEntry);
+          io.emit('online:update');
+        }
+      }
+      
+      if (disconnectCount > 0) {
+        console.log(`🔴 Auto-disconnect: ${disconnectCount} utilisateur(s)`);
+      }
+    } catch (e) {
+      console.error("Cron auto-disconnect error:", e);
+    }
+  },
+  { timezone: "Europe/Paris" }
+);
+
+// Job 2 : Nettoyage des abonnements expirés (tous les jours à 3h)
 cron.schedule(
   "0 3 * * *",
   async () => {
@@ -160,11 +215,13 @@ cron.schedule(
           },
         }
       );
-      console.log(
-        `🧹 Cron: ${result.modifiedCount} abonnement(s)/essai(s) expiré(s) désactivé(s).`
-      );
+      if (result.modifiedCount > 0) {
+        console.log(
+          `🧹 Cron: ${result.modifiedCount} abonnement(s) expiré(s) désactivé(s).`
+        );
+      }
     } catch (e) {
-      console.error("Cron error:", e);
+      console.error("Cron cleanup error:", e);
     }
   },
   { timezone: "Europe/Paris" }
