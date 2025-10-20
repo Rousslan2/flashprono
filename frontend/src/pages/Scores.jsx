@@ -5,27 +5,56 @@ import { API_BASE } from "../config";
 export default function Scores() {
   const [liveMatches, setLiveMatches] = useState([]);
   const [todayMatches, setTodayMatches] = useState([]);
+  const [tomorrowMatches, setTomorrowMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("live"); // live | today
+  const [tab, setTab] = useState("live"); // live | today | tomorrow
+  const [selectedDate, setSelectedDate] = useState("");
 
   useEffect(() => {
     loadScores();
     
-    // Actualiser toutes les 30 secondes
-    const interval = setInterval(loadScores, 30000);
-    return () => clearInterval(interval);
-  }, [tab]);
+    // Actualiser toutes les 30 secondes pour les matchs en direct
+    if (tab === "live") {
+      const interval = setInterval(loadScores, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [tab, selectedDate]);
 
   const loadScores = async () => {
     try {
       setLoading(true);
-      const endpoint = tab === "live" ? "/api/scores/live" : "/api/scores/today";
+      let endpoint = "";
+      
+      if (selectedDate) {
+        endpoint = `/api/scores/by-date/${selectedDate}`;
+      } else {
+        switch (tab) {
+          case "live":
+            endpoint = "/api/scores/live";
+            break;
+          case "today":
+            endpoint = "/api/scores/today";
+            break;
+          case "tomorrow":
+            endpoint = "/api/scores/tomorrow";
+            break;
+          default:
+            endpoint = "/api/scores/live";
+        }
+      }
+      
       const { data } = await axios.get(`${API_BASE}${endpoint}`);
       
-      if (tab === "live") {
-        setLiveMatches(data.matches || []);
-      } else {
+      if (selectedDate) {
         setTodayMatches(data.matches || []);
+      } else {
+        if (tab === "live") {
+          setLiveMatches(data.matches || []);
+        } else if (tab === "today") {
+          setTodayMatches(data.matches || []);
+        } else if (tab === "tomorrow") {
+          setTomorrowMatches(data.matches || []);
+        }
       }
     } catch (err) {
       console.error("❌ Erreur chargement scores:", err);
@@ -34,7 +63,22 @@ export default function Scores() {
     }
   };
 
-  const matches = tab === "live" ? liveMatches : todayMatches;
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+    setTab("today"); // Basculer sur l'onglet "today" lors de la sélection d'une date
+  };
+
+  const clearDate = () => {
+    setSelectedDate("");
+  };
+
+  const matches = selectedDate 
+    ? todayMatches 
+    : tab === "live" 
+      ? liveMatches 
+      : tab === "today" 
+        ? todayMatches 
+        : tomorrowMatches;
 
   return (
     <section className="pt-16 pb-12 px-4">
@@ -54,29 +98,78 @@ export default function Scores() {
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex justify-center gap-3 mb-8">
-          <button
-            onClick={() => setTab("live")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-              tab === "live"
-                ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-            }`}
-          >
-            🔴 En Direct ({liveMatches.length})
-          </button>
-          <button
-            onClick={() => setTab("today")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-              tab === "today"
-                ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
-                : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
-            }`}
-          >
-            📅 Aujourd'hui ({todayMatches.length})
-          </button>
+        {/* Sélecteur de date */}
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-3 bg-black border-2 border-primary/30 rounded-xl p-3">
+            <label htmlFor="date-picker" className="text-sm font-semibold text-gray-300">
+              📅 Date personnalisée :
+            </label>
+            <input
+              id="date-picker"
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              className="px-3 py-2 bg-gray-900 border border-primary/40 rounded-lg text-white focus:outline-none focus:border-primary"
+            />
+            {selectedDate && (
+              <button
+                onClick={clearDate}
+                className="px-3 py-2 bg-red-500/20 border border-red-500 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all font-medium text-sm"
+              >
+                ✕ Effacer
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Tabs */}
+        {!selectedDate && (
+          <div className="flex justify-center gap-3 mb-8 flex-wrap">
+            <button
+              onClick={() => setTab("live")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                tab === "live"
+                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
+                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
+              }`}
+            >
+              🔴 En Direct ({liveMatches.length})
+            </button>
+            <button
+              onClick={() => setTab("today")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                tab === "today"
+                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
+                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
+              }`}
+            >
+              📅 Aujourd'hui ({todayMatches.length})
+            </button>
+            <button
+              onClick={() => setTab("tomorrow")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                tab === "tomorrow"
+                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
+                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
+              }`}
+            >
+              🗓️ Demain ({tomorrowMatches.length})
+            </button>
+          </div>
+        )}
+
+        {selectedDate && (
+          <div className="text-center mb-6">
+            <p className="text-lg text-primary font-semibold">
+              📅 Matchs du {new Date(selectedDate).toLocaleDateString("fr-FR", { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
+        )}
 
         {/* Loading */}
         {loading ? (
@@ -88,12 +181,12 @@ export default function Scores() {
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold text-white mb-3">
-              {tab === "live" ? "Aucun match en direct" : "Aucun match aujourd'hui"}
+              {tab === "live" ? "Aucun match en direct" : "Aucun match prévu"}
             </h3>
             <p className="text-gray-400">
               {tab === "live" 
                 ? "Reviens plus tard pour suivre les matchs en direct !" 
-                : "Aucun match prévu pour aujourd'hui"}
+                : "Aucun match trouvé pour cette période"}
             </p>
           </div>
         ) : (
@@ -107,7 +200,7 @@ export default function Scores() {
         {/* Info */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
-            🔄 Actualisation automatique toutes les 30 secondes
+            {tab === "live" ? "🔄 Actualisation automatique toutes les 30 secondes" : "💡 Sélectionnez une date personnalisée pour voir les matchs"}
           </p>
         </div>
       </div>
