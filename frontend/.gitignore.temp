@@ -1,0 +1,2 @@
+# Temporarily remove package-lock to force npm to regenerate it
+package-lock.json
