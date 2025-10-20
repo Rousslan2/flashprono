@@ -1,5 +1,5 @@
 [build]
-buildCommand = "npm install --legacy-peer-deps --prefer-offline"
+buildCommand = "rm -rf node_modules package-lock.json && npm install"
 
 [deploy]
 startCommand = "npm start"
