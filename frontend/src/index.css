@@ -201,6 +201,11 @@ body {
   animation-delay: 1000ms;
 }
 
+/* Perspective for 3D effects */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
 /* Glassmorphism */
 .glass {
   background: rgba(255, 255, 255, 0.05);

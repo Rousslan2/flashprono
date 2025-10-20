@@ -262,18 +262,39 @@ function FeaturePreview({ icon, title, desc }) {
 function HeaderIntro() {
   return (
     <div className="text-center mb-12 max-w-5xl mx-auto relative z-10">
-      <div className="inline-block px-6 py-3 bg-gradient-to-r from-primary/20 to-yellow-400/20 border-2 border-primary rounded-full mb-6 animate-pulse-slow">
-        <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent font-bold text-sm">⚽ SECTION PRONOSTICS VIP</span>
+      {/* Badge animé */}
+      <div className="inline-block px-6 py-3 bg-gradient-to-r from-primary/20 to-yellow-400/20 border-2 border-primary rounded-full mb-6 animate-pulse-slow relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+        <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent font-bold text-sm relative z-10">⚽ SECTION PRONOSTICS VIP</span>
       </div>
-      <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-        <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient-x drop-shadow-2xl">
-          Pronostics Football
-        </span>
-      </h1>
+      
+      {/* Titre principal avec particles */}
+      <div className="relative">
+        <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight relative">
+          <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent animate-gradient-x drop-shadow-2xl inline-block hover:scale-105 transition-transform duration-300">
+            Pronostics Football
+          </span>
+          {/* Étoiles décoratives */}
+          <span className="absolute -top-4 -right-4 text-4xl animate-spin-slow">⭐</span>
+          <span className="absolute -bottom-4 -left-4 text-3xl animate-bounce-slow">🔥</span>
+        </h1>
+      </div>
+      
+      {/* Description */}
       <p className="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
-        Sélection de paris <span className="text-primary font-bold">simples & rentables</span>,
+        Sélection de paris <span className="text-primary font-bold relative inline-block group">
+          <span className="relative z-10">simples & rentables</span>
+          <span className="absolute inset-0 bg-primary/20 blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+        </span>,
         analyses courtes et mises à jour en continu.
       </p>
+      
+      {/* Séparateur animé */}
+      <div className="mt-8 flex items-center justify-center gap-2">
+        <div className="h-1 w-12 bg-gradient-to-r from-transparent to-primary rounded-full animate-pulse"></div>
+        <div className="h-2 w-2 bg-primary rounded-full animate-ping"></div>
+        <div className="h-1 w-12 bg-gradient-to-l from-transparent to-primary rounded-full animate-pulse"></div>
+      </div>
     </div>
   );
 }
@@ -284,14 +305,20 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
     return (
       <button
         onClick={() => setFilter(id)}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+        className={`relative px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all duration-300 overflow-hidden group ${
           active
-            ? "bg-gradient-to-r from-primary to-yellow-400 text-black border-primary shadow-lg"
-            : "border-primary/30 text-gray-300 hover:bg-primary/10 hover:border-primary/50"
+            ? "bg-gradient-to-r from-primary to-yellow-400 text-black border-primary shadow-lg shadow-primary/50 scale-110"
+            : "border-primary/30 text-gray-300 hover:bg-primary/10 hover:border-primary/50 hover:scale-105"
         }`}
       >
-        {label}
-        {count !== undefined && <span className="ml-1.5 opacity-75">({count})</span>}
+        {/* Effet brillance au hover */}
+        {!active && (
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+        )}
+        <span className="relative z-10">
+          {label}
+          {count !== undefined && <span className="ml-1.5 opacity-75">({count})</span>}
+        </span>
       </button>
     );
   };
@@ -299,49 +326,90 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
   const totalFiltered = stats.today + stats.future + stats.past;
 
   return (
-    <div className="sticky top-16 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
+    <div className="sticky top-16 z-20 bg-gradient-to-br from-black/95 via-gray-900/95 to-black/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-2xl">
+      {/* Ligne lumineuse animée en haut */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse"></div>
+      
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 py-4 px-2">
         <div className="flex items-center flex-wrap gap-2">
           <Btn id="all" label="Tous" count={loading ? undefined : totalFiltered} />
-          <Btn id="pending" label="En attente" />
-          <Btn id="win" label="Gagnés" />
-          <Btn id="lose" label="Perdus" />
+          <Btn id="pending" label="⏳ En attente" />
+          <Btn id="win" label="✅ Gagnés" />
+          <Btn id="lose" label="❌ Perdus" />
         </div>
         {!loading && (
           <div className="hidden md:flex items-center gap-4 text-sm">
-            <StatBadge icon="🔥" label="Aujourd'hui" value={stats.today} />
-            <StatBadge icon="📅" label="À venir" value={stats.future} />
-            <StatBadge icon="📚" label="Archives" value={stats.past} />
+            <StatBadge icon="🔥" label="Aujourd'hui" value={stats.today} color="red" />
+            <StatBadge icon="📅" label="À venir" value={stats.future} color="blue" />
+            <StatBadge icon="📚" label="Archives" value={stats.past} color="gray" />
           </div>
         )}
       </div>
+      
+      {/* Ligne lumineuse animée en bas */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent animate-pulse delay-500"></div>
     </div>
   );
 }
 
-function StatBadge({ icon, label, value }) {
+function StatBadge({ icon, label, value, color = "gray" }) {
+  const colorClasses = {
+    red: "from-red-500/20 to-orange-500/20 border-red-500/40 text-red-300 shadow-red-500/30",
+    blue: "from-blue-500/20 to-cyan-500/20 border-blue-500/40 text-blue-300 shadow-blue-500/30",
+    gray: "from-gray-500/20 to-gray-600/20 border-gray-500/40 text-gray-300 shadow-gray-500/30",
+  };
+  
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/50 border border-primary/30 rounded-lg">
-      <span>{icon}</span>
-      <span className="text-gray-400">{label}:</span>
-      <span className="text-primary font-bold">{value}</span>
+    <div className={`group flex items-center gap-2 px-3 py-1.5 bg-gradient-to-br ${colorClasses[color]} border-2 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg cursor-pointer`}>
+      <span className="text-lg group-hover:scale-125 transition-transform">{icon}</span>
+      <span className="text-gray-400 text-xs">{label}:</span>
+      <span className="font-bold text-base group-hover:text-white transition-colors">{value}</span>
     </div>
   );
 }
 
 function Group({ title, icon, items, now, gradient }) {
   return (
-    <div className="relative">
-      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} blur-3xl opacity-20 -z-10`}></div>
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 mb-6 md:mb-8">
-        <div className="text-4xl md:text-5xl animate-bounce-slow">{icon}</div>
-        <div>
-          <h2 className="text-3xl md:text-4xl font-black text-white flex flex-wrap items-center gap-2 md:gap-3">
-            {title}
-            <span className="px-3 md:px-4 py-1 bg-primary text-black rounded-full text-lg md:text-xl">{items.length}</span>
-          </h2>
+    <div className="relative group/section">
+      {/* Halo coloré en arrière-plan */}
+      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} blur-3xl opacity-20 group-hover/section:opacity-30 transition-opacity duration-500 -z-10`}></div>
+      
+      {/* Header de section amélioré */}
+      <div className="relative mb-8">
+        {/* Ligne décorative gauche */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-16 bg-gradient-to-b ${gradient} rounded-full"></div>
+        
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 ml-6">
+          {/* Icône animée */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
+            <div className="relative text-4xl md:text-5xl animate-bounce-slow transform group-hover/section:scale-125 transition-transform duration-500">
+              {icon}
+            </div>
+          </div>
+          
+          {/* Titre et badge */}
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-3xl md:text-4xl font-black text-white group-hover/section:text-primary transition-colors duration-300">
+                {title}
+              </h2>
+              {/* Badge compteur animé */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary blur-lg opacity-50 animate-pulse"></div>
+                <span className="relative px-4 py-1 bg-gradient-to-r from-primary to-yellow-400 text-black rounded-full text-lg md:text-xl font-black shadow-lg transform group-hover/section:scale-110 transition-transform duration-300">
+                  {items.length}
+                </span>
+              </div>
+            </div>
+            {/* Ligne de progression */}
+            <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-primary to-yellow-400 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+            </div>
+          </div>
         </div>
       </div>
+      
       <CardGrid items={items} now={now} />
     </div>
   );
@@ -637,15 +705,30 @@ function PronoCard({ p, now }) {
 function LabelBadge({ label }) {
   if (label === "strategie_bankroll") {
     return (
-      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black bg-gradient-to-r from-blue-400/20 to-cyan-400/20 text-blue-300 border-2 border-blue-500/40 shadow-lg animate-pulse-slow">
-        🧠 Stratégie
+      <span className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black overflow-hidden group">
+        {/* Background animé */}
+        <span className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-cyan-400/20 group-hover:from-blue-400/30 group-hover:to-cyan-400/30 transition-all"></span>
+        <span className="absolute inset-0 border-2 border-blue-500/40 rounded-full group-hover:border-blue-500/60 transition-colors"></span>
+        {/* Effet brillance */}
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+        {/* Contenu */}
+        <span className="relative z-10 text-2xl group-hover:scale-125 transition-transform">🧠</span>
+        <span className="relative z-10 text-blue-300 group-hover:text-blue-200 transition-colors">Stratégie</span>
       </span>
     );
   }
   if (label === "prono_en_or") {
     return (
-      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black bg-gradient-to-r from-yellow-400/30 to-orange-400/30 text-yellow-300 border-2 border-yellow-500/50 animate-shimmer shadow-2xl shadow-yellow-500/50">
-        <span className="animate-spin-slow">👑</span> PRONO EN OR
+      <span className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black overflow-hidden group">
+        {/* Background shimmer */}
+        <span className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 animate-shimmer"></span>
+        <span className="absolute inset-0 border-2 border-yellow-500/50 rounded-full shadow-2xl shadow-yellow-500/50"></span>
+        {/* Particules dorées */}
+        <span className="absolute top-0 right-2 w-1 h-1 bg-yellow-300 rounded-full animate-ping"></span>
+        <span className="absolute bottom-1 left-3 w-1 h-1 bg-yellow-400 rounded-full animate-ping delay-300"></span>
+        {/* Contenu */}
+        <span className="relative z-10 text-2xl animate-spin-slow group-hover:scale-150 transition-transform duration-500">👑</span>
+        <span className="relative z-10 text-yellow-300 group-hover:text-yellow-200 transition-colors">PRONO EN OR</span>
       </span>
     );
   }
