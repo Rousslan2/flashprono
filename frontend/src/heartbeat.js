@@ -1,5 +1,6 @@
 // frontend/src/heartbeat.js
 import axios from "axios";
+import { API_BASE } from "./config";
 
 let timer = null;
 let started = false;
@@ -12,7 +13,7 @@ export function startHeartbeat() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return; // pas connecté
-      await axios.post("/api/presence/heartbeat");
+      await axios.post(`${API_BASE}/api/presence/heartbeat`);
     } catch (e) {
       // silencieux
     }
@@ -27,5 +28,19 @@ export function startHeartbeat() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) return;
     send();
+  });
+  
+  // 🔥 Déconnexion automatique quand l'utilisateur ferme la page
+  window.addEventListener("beforeunload", async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    try {
+      // Utiliser sendBeacon pour envoyer la requête même si la page se ferme
+      const blob = new Blob([JSON.stringify({ token })], { type: 'application/json' });
+      navigator.sendBeacon(`${API_BASE}/api/auth/logout`, blob);
+    } catch (e) {
+      // silencieux
+    }
   });
 }

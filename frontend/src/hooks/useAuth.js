@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { listenUserUpdate } from '../utils/userSync';
+import axios from 'axios';
+import { API_BASE } from '../config';
 
 export function getUser() {
   try {
@@ -18,10 +20,24 @@ export function isAuthenticated() {
   return !!getToken();
 }
 
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "/";
+export async function logout() {
+  // 🔥 Appeler la route de déconnexion
+  try {
+    const token = getToken();
+    if (token) {
+      await axios.post(
+        `${API_BASE}/api/auth/logout`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    }
+  } catch (err) {
+    console.error('❌ Erreur logout:', err);
+  } finally {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  }
 }
 
 // ➕ Abonnement actif OU essai en cours
