@@ -9,6 +9,7 @@ export default function Scores() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("live"); // live | today | tomorrow
   const [selectedDate, setSelectedDate] = useState("");
+  const [apiStatus, setApiStatus] = useState(null);
 
   useEffect(() => {
     loadScores();
@@ -70,6 +71,21 @@ export default function Scores() {
 
   const clearDate = () => {
     setSelectedDate("");
+  };
+
+  const testApiConnection = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/scores/test`);
+      setApiStatus(data);
+      alert(
+        data.success
+          ? `✅ API connectée!\n\nRequests restantes: ${data.subscription?.requests?.current || "N/A"}/${data.subscription?.requests?.limit_day || "N/A"}`
+          : `❌ ${data.message}`
+      );
+    } catch (err) {
+      setApiStatus({ success: false, message: err.message });
+      alert(`❌ Erreur: ${err.response?.data?.message || err.message}`);
+    }
   };
 
   const matches = selectedDate 
@@ -198,10 +214,28 @@ export default function Scores() {
         )}
 
         {/* Info */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-sm text-gray-500">
             {tab === "live" ? "🔄 Actualisation automatique toutes les 30 secondes" : "💡 Sélectionnez une date personnalisée pour voir les matchs"}
           </p>
+          
+          {/* Bouton test API */}
+          <button
+            onClick={testApiConnection}
+            className="px-4 py-2 bg-primary/20 border border-primary/40 text-primary rounded-lg hover:bg-primary/30 transition-all text-sm font-medium"
+          >
+            🧪 Tester la connexion API
+          </button>
+          
+          {apiStatus && (
+            <div className={`inline-block px-4 py-2 rounded-lg text-sm ${
+              apiStatus.success 
+                ? "bg-green-500/20 border border-green-500 text-green-400" 
+                : "bg-red-500/20 border border-red-500 text-red-400"
+            }`}>
+              {apiStatus.message}
+            </div>
+          )}
         </div>
       </div>
     </section>

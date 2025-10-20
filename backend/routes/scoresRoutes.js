@@ -199,4 +199,39 @@ router.get("/by-date/:date", async (req, res) => {
   }
 });
 
+// 🧪 Test de l'API Football (pour vérifier que la clé fonctionne)
+router.get("/test", async (req, res) => {
+  try {
+    if (!API_KEY) {
+      return res.status(500).json({ 
+        success: false,
+        message: "❌ Clé API Football non configurée dans .env"
+      });
+    }
+
+    // Test avec l'endpoint status de l'API
+    const { data } = await axios.get(`${API_BASE_URL}/status`, {
+      headers: {
+        "x-rapidapi-key": API_KEY,
+        "x-rapidapi-host": "v3.football.api-sports.io",
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "✅ API Football connectée avec succès!",
+      account: data.response?.account || {},
+      subscription: data.response?.subscription || {},
+      apiKey: API_KEY.substring(0, 10) + "..." // Masquer la clé complète
+    });
+  } catch (error) {
+    console.error("❌ Erreur test API Football:", error.message);
+    res.status(500).json({ 
+      success: false,
+      message: "❌ Erreur de connexion à l'API Football",
+      error: error.response?.data || error.message
+    });
+  }
+});
+
 export default router;
