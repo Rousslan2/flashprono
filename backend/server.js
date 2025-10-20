@@ -150,9 +150,9 @@ app.post("/api/admin/log-test", (req, res) => {
 // 🕛 CRON JOBS
 // =============================
 
-// Job 1 : Vérification automatique des résultats de pronostics (toutes les 3 minutes - quasi-instantané)
+// Job 1 : Vérification automatique des résultats de pronostics (toutes les 1 minute - LIVE)
 cron.schedule(
-  "*/3 * * * *", // Toutes les 3 minutes pour mise à jour quasi-instantanée
+  "*/1 * * * *", // Toutes les 1 minute pour scores LIVE instantanés
   async () => {
     console.log("🔄 CRON: Vérification des résultats de pronostics...");
     const result = await checkAndUpdatePronosticResults();

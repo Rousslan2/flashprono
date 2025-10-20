@@ -15,7 +15,7 @@ export default function Scores() {
   
   // Interval séparé qui dépend de matches
   useEffect(() => {
-    // Actualiser intelligemment : seulement si matchs LIVE et toutes les 2 minutes
+    // Actualiser intelligemment : seulement si matchs LIVE et toutes les 1 minute
     const interval = setInterval(() => {
       const hasLiveMatches = matches.some(m => 
         ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
@@ -25,9 +25,9 @@ export default function Scores() {
         console.log('🔴 Matchs LIVE détectés - actualisation');
         loadScores();
       } else {
-        console.log('⏸️ Aucun match LIVE - pas d\'actualisation (economies API)');
+        console.log('⏸️ Aucun match LIVE - pas d\'actualisation (économies API)');
       }
-    }, 120000); // 2 minutes
+    }, 60000); // 1 minute pour LIVE instantané
     
     return () => clearInterval(interval);
   }, [matches]); // Dépend de matches pour détecter les LIVE
@@ -169,7 +169,7 @@ export default function Scores() {
         {/* Info */}
         <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
           <p className="text-sm text-blue-300 text-center">
-            💡 <strong>Super optimisé API</strong> : Cache 5 min • Actualisation auto toutes les 2 min UNIQUEMENT si matchs LIVE • Seulement tes pronos • Max 5-10 requêtes/jour
+            🔴 <strong>LIVE EN DIRECT</strong> : Actualisation automatique toutes les 1 minute si matchs LIVE • Latence max 1 min • Cache intelligent • Seulement vos pronos du jour
           </p>
         </div>
       </div>
