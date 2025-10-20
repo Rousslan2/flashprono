@@ -6,7 +6,7 @@ import socket from "../services/socket";
 
 export default function Admin() {
   const token = localStorage.getItem("token");
-  const [tab, setTab] = useState("stats"); // stats | add | list | users | online | history
+  const [tab, setTab] = useState("stats"); // stats | add | list | users | online
   const [editingId, setEditingId] = useState(null);
 
   // ---- STATS ----
@@ -40,12 +40,6 @@ export default function Admin() {
   // ---- ONLINE ----
   const [online, setOnline] = useState({ users: [], count: 0, loading: false, timestamp: null });
   const onlineIvRef = useRef(null);
-  
-  // ---- HISTORY ----
-  const [history, setHistory] = useState([]);
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyPages, setHistoryPages] = useState(1);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // 🎙️ Upload audio
   const uploadAudio = async (file) => {
@@ -121,24 +115,6 @@ export default function Admin() {
       setOnline((o) => ({ ...o, loading: false }));
     }
   };
-  
-  const loadHistory = async (page = 1) => {
-    try {
-      setLoadingHistory(true);
-      const { data } = await axios.get(
-        `${API_BASE}/api/admin/connection-history?page=${page}&limit=50`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setHistory(data.items || []);
-      setHistoryPage(data.page);
-      setHistoryPages(data.pages);
-    } catch (err) {
-      console.error('❌ Erreur history:', err);
-      alert("Erreur chargement historique");
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
 
   // Load initial datasets (stats + pronos + users page 1)
   useEffect(() => {
@@ -171,12 +147,7 @@ export default function Admin() {
     
     const handleConnectionNew = (newEntry) => {
       console.log('🔥 NEW CONNECTION:', newEntry.userName, newEntry.action);
-      setHistory(prev => {
-        // Éviter les doublons
-        const exists = prev.some(h => h._id === newEntry._id);
-        if (exists) return prev;
-        return [newEntry, ...prev].slice(0, 100);
-      });
+      // Ne rien faire, juste logger
     };
     
     const handleOnlineUpdate = () => {
@@ -208,8 +179,6 @@ export default function Admin() {
     if (tab === "online") {
       loadOnline();
       onlineIvRef.current = setInterval(loadOnline, 15000);
-    } else if (tab === "history") {
-      loadHistory(1);
     }
     
     return () => {
@@ -400,9 +369,6 @@ export default function Admin() {
         </Tab>
         <Tab tab={tab} id="online" setTab={setTab}>
           En ligne ({online.count})
-        </Tab>
-        <Tab tab={tab} id="history" setTab={setTab}>
-          📜 Historique
         </Tab>
       </div>
 

@@ -190,7 +190,7 @@ export default function Pronostics() {
   const hasAny = groups.today.length || groups.future.length || groups.past.length;
 
   return (
-    <section className="py-12 px-4">
+    <section className="pt-16 pb-12 px-4">
       <HeaderIntro />
       <FilterBar
         filter={filter}
