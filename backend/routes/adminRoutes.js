@@ -5,6 +5,7 @@ import { logAdminAction } from "../middleware/logMiddleware.js";
 import User from "../models/User.js";
 import Pronostic from "../models/Pronostic.js";
 import ConnectionHistory from "../models/ConnectionHistory.js";
+import { io } from "../server.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -96,6 +97,10 @@ router.post("/pronostics", async (req, res, next) => {
       details: details || "",
       audioUrl: audioUrl || "",
     });
+    
+    // 🔥 Émettre un événement Socket.io
+    io.emit("prono:created", prono);
+    
     res.json(prono);
   } catch (e) {
     next(e);
@@ -106,6 +111,10 @@ router.put("/pronostics/:id", async (req, res, next) => {
   try {
     const prono = await Pronostic.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!prono) return res.status(404).json({ message: "Pronostic introuvable." });
+    
+    // 🔥 Émettre un événement Socket.io
+    io.emit("prono:updated", prono);
+    
     res.json(prono);
   } catch (e) {
     next(e);
@@ -116,6 +125,10 @@ router.delete("/pronostics/:id", async (req, res, next) => {
   try {
     const prono = await Pronostic.findByIdAndDelete(req.params.id);
     if (!prono) return res.status(404).json({ message: "Pronostic introuvable." });
+    
+    // 🔥 Émettre un événement Socket.io
+    io.emit("prono:deleted", { _id: req.params.id });
+    
     res.json({ ok: true });
   } catch (e) {
     next(e);

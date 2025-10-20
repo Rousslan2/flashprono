@@ -4,6 +4,7 @@ import axios from "axios";
 import { API_BASE } from "../config";
 import { isSubscriptionActive } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
+import socket from "../services/socket";
 
 export default function Pronostics() {
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ export default function Pronostics() {
       return;
     }
 
-    (async () => {
+    const loadPronos = async () => {
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(`${API_BASE}/api/pronostics`, {
@@ -49,7 +50,34 @@ export default function Pronostics() {
       } finally {
         setLoading(false);
       }
-    })();
+    };
+
+    loadPronos();
+
+    // 🔥 Écouter les événements Socket.io
+    socket.on('prono:created', (newProno) => {
+      console.log('🎉 Nouveau prono reçu:', newProno);
+      if ((newProno.sport || "").toLowerCase().includes("foot")) {
+        setPronos(prev => [newProno, ...prev].sort((a, b) => new Date(a.date) - new Date(b.date)));
+      }
+    });
+
+    socket.on('prono:updated', (updatedProno) => {
+      console.log('✏️ Prono mis à jour:', updatedProno);
+      setPronos(prev => prev.map(p => p._id === updatedProno._id ? updatedProno : p));
+    });
+
+    socket.on('prono:deleted', ({ _id }) => {
+      console.log('🗑️ Prono supprimé:', _id);
+      setPronos(prev => prev.filter(p => p._id !== _id));
+    });
+
+    // Nettoyage
+    return () => {
+      socket.off('prono:created');
+      socket.off('prono:updated');
+      socket.off('prono:deleted');
+    };
   }, [active]);
 
   const filtered = useMemo(() => {

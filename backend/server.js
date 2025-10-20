@@ -3,6 +3,8 @@
 // =========================================
 
 import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import cron from "node-cron";
@@ -17,7 +19,7 @@ import authRoutes from "./routes/authRoutes.js";
 import pronosticRoutes from "./routes/pronosticRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import presenceRoutes from "./routes/presenceRoutes.js"; // présence en ligne
+import presenceRoutes from "./routes/presenceRoutes.js";
 
 // 📊 Modèles
 import User from "./models/User.js";
@@ -26,21 +28,15 @@ import User from "./models/User.js";
 dotenv.config();
 connectDB();
 
-// ✅ Créer l'app AVANT tout app.use(...)
 const app = express();
-
-// Aide les proxies (Railway / Cloudflare) à passer l'IP et le protocole
-app.set("trust proxy", 1);
+const httpServer = createServer(app);
 
 // =============================
-// 🌐 CONFIGURATION GLOBALE CORS (robuste)
-//  - Autorise ton domaine custom + localhost
-//  - Répond correctement aux pré-requêtes OPTIONS
+// 🔥 SOCKET.IO - TEMPS RÉEL
 // =============================
 const FRONT = (process.env.FRONTEND_URL || "").replace(/\/+$/, "");
-
 const baseWhitelist = [
-  FRONT, // depuis .env Railway: FRONTEND_URL=https://flashprono.com
+  FRONT,
   "https://flashprono.com",
   "https://www.flashprono.com",
   "http://localhost:3000",
@@ -50,12 +46,43 @@ const baseWhitelist = [
 
 const WHITELIST = new Set(baseWhitelist.map((u) => u.replace(/\/+$/, "")));
 
+const io = new Server(httpServer, {
+  cors: {
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      const clean = origin.replace(/\/+$/, "");
+      if (WHITELIST.has(clean) || clean.endsWith(".flashprono.com")) {
+        return cb(null, true);
+      }
+      return cb(new Error("CORS bloqué"), false);
+    },
+    credentials: true,
+  },
+});
+
+// Gestion des connexions Socket.io
+io.on("connection", (socket) => {
+  console.log("✅ Client connecté:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client déconnecté:", socket.id);
+  });
+});
+
+// Exporter io pour l'utiliser dans les routes
+export { io };
+
+// =============================
+// 🌐 CONFIGURATION CORS
+// =============================
+app.set("trust proxy", 1);
+
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman / cURL
+    if (!origin) return cb(null, true);
     const clean = origin.replace(/\/+$/, "");
     if (WHITELIST.has(clean)) return cb(null, true);
-    if (clean.endsWith(".flashprono.com")) return cb(null, true); // sous-domaines éventuels
+    if (clean.endsWith(".flashprono.com")) return cb(null, true);
     console.warn("❌ CORS refusé pour :", origin);
     return cb(new Error(`CORS bloqué pour ${origin}`), false);
   },
@@ -66,17 +93,16 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// 👉 Répond aux pré-requêtes sur toutes les routes (corrige ton 404 OPTIONS)
 app.options("*", cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 📁 Fichiers statiques (vocaux, etc.)
+// 📁 Fichiers statiques
 app.use("/uploads", express.static("uploads"));
 
 // =============================
-// 🩺 ROUTE DE TEST / STATUS API
+// 🩺 ROUTE DE TEST
 // =============================
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -85,6 +111,7 @@ app.get("/api/health", (_req, res) => {
     clientUrl: process.env.FRONTEND_URL || FRONT,
     hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
     mongoUriSet: !!process.env.MONGO_URI,
+    socketConnected: io.engine.clientsCount,
     message: "✅ FlashProno API opérationnelle",
   });
 });
@@ -96,10 +123,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/pronostics", pronosticRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/presence", presenceRoutes); // présence en ligne
+app.use("/api/presence", presenceRoutes);
 
 // =============================
-// 🧾 LOG ADMIN TEST (optionnel)
+// 🧾 LOG ADMIN TEST
 // =============================
 app.post("/api/admin/log-test", (req, res) => {
   const { action, adminEmail, targetEmail } = req.body;
@@ -108,7 +135,7 @@ app.post("/api/admin/log-test", (req, res) => {
 });
 
 // =============================
-// 🕛 CRON JOB : NETTOYAGE AUTO
+// 🕛 CRON JOB
 // =============================
 cron.schedule(
   "0 3 * * *",
@@ -139,7 +166,7 @@ cron.schedule(
 );
 
 // =============================
-// 🧱 MIDDLEWARE ERREUR GLOBAL
+// 🧱 MIDDLEWARE ERREUR
 // =============================
 app.use(errorHandler);
 
@@ -154,6 +181,7 @@ app.get("/", (_req, res) => {
 // 🚀 LANCEMENT SERVEUR
 // =============================
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`✅ Serveur FlashProno actif sur le port ${PORT}`);
+  console.log(`🔥 Socket.io prêt pour le temps réel`);
 });
