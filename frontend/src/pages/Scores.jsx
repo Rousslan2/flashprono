@@ -7,6 +7,7 @@ export default function Scores() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [fromCache, setFromCache] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadScores();
@@ -31,9 +32,15 @@ export default function Scores() {
   const loadScores = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const { data } = await axios.get(`${API_BASE}/api/scores/my-matches`);
       
       console.log('✅ Scores reçus:', data);
+      
+      if (data.message && data.matches.length === 0) {
+        setError(data.message);
+      }
       
       setMatches(data.matches || []);
       setFromCache(data.fromCache || false);
@@ -42,11 +49,11 @@ export default function Scores() {
       console.error("❌ Erreur chargement scores:", err);
       console.error("Détails:", err.response?.data);
       
-      // Afficher un message d'erreur à l'utilisateur
-      alert(
-        err.response?.data?.message || 
-        "Impossible de charger les scores. Vérifie que l'API est configurée."
-      );
+      const errorMsg = err.response?.data?.message || 
+        err.message || 
+        "Impossible de charger les scores. Vérifie que le backend est démarré.";
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
