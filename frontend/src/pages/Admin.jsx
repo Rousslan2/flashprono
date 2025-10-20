@@ -177,25 +177,35 @@ export default function Admin() {
     };
   }, []);
 
+  // 🔥 Écouter les événements Socket.io GLOBAUX (pas dépendant de l'onglet)
+  useEffect(() => {
+    // Connexions/déconnexions
+    socket.on('connection:new', (newEntry) => {
+      console.log('✨ Nouvelle connexion/déconnexion:', newEntry.userName, newEntry.action);
+      setHistory(prev => [newEntry, ...prev].slice(0, 100));
+    });
+    
+    // Utilisateurs en ligne
+    socket.on('online:update', () => {
+      console.log('🟢 Mise à jour utilisateurs en ligne');
+      if (tab === 'online') {
+        loadOnline();
+      }
+    });
+    
+    return () => {
+      socket.off('connection:new');
+      socket.off('online:update');
+    };
+  }, [tab]); // Dépend de tab pour recharger loadOnline
+
   // Auto-refresh online tab every 15s when visible
   useEffect(() => {
     if (tab === "online") {
       loadOnline();
       onlineIvRef.current = setInterval(loadOnline, 15000);
-      
-      // 🔥 Écouter les mises à jour en temps réel
-      socket.on('online:update', () => {
-        console.log('🟢 Actualisation utilisateurs en ligne');
-        loadOnline();
-      });
     } else if (tab === "history") {
       loadHistory(1);
-      
-      // 🔥 Écouter les nouvelles connexions
-      socket.on('connection:new', (newEntry) => {
-        console.log('✨ Nouvelle connexion:', newEntry.userName);
-        setHistory(prev => [newEntry, ...prev].slice(0, 50)); // Garder max 50 entrées
-      });
     }
     
     return () => {
@@ -203,8 +213,6 @@ export default function Admin() {
         clearInterval(onlineIvRef.current);
         onlineIvRef.current = null;
       }
-      socket.off('online:update');
-      socket.off('connection:new');
     };
   }, [tab]);
 
