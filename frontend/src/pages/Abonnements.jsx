@@ -203,8 +203,8 @@ export default function Abonnements() {
                 </div>
               )}
               {plan.popular && !isCurrent && (
-                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg z-20 animate-pulse whitespace-nowrap">
-                  🔥 LE PLUS POPULAIRE
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary to-yellow-400 text-black text-[10px] sm:text-xs font-black px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg z-20 animate-pulse whitespace-nowrap max-w-[90%] overflow-hidden text-ellipsis">
+                  🔥 LE + POPULAIRE
                 </div>
               )}
               {isCurrent && (

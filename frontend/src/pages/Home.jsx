@@ -151,17 +151,17 @@ export default function Home() {
       </div>
 
       {/* Pourquoi FlashProno */}
-      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10">
+      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10 px-4">
         <div className="mb-12 animate-slide-in-up">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4">
             Pourquoi choisir FlashProno ?
           </h2>
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent to-yellow-400 rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-transparent to-yellow-400 rounded-full animate-pulse"></div>
             <div className="h-2 w-2 bg-yellow-400 rounded-full animate-ping"></div>
-            <div className="h-1 w-16 bg-gradient-to-l from-transparent to-yellow-400 rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-l from-transparent to-yellow-400 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-gray-400 text-xl">Ce qui nous différencie des autres 💎</p>
+          <p className="text-gray-400 text-lg sm:text-xl">Ce qui nous différencie des autres 💎</p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
@@ -190,17 +190,17 @@ export default function Home() {
       </div>
 
       {/* Ce que tu obtiens */}
-      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10">
+      <div className="max-w-6xl mx-auto mt-32 mb-20 relative z-10 px-4">
         <div className="mb-12 animate-slide-in-up">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4">
             Ce que tu obtiens avec FlashProno
           </h2>
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent to-green-400 rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-transparent to-green-400 rounded-full animate-pulse"></div>
             <div className="h-2 w-2 bg-green-400 rounded-full animate-ping"></div>
-            <div className="h-1 w-16 bg-gradient-to-l from-transparent to-green-400 rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-l from-transparent to-green-400 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-gray-400 text-xl">Tout pour réussir tes paris sportifs 🎁</p>
+          <p className="text-gray-400 text-lg sm:text-xl">Tout pour réussir tes paris sportifs 🎁</p>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8">
