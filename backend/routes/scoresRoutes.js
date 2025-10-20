@@ -1,5 +1,6 @@
 import express from "express";
 import axios from "axios";
+import Pronostic from "../models/Pronostic.js";
 
 const router = express.Router();
 
@@ -230,6 +231,121 @@ router.get("/test", async (req, res) => {
       success: false,
       message: "❌ Erreur de connexion à l'API Football",
       error: error.response?.data || error.message
+    });
+  }
+});
+
+// ⚽ Récupérer les scores des matchs avec pronostics uniquement
+router.get("/my-pronos", async (req, res) => {
+  try {
+    if (!API_KEY) {
+      return res.status(500).json({ 
+        message: "API Football non configurée",
+        matches: [] 
+      });
+    }
+
+    // 1. Récupérer tous les pronostics actifs (en attente)
+    const pronostics = await Pronostic.find({ 
+      statut: 'en attente',
+      sport: 'Football' // Seulement le football
+    }).sort({ date: -1 });
+
+    if (pronostics.length === 0) {
+      return res.json({ 
+        matches: [],
+        message: "Aucun pronostic en attente" 
+      });
+    }
+
+    // 2. Récupérer tous les matchs du jour et en direct
+    const today = new Date().toISOString().split("T")[0];
+    
+    const [liveData, todayData] = await Promise.all([
+      axios.get(`${API_BASE_URL}/fixtures`, {
+        params: { live: "all" },
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      }),
+      axios.get(`${API_BASE_URL}/fixtures`, {
+        params: { date: today },
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      })
+    ]);
+
+    // 3. Combiner tous les matchs
+    const allMatches = [
+      ...(liveData.data.response || []),
+      ...(todayData.data.response || [])
+    ];
+
+    // 4. Filtrer uniquement les matchs qui correspondent aux pronostics
+    const matchesWithPronos = [];
+
+    for (const prono of pronostics) {
+      const matchingMatch = allMatches.find(match => {
+        const homeTeam = match.teams.home.name.toLowerCase();
+        const awayTeam = match.teams.away.name.toLowerCase();
+        const equipe1 = prono.equipe1.toLowerCase();
+        const equipe2 = prono.equipe2.toLowerCase();
+
+        // Vérifier si les équipes correspondent (dans un ordre ou l'autre)
+        return (
+          (homeTeam.includes(equipe1) || equipe1.includes(homeTeam)) &&
+          (awayTeam.includes(equipe2) || equipe2.includes(awayTeam))
+        ) || (
+          (homeTeam.includes(equipe2) || equipe2.includes(homeTeam)) &&
+          (awayTeam.includes(equipe1) || equipe1.includes(awayTeam))
+        );
+      });
+
+      if (matchingMatch) {
+        matchesWithPronos.push({
+          id: matchingMatch.fixture.id,
+          status: matchingMatch.fixture.status.short,
+          elapsed: matchingMatch.fixture.status.elapsed,
+          date: matchingMatch.fixture.date,
+          league: matchingMatch.league.name,
+          country: matchingMatch.league.country,
+          homeTeam: matchingMatch.teams.home.name,
+          awayTeam: matchingMatch.teams.away.name,
+          homeScore: matchingMatch.goals.home,
+          awayScore: matchingMatch.goals.away,
+          homeLogo: matchingMatch.teams.home.logo,
+          awayLogo: matchingMatch.teams.away.logo,
+          // Ajouter les infos du pronostic
+          pronostic: {
+            _id: prono._id,
+            type: prono.type,
+            cote: prono.cote,
+            confiance: prono.confiance,
+            details: prono.details,
+            categorie: prono.categorie
+          }
+        });
+      }
+    }
+
+    // Supprimer les doublons (au cas où)
+    const uniqueMatches = matchesWithPronos.filter(
+      (match, index, self) => index === self.findIndex(m => m.id === match.id)
+    );
+
+    res.json({ 
+      matches: uniqueMatches,
+      total: uniqueMatches.length 
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur récupération scores pronos:", error.message);
+    res.status(500).json({ 
+      message: "Erreur récupération scores",
+      matches: [] 
     });
   }
 });

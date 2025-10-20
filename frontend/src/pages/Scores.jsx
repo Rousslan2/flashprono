@@ -6,8 +6,9 @@ export default function Scores() {
   const [liveMatches, setLiveMatches] = useState([]);
   const [todayMatches, setTodayMatches] = useState([]);
   const [tomorrowMatches, setTomorrowMatches] = useState([]);
+  const [myPronosMatches, setMyPronosMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("live"); // live | today | tomorrow
+  const [tab, setTab] = useState("my-pronos"); // my-pronos | live | today | tomorrow
   const [selectedDate, setSelectedDate] = useState("");
   const [apiStatus, setApiStatus] = useState(null);
 
@@ -30,6 +31,9 @@ export default function Scores() {
         endpoint = `/api/scores/by-date/${selectedDate}`;
       } else {
         switch (tab) {
+          case "my-pronos":
+            endpoint = "/api/scores/my-pronos";
+            break;
           case "live":
             endpoint = "/api/scores/live";
             break;
@@ -40,7 +44,7 @@ export default function Scores() {
             endpoint = "/api/scores/tomorrow";
             break;
           default:
-            endpoint = "/api/scores/live";
+            endpoint = "/api/scores/my-pronos";
         }
       }
       
@@ -49,7 +53,9 @@ export default function Scores() {
       if (selectedDate) {
         setTodayMatches(data.matches || []);
       } else {
-        if (tab === "live") {
+        if (tab === "my-pronos") {
+          setMyPronosMatches(data.matches || []);
+        } else if (tab === "live") {
           setLiveMatches(data.matches || []);
         } else if (tab === "today") {
           setTodayMatches(data.matches || []);
@@ -90,11 +96,13 @@ export default function Scores() {
 
   const matches = selectedDate 
     ? todayMatches 
-    : tab === "live" 
-      ? liveMatches 
-      : tab === "today" 
-        ? todayMatches 
-        : tomorrowMatches;
+    : tab === "my-pronos"
+      ? myPronosMatches
+      : tab === "live" 
+        ? liveMatches 
+        : tab === "today" 
+          ? todayMatches 
+          : tomorrowMatches;
 
   return (
     <section className="pt-16 pb-12 px-4">
@@ -141,6 +149,16 @@ export default function Scores() {
         {/* Tabs */}
         {!selectedDate && (
           <div className="flex justify-center gap-3 mb-8 flex-wrap">
+            <button
+              onClick={() => setTab("my-pronos")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                tab === "my-pronos"
+                  ? "bg-gradient-to-r from-primary to-yellow-400 text-black"
+                  : "bg-black border-2 border-primary/30 text-white hover:bg-gray-900"
+              }`}
+            >
+              🎯 Mes Pronos ({myPronosMatches.length})
+            </button>
             <button
               onClick={() => setTab("live")}
               className={`px-6 py-3 rounded-xl font-semibold transition-all ${
@@ -197,12 +215,14 @@ export default function Scores() {
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-2xl font-bold text-white mb-3">
-              {tab === "live" ? "Aucun match en direct" : "Aucun match prévu"}
+              {tab === "my-pronos" ? "Aucun match avec pronostic" : tab === "live" ? "Aucun match en direct" : "Aucun match prévu"}
             </h3>
             <p className="text-gray-400">
-              {tab === "live" 
-                ? "Reviens plus tard pour suivre les matchs en direct !" 
-                : "Aucun match trouvé pour cette période"}
+              {tab === "my-pronos"
+                ? "Aucun pronostic en attente pour le moment"
+                : tab === "live" 
+                  ? "Reviens plus tard pour suivre les matchs en direct !" 
+                  : "Aucun match trouvé pour cette période"}
             </p>
           </div>
         ) : (
@@ -246,6 +266,7 @@ function MatchCard({ match }) {
   const isLive = ["1H", "HT", "2H", "ET", "BT", "P"].includes(match.status);
   const isFinished = match.status === "FT";
   const isPending = ["TBD", "NS", "SUSP", "INT"].includes(match.status);
+  const hasProno = !!match.pronostic;
 
   const getStatusLabel = () => {
     if (match.status === "1H") return `${match.elapsed}'`;
@@ -268,7 +289,7 @@ function MatchCard({ match }) {
     >
       {/* League */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
             {match.league}
           </span>
@@ -276,6 +297,11 @@ function MatchCard({ match }) {
             <span className="flex items-center gap-1 text-xs text-red-400 font-semibold">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               LIVE
+            </span>
+          )}
+          {hasProno && (
+            <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full border border-green-500/30 font-semibold">
+              🎯 Prono actif
             </span>
           )}
         </div>
@@ -306,6 +332,34 @@ function MatchCard({ match }) {
           </span>
         </div>
       </div>
+
+      {/* Infos du pronostic */}
+      {hasProno && (
+        <div className="mt-4 pt-4 border-t-2 border-primary/20">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-primary">🎯 {match.pronostic.type}</span>
+              <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">
+                Cote {match.pronostic.cote}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-400">Confiance:</span>
+              <span className={`text-xs font-bold ${
+                match.pronostic.confiance >= 75 ? "text-green-400" :
+                match.pronostic.confiance >= 50 ? "text-yellow-400" : "text-orange-400"
+              }`}>
+                {match.pronostic.confiance}%
+              </span>
+            </div>
+          </div>
+          {match.pronostic.details && (
+            <p className="text-xs text-gray-400 mt-2 italic">
+              {match.pronostic.details}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
