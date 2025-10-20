@@ -1,19 +1,17 @@
 # Build optimisé pour Railway
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Variables d'environnement pour optimiser le build
-ENV NODE_ENV=production
+# Variables d'environnement
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Copier les fichiers de dépendances
-COPY package.json ./
-COPY .npmrc ./
+COPY package.json .npmrc ./
 
-# Nettoyer et installer TOUTES les dépendances (incluant devDependencies pour le build)
+# Installation des dépendances
 RUN npm cache clean --force && \
-    npm install --include=dev --no-optional=false
+    npm install --include=dev
 
 # Copier le code source
 COPY . .
@@ -22,14 +20,14 @@ COPY . .
 RUN npm run build
 
 # Image de production légère
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-# Installer serve
+# Installer serve globalement
 RUN npm install -g serve
 
-# Copier le build
+# Copier uniquement le build depuis l'étape précédente
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 8080
