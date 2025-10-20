@@ -33,9 +33,13 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
     
+    // 🔥 Mettre à jour lastSeen
+    user.lastSeen = new Date();
+    await user.save();
+    
     // 🔥 Enregistrer la connexion dans l'historique
     try {
-      await ConnectionHistory.create({
+      const historyEntry = await ConnectionHistory.create({
         userId: user._id,
         userName: user.name,
         userEmail: user.email,
@@ -43,6 +47,11 @@ router.post("/login", async (req, res) => {
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.headers['user-agent'] || 'Unknown',
       });
+      
+      // Émettre événement Socket.io pour l'historique
+      const { io } = await import("../server.js");
+      io.emit("connection:new", historyEntry);
+      io.emit("online:update"); // Notifier changement utilisateurs en ligne
     } catch (err) {
       console.error('❌ Erreur enregistrement historique:', err);
     }
