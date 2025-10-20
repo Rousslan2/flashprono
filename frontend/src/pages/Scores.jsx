@@ -1,21 +1,27 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE } from "../config";
+import { isSubscriptionActive } from "../hooks/useAuth";
+import { Link } from "react-router-dom";
 
 export default function Scores() {
+  const active = isSubscriptionActive();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
-    // Premier chargement
+    if (!active) {
+      setLoading(false);
+      return;
+    }
     loadScores();
-  }, []); // Une seule fois au montage
+  }, [active]);
   
-  // Interval séparé qui dépend de matches
   useEffect(() => {
-    // Actualiser intelligemment : seulement si matchs LIVE et toutes les 1 minute
+    if (!active) return;
+    
     const interval = setInterval(() => {
       const hasLiveMatches = matches.some(m => 
         ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
@@ -24,24 +30,18 @@ export default function Scores() {
       if (hasLiveMatches) {
         console.log('🔴 Matchs LIVE détectés - actualisation');
         loadScores();
-      } else {
-        console.log('⏸️ Aucun match LIVE - pas d\'actualisation (économies API)');
       }
-    }, 60000); // 1 minute pour LIVE instantané
+    }, 60000);
     
     return () => clearInterval(interval);
-  }, [matches]); // Dépend de matches pour détecter les LIVE
+  }, [matches, active]);
 
   const loadScores = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('📡 Chargement des scores...');
-      
       const { data } = await axios.get(`${API_BASE}/api/scores/my-matches`);
-      
-      console.log('✅ Réponse reçue:', data);
       
       if (!data.success) {
         setError(data.message || "Erreur inconnue");
@@ -63,6 +63,53 @@ export default function Scores() {
       setLoading(false);
     }
   };
+
+  // 🔒 BLOQUER ACCÈS SI NON ABONNÉ
+  if (!active) {
+    return (
+      <section className="py-20 px-4 text-center relative overflow-hidden">
+        {/* Particules animées */}
+        <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+          <div className="absolute top-20 left-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-blue-500 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-primary rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="mb-8 animate-bounce-slow">
+            <div className="inline-block w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center mb-6 text-5xl border-4 border-white/20 shadow-2xl">
+              🔒
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 bg-clip-text text-transparent animate-gradient-x">
+                Scores en Direct
+              </span>
+              <br />
+              <span className="text-white drop-shadow-lg">Réservés aux membres VIP</span>
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed mb-8">
+              Suis en <span className="text-blue-400 font-bold">temps réel</span> tous les matchs de tes pronos avec actualisation automatique !
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <FeaturePreview icon="🔴" title="Live en direct" desc="Actualisation auto toutes les 1 min" />
+            <FeaturePreview icon="⚽" title="Tes pronos" desc="Uniquement les matchs que tu suis" />
+            <FeaturePreview icon="📊" title="Statistiques" desc="Scores et statuts en temps réel" />
+          </div>
+
+          <Link
+            to="/abonnements"
+            className="group relative inline-block"
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-blue-500 to-cyan-400 text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
+              ✨ Devenir membre VIP
+            </div>
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   const liveMatches = matches.filter(m => 
     ["1H", "HT", "2H", "ET", "BT", "P"].includes(m.status)
@@ -149,17 +196,14 @@ export default function Scores() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Matchs LIVE */}
             {liveMatches.length > 0 && (
               <Section title="🔴 En Direct" matches={liveMatches} />
             )}
             
-            {/* Matchs à venir */}
             {upcomingMatches.length > 0 && (
               <Section title="⏰ À venir" matches={upcomingMatches} />
             )}
             
-            {/* Matchs terminés */}
             {finishedMatches.length > 0 && (
               <Section title="✅ Terminés" matches={finishedMatches} />
             )}
@@ -169,11 +213,21 @@ export default function Scores() {
         {/* Info */}
         <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
           <p className="text-sm text-blue-300 text-center">
-            🔴 <strong>LIVE EN DIRECT</strong> : Actualisation automatique toutes les 1 minute si matchs LIVE • Latence max 1 min • Cache intelligent • Seulement vos pronos du jour
+            🔴 <strong>LIVE EN DIRECT</strong> : Actualisation automatique toutes les 1 minute si matchs LIVE
           </p>
         </div>
       </div>
     </section>
+  );
+}
+
+function FeaturePreview({ icon, title, desc }) {
+  return (
+    <div className="group bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border-2 border-blue-500/30 rounded-2xl p-6 text-center hover:scale-110 hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-500 cursor-pointer">
+      <div className="text-5xl mb-4 group-hover:scale-125 transition-transform duration-300">{icon}</div>
+      <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
+      <p className="text-gray-400 text-sm">{desc}</p>
+    </div>
   );
 }
 
@@ -226,7 +280,6 @@ function MatchCard({ match }) {
           : "border-primary/30"
       }`}
     >
-      {/* League */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs px-3 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
           {match.league}
@@ -242,9 +295,7 @@ function MatchCard({ match }) {
         )}
       </div>
 
-      {/* Teams */}
       <div className="space-y-3">
-        {/* Home Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             <img src={match.homeLogo} alt={match.homeTeam} className="w-8 h-8 object-contain" />
@@ -255,7 +306,6 @@ function MatchCard({ match }) {
           </span>
         </div>
 
-        {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             <img src={match.awayLogo} alt={match.awayTeam} className="w-8 h-8 object-contain" />
