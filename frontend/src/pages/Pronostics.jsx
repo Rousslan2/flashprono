@@ -191,7 +191,7 @@ export default function Pronostics() {
   const hasAny = groups.today.length || groups.future.length || groups.past.length;
 
   return (
-    <section className="py-16 px-4">
+    <section className="pt-20 pb-16 px-4">
       <HeaderIntro />
       <FilterBar
         filter={filter}
@@ -295,7 +295,7 @@ function FilterBar({ filter, setFilter, stats, loading = false }) {
   const totalFiltered = stats.today + stats.future + stats.past;
 
   return (
-    <div className="sticky top-0 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
+    <div className="sticky top-16 z-20 bg-dark/95 backdrop-blur-xl border-y-2 border-primary/20 shadow-xl">
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4 py-4 px-2">
         <div className="flex items-center flex-wrap gap-2">
           <Btn id="all" label="Tous" count={loading ? undefined : totalFiltered} />
