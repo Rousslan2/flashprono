@@ -448,30 +448,56 @@ router.post("/check-results", async (req, res, next) => {
     let updated = 0;
     const details = [];
 
+    // Fonction de similarité améliorée
+    const similarity = (str1, str2) => {
+      const s1 = str1.toLowerCase().trim();
+      const s2 = str2.toLowerCase().trim();
+      
+      // Exact match
+      if (s1 === s2) return 1;
+      
+      // Contains
+      if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+      
+      // Split words and check common words
+      const words1 = s1.split(/\s+/);
+      const words2 = s2.split(/\s+/);
+      const commonWords = words1.filter(w => words2.includes(w)).length;
+      
+      if (commonWords > 0) {
+        return commonWords / Math.max(words1.length, words2.length);
+      }
+      
+      return 0;
+    };
+
     for (const prono of pronos) {
       const team1 = prono.equipe1.toLowerCase().trim();
       const team2 = prono.equipe2.toLowerCase().trim();
 
-      // Chercher le match
-      const match = allMatches.find((m) => {
+      // Chercher le match avec score de similarité
+      let bestMatch = null;
+      let bestScore = 0;
+
+      for (const m of allMatches) {
         const home = m.teams.home.name.toLowerCase();
         const away = m.teams.away.name.toLowerCase();
         
-        // Correspondance exacte ou partielle
-        const match1 = (
-          (home.includes(team1) || team1.includes(home)) &&
-          (away.includes(team2) || team2.includes(away))
-        );
+        // Score pour match1 (home=team1, away=team2)
+        const score1 = (similarity(home, team1) + similarity(away, team2)) / 2;
         
-        const match2 = (
-          (away.includes(team1) || team1.includes(away)) &&
-          (home.includes(team2) || team2.includes(home))
-        );
+        // Score pour match2 (home=team2, away=team1)
+        const score2 = (similarity(home, team2) + similarity(away, team1)) / 2;
         
-        return match1 || match2;
-      });
+        const score = Math.max(score1, score2);
+        
+        if (score > bestScore && score > 0.5) { // Seuil de 50% de similarité
+          bestScore = score;
+          bestMatch = m;
+        }
+      }
 
-      if (!match) {
+      if (!bestMatch) {
         details.push({
           prono: `${prono.equipe1} vs ${prono.equipe2}`,
           status: "❌ Match non trouvé dans l'API",
@@ -480,45 +506,38 @@ router.post("/check-results", async (req, res, next) => {
         continue;
       }
 
-      const matchStatus = match.fixture.status.short;
+      const matchStatus = bestMatch.fixture.status.short;
       
       if (matchStatus !== "FT") {
         details.push({
           prono: `${prono.equipe1} vs ${prono.equipe2}`,
           status: `⏳ Match en cours ou pas commencé (${matchStatus})`,
-          action: "Attente fin du match"
+          action: `Trouvé: ${bestMatch.teams.home.name} vs ${bestMatch.teams.away.name}`
         });
         continue;
       }
 
       // Match terminé, déterminer le résultat
-      const homeScore = match.goals.home;
-      const awayScore = match.goals.away;
+      const homeScore = bestMatch.goals.home;
+      const awayScore = bestMatch.goals.away;
       const type = prono.type.toLowerCase();
 
       let resultat = "En attente";
 
       // Logique de calcul du résultat
       if (type.includes("1") && !type.includes("1n") && !type.includes("12")) {
-        // Victoire domicile
         resultat = homeScore > awayScore ? "Gagnant" : "Perdu";
       } else if (type.includes("2") && !type.includes("2n") && !type.includes("12")) {
-        // Victoire extérieur
         resultat = awayScore > homeScore ? "Gagnant" : "Perdu";
       } else if (type.includes("x") || type.includes("nul") || type.includes("draw")) {
-        // Match nul
         resultat = homeScore === awayScore ? "Gagnant" : "Perdu";
       } else if (type.includes("1n")) {
-        // Domicile ou nul
         resultat = homeScore >= awayScore ? "Gagnant" : "Perdu";
       } else if (type.includes("2n")) {
-        // Extérieur ou nul
         resultat = awayScore >= homeScore ? "Gagnant" : "Perdu";
       } else if (type.includes("12")) {
-        // Pas de nul
         resultat = homeScore !== awayScore ? "Gagnant" : "Perdu";
       } else if (type.includes("btts") || type.includes("both")) {
-        // Les deux équipes marquent
         resultat = homeScore > 0 && awayScore > 0 ? "Gagnant" : "Perdu";
       } else if (type.includes("over")) {
         const totalGoals = homeScore + awayScore;
@@ -532,7 +551,7 @@ router.post("/check-results", async (req, res, next) => {
         details.push({
           prono: `${prono.equipe1} vs ${prono.equipe2}`,
           status: `⚠️ Type de pari non reconnu: ${prono.type}`,
-          action: "Mise à jour manuelle nécessaire"
+          action: `Match: ${bestMatch.teams.home.name} ${homeScore}-${awayScore} ${bestMatch.teams.away.name}`
         });
         continue;
       }
@@ -544,15 +563,14 @@ router.post("/check-results", async (req, res, next) => {
 
       details.push({
         prono: `${prono.equipe1} vs ${prono.equipe2}`,
-        status: `✅ ${homeScore}-${awayScore} → ${resultat}`,
-        action: "Mis à jour"
+        status: `✅ ${bestMatch.teams.home.name} ${homeScore}-${awayScore} ${bestMatch.teams.away.name} → ${resultat}`,
+        action: `Similarité: ${Math.round(bestScore * 100)}%`
       });
 
       console.log(
         `✅ ${prono.equipe1} vs ${prono.equipe2}: ${homeScore}-${awayScore} → ${resultat}`
       );
       
-      // 🔥 Émettre un événement Socket.io
       io.emit("prono:updated", prono);
     }
 
