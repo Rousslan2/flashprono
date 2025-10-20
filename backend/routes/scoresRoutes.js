@@ -18,13 +18,17 @@ let cache = {
 // 🎯 Récupérer les scores UNIQUEMENT pour les pronos actifs
 router.get("/my-matches", async (req, res) => {
   try {
+    console.log('🔍 Route /my-matches appelée');
+    
     if (!API_KEY) {
+      console.log('⚠️ API_KEY manquante');
       return res.json({ 
-        message: "API Football non configurée",
+        message: "API Football non configurée - Ajoute FOOTBALL_API_KEY dans .env",
         matches: [] 
       });
     }
 
+    console.log('✅ API_KEY présente');
     const now = new Date();
     
     // Vérifier le cache
