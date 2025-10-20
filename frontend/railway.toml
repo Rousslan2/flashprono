@@ -1,9 +1,5 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+buildCommand = "npm run build"
 
 [deploy]
-startCommand = "serve -s dist -l 8080"
-healthcheckPath = "/"
-healthcheckTimeout = 100
-restartPolicyType = "ON_FAILURE"
+startCommand = "npm start"
