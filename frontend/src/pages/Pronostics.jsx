@@ -333,12 +333,12 @@ function Group({ title, icon, items, now, gradient }) {
   return (
     <div className="relative">
       <div className={`absolute inset-0 bg-gradient-to-r ${gradient} blur-3xl opacity-20 -z-10`}></div>
-      <div className="flex items-center gap-4 mb-8">
-        <div className="text-5xl animate-bounce-slow">{icon}</div>
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 mb-6 md:mb-8">
+        <div className="text-4xl md:text-5xl animate-bounce-slow">{icon}</div>
         <div>
-          <h2 className="text-4xl font-black text-white flex items-center gap-3">
+          <h2 className="text-3xl md:text-4xl font-black text-white flex flex-wrap items-center gap-2 md:gap-3">
             {title}
-            <span className="px-4 py-1 bg-primary text-black rounded-full text-xl">{items.length}</span>
+            <span className="px-3 md:px-4 py-1 bg-primary text-black rounded-full text-lg md:text-xl">{items.length}</span>
           </h2>
         </div>
       </div>
@@ -438,11 +438,12 @@ function PronoCard({ p, now }) {
 
   return (
     <article
-      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-8 rounded-3xl border-2 ${color} transition-all duration-500 hover:scale-[1.03] hover:shadow-2xl hover:shadow-primary/30 overflow-hidden transform-gpu perspective-1000`}
+      className={`group relative bg-gradient-to-br from-black via-gray-900 to-black p-4 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border-2 ${color} transition-all duration-500 hover:scale-[1.02] md:hover:scale-[1.03] hover:shadow-2xl hover:shadow-primary/30 overflow-hidden transform-gpu`}
       style={{
         transformStyle: 'preserve-3d',
       }}
       onMouseMove={(e) => {
+        if (window.innerWidth < 768) return; // Pas d'effet 3D sur mobile
         const card = e.currentTarget;
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -454,6 +455,7 @@ function PronoCard({ p, now }) {
         card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
       }}
       onMouseLeave={(e) => {
+        if (window.innerWidth < 768) return;
         e.currentTarget.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
       }}
     >
@@ -462,14 +464,14 @@ function PronoCard({ p, now }) {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
       </div>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex flex-col md:flex-row items-start md:items-start justify-between gap-3 mb-6 relative z-10">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="px-3 py-1 rounded-full bg-emerald-400/15 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
             ⚽ Football
           </span>
           <LabelBadge label={p.label} />
         </div>
-        <div className="text-right">
+        <div className="text-left md:text-right">
           <div className="text-gray-400 text-sm font-medium">
             {p.date ? new Date(p.date).toLocaleString("fr-FR", { 
               day: "2-digit", 
@@ -483,28 +485,38 @@ function PronoCard({ p, now }) {
       </div>
 
       {/* Match Teams - PLUS GROS */}
-      <h3 className="text-2xl md:text-3xl font-black text-white mb-6 relative z-10 leading-tight">
+      <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-white mb-4 md:mb-6 relative z-10 leading-tight break-words">
         <span className="hover:text-primary transition-colors">{p.equipe1}</span>
-        <span className="text-primary mx-3 animate-pulse">VS</span>
+        <span className="text-primary mx-2 md:mx-3 animate-pulse">VS</span>
         <span className="hover:text-primary transition-colors">{p.equipe2}</span>
       </h3>
 
       {/* Prono Info - Style carte */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 relative z-10">
-        <div className="px-5 py-3 bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/40 rounded-2xl hover:scale-110 transition-transform shadow-lg">
+      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6 relative z-10">
+        <div className="px-3 md:px-5 py-2 md:py-3 bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/40 rounded-xl md:rounded-2xl hover:scale-110 transition-transform shadow-lg">
           <span className="text-xs text-gray-400 block mb-1 font-semibold">Pronostic</span>
-          <span className="text-white font-black text-lg">{p.type}</span>
+          <span className="text-white font-black text-base md:text-lg">{p.type}</span>
         </div>
-        <div className="px-5 py-3 bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 border-2 border-yellow-400/40 rounded-2xl hover:scale-110 transition-transform shadow-lg">
+        <div className="px-3 md:px-5 py-2 md:py-3 bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 border-2 border-yellow-400/40 rounded-xl md:rounded-2xl hover:scale-110 transition-transform shadow-lg">
           <span className="text-xs text-gray-400 block mb-1 font-semibold">Cote</span>
-          <span className="text-yellow-400 font-black text-xl">{p.cote}</span>
+          <span className="text-yellow-400 font-black text-lg md:text-xl">{p.cote}</span>
         </div>
         <ResultPill value={p.resultat} />
       </div>
       
+      {/* Score Live - Si disponible */}
+      {p.scoreLive && (
+        <div className="mb-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 rounded-2xl shadow-lg">
+            <span className="text-xs text-gray-400 font-semibold">📊 Score en direct:</span>
+            <span className="text-blue-300 font-black text-xl">{p.scoreLive}</span>
+          </div>
+        </div>
+      )}
+      
       {/* Bouton Suivre */}
       {!loadingFollow && (
-        <div className="mb-4">
+        <div className="mb-4 relative z-10">
           {isFollowing ? (
             <button
               onClick={handleUnfollow}
@@ -527,8 +539,8 @@ function PronoCard({ p, now }) {
       
       {/* Modal Mise */}
       {showMiseModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-primary rounded-2xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-primary rounded-2xl p-6 max-w-md w-full relative z-[10000] shadow-2xl">
             <h3 className="text-xl font-bold text-white mb-4">💰 Quelle mise ?</h3>
             <p className="text-gray-400 text-sm mb-4">Choisis un montant prédéfini ou entre le tien</p>
             
@@ -582,10 +594,10 @@ function PronoCard({ p, now }) {
 
       {/* Analyse */}
       {(p.details || p.audioUrl) && (
-        <div className="mt-4">
+        <div className="mt-4 relative z-10">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="flex items-center gap-2 px-4 py-2 border-2 border-primary/30 rounded-xl hover:bg-primary/10 transition-all font-semibold text-sm group"
+            className="flex items-center gap-2 px-4 py-2 border-2 border-primary/30 rounded-xl hover:bg-primary/10 transition-all font-semibold text-sm group w-full justify-center"
           >
             <span className="group-hover:scale-110 transition-transform">
               {open ? "📖" : "🔍"}
@@ -593,7 +605,7 @@ function PronoCard({ p, now }) {
             {open ? "Masquer l'analyse" : "Voir l'analyse détaillée"}
           </button>
           {open && (
-            <div className="mt-4 p-4 bg-black/50 border border-primary/20 rounded-xl space-y-3">
+            <div className="mt-4 p-4 bg-black/50 border border-primary/20 rounded-xl space-y-3 relative z-10">
               {p.details && (
                 <div>
                   <h4 className="text-primary font-semibold mb-2 flex items-center gap-2">
