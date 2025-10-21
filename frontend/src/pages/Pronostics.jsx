@@ -437,7 +437,14 @@ function PronoCard({ p, now }) {
   const [loadingFollow, setLoadingFollow] = useState(true);
   const [showMiseModal, setShowMiseModal] = useState(false);
   const [customMise, setCustomMise] = useState("");
-  const color = borderColorFor(p.resultat);
+  
+  const resultat = (p.resultat || "").toLowerCase();
+  const isWin = resultat.includes("gagnant") || resultat.includes("win");
+  const isLose = resultat.includes("perdu") || resultat.includes("lose");
+  
+  const color = isWin ? "border-emerald-400 shadow-2xl shadow-emerald-500/40 animate-win-flash" : 
+                isLose ? "border-red-500 shadow-xl shadow-red-500/30" : 
+                borderColorFor(p.resultat);
   const status = computeMatchStatus(p.date, now);
   
   // Vérifier si le prono est suivi
@@ -737,22 +744,34 @@ function LabelBadge({ label }) {
 
 function ResultPill({ value }) {
   const val = (value || "En attente").toLowerCase();
+  const isWin = val.includes("gagnant") || val.includes("win");
+  const isLose = val.includes("perdu") || val.includes("lose");
+  
   let cls = "bg-gray-500/15 text-gray-300 border border-gray-600/40";
   let icon = "⏳";
   let label = value || "En attente";
 
-  if (val.includes("gagnant") || val.includes("win")) {
-    cls = "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
-    icon = "✅";
-  } else if (val.includes("perdu") || val.includes("lose")) {
-    cls = "bg-red-500/15 text-red-300 border border-red-500/30";
-    icon = "❌";
+  if (isWin) {
+    cls = "bg-gradient-to-r from-emerald-500 to-green-400 text-white border-2 border-emerald-300 shadow-lg shadow-emerald-500/50 animate-pulse-win";
+    icon = "🎉";
+  } else if (isLose) {
+    cls = "bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-red-300 shadow-lg";
+    icon = "💔";
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold ${cls}`}>
-      <span>{icon}</span>
-      {label}
+    <span className={`inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full font-bold ${cls} relative overflow-hidden group`}>
+      {isWin && (
+        <>
+          <span className="absolute inset-0 pointer-events-none">
+            <span className="absolute top-0 left-1/4 w-1 h-1 bg-yellow-300 rounded-full animate-sparkle-1"></span>
+            <span className="absolute top-0 right-1/3 w-1 h-1 bg-white rounded-full animate-sparkle-2"></span>
+          </span>
+        </>
+      )}
+      <span className={isWin ? "text-xl animate-bounce" : "text-lg"}>{icon}</span>
+      <span>{label}</span>
+      {isWin && <span className="text-xl animate-bounce" style={{ animationDelay: "0.2s" }}>🎊</span>}
     </span>
   );
 }
@@ -826,3 +845,35 @@ function SkeletonCard() {
     </div>
   );
 }
+
+{/* Styles CSS pour les animations */}
+<style>{`
+  @keyframes win-flash {
+    0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.8), 0 0 60px rgba(16, 185, 129, 0.4); }
+  }
+  @keyframes pulse-win {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes sparkle-1 {
+    0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+    50% { opacity: 1; transform: scale(2) translateY(-10px); }
+  }
+  @keyframes sparkle-2 {
+    0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+    50% { opacity: 1; transform: scale(1.5) translateY(-8px); }
+  }
+  .animate-win-flash {
+    animation: win-flash 2s ease-in-out infinite;
+  }
+  .animate-pulse-win {
+    animation: pulse-win 1.5s ease-in-out infinite;
+  }
+  .animate-sparkle-1 {
+    animation: sparkle-1 1.5s ease-in-out infinite;
+  }
+  .animate-sparkle-2 {
+    animation: sparkle-2 1.8s ease-in-out infinite 0.3s;
+  }
+`}</style>

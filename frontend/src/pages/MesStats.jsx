@@ -318,6 +318,95 @@ export default function MesStats() {
   );
 }
 
+{/* Styles CSS pour toutes les animations */}
+<style>{`
+  @keyframes win-flash {
+    0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.8), 0 0 60px rgba(16, 185, 129, 0.4); }
+  }
+  @keyframes lose-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  @keyframes pulse-win {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes confetti-1 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
+  }
+  @keyframes confetti-2 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(320px) rotate(-360deg); opacity: 0; }
+  }
+  @keyframes confetti-3 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(280px) rotate(180deg); opacity: 0; }
+  }
+  @keyframes confetti-4 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(310px) rotate(-180deg); opacity: 0; }
+  }
+  @keyframes confetti-5 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(290px) rotate(270deg); opacity: 0; }
+  }
+  @keyframes confetti-6 {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(330px) rotate(-270deg); opacity: 0; }
+  }
+  @keyframes flame-1 {
+    0%, 100% { opacity: 0.3; transform: translateY(0) scaleY(1); }
+    50% { opacity: 0.6; transform: translateY(-10px) scaleY(1.2); }
+  }
+  @keyframes flame-2 {
+    0%, 100% { opacity: 0.4; transform: translateY(0) scaleY(1); }
+    50% { opacity: 0.7; transform: translateY(-15px) scaleY(1.3); }
+  }
+  @keyframes flame-3 {
+    0%, 100% { opacity: 0.3; transform: translateY(0) scaleY(1); }
+    50% { opacity: 0.5; transform: translateY(-8px) scaleY(1.1); }
+  }
+  .animate-win-flash {
+    animation: win-flash 2s ease-in-out infinite;
+  }
+  .animate-lose-shake {
+    animation: lose-shake 0.5s ease-in-out;
+  }
+  .animate-pulse-win {
+    animation: pulse-win 1.5s ease-in-out infinite;
+  }
+  .animate-confetti-1 {
+    animation: confetti-1 2s ease-out infinite;
+  }
+  .animate-confetti-2 {
+    animation: confetti-2 2.2s ease-out infinite 0.2s;
+  }
+  .animate-confetti-3 {
+    animation: confetti-3 2.1s ease-out infinite 0.4s;
+  }
+  .animate-confetti-4 {
+    animation: confetti-4 2.3s ease-out infinite 0.6s;
+  }
+  .animate-confetti-5 {
+    animation: confetti-5 2s ease-out infinite 0.8s;
+  }
+  .animate-confetti-6 {
+    animation: confetti-6 2.4s ease-out infinite 1s;
+  }
+  .animate-flame-1 {
+    animation: flame-1 1.5s ease-in-out infinite;
+  }
+  .animate-flame-2 {
+    animation: flame-2 1.8s ease-in-out infinite 0.3s;
+  }
+  .animate-flame-3 {
+    animation: flame-3 1.6s ease-in-out infinite 0.6s;
+  }
+`}</style>
+
 function FeaturePreview({ icon, title, desc }) {
   return (
     <div className="group bg-gradient-to-br from-emerald-500/10 to-blue-500/5 border-2 border-emerald-500/30 rounded-2xl p-6 text-center hover:scale-110 hover:shadow-2xl hover:shadow-emerald-500/50 transition-all duration-500 cursor-pointer">
@@ -364,15 +453,40 @@ function BetCard({ bet, onRemove }) {
   const isPending = !isWin && !isLose;
 
   const bgColor = isWin
-    ? "border-emerald-500/40 bg-emerald-500/10"
+    ? "border-emerald-500/60 bg-gradient-to-br from-emerald-500/20 to-green-500/10"
     : isLose
-    ? "border-red-500/40 bg-red-500/10"
+    ? "border-red-500/60 bg-gradient-to-br from-red-500/20 to-orange-500/10"
     : "border-gray-600 bg-gray-900/50";
 
   const gain = isWin ? (bet.mise * bet.cote - bet.mise).toFixed(2) : isLose ? -bet.mise : 0;
 
   return (
-    <div className={`relative border-2 ${bgColor} rounded-xl p-4 sm:p-5 hover:scale-[1.02] transition-all duration-300 overflow-hidden group`}>
+    <div className={`relative border-2 ${bgColor} rounded-xl p-4 sm:p-5 hover:scale-[1.02] transition-all duration-300 overflow-hidden group ${
+      isWin ? 'animate-win-flash shadow-2xl shadow-emerald-500/40' : 
+      isLose ? 'animate-lose-shake' : ''
+    }`}>
+      {/* Effet confettis pour les paris gagnants */}
+      {isWin && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-2 left-1/4 w-2 h-2 bg-yellow-400 rounded-full animate-confetti-1"></div>
+          <div className="absolute top-3 right-1/3 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-confetti-2"></div>
+          <div className="absolute top-4 left-1/2 w-2 h-2 bg-green-300 rounded-full animate-confetti-3"></div>
+          <div className="absolute top-2 right-1/4 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-confetti-4"></div>
+          <div className="absolute top-5 left-1/3 w-1 h-1 bg-lime-400 rounded-full animate-confetti-5"></div>
+          <div className="absolute top-3 right-1/2 w-1.5 h-1.5 bg-emerald-300 rounded-full animate-confetti-6"></div>
+        </div>
+      )}
+      
+      {/* Effet flammes pour les paris perdants */}
+      {isLose && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute bottom-0 left-1/4 w-8 h-12 bg-gradient-to-t from-red-500/30 to-transparent blur-sm animate-flame-1"></div>
+          <div className="absolute bottom-0 right-1/3 w-10 h-16 bg-gradient-to-t from-orange-500/30 to-transparent blur-sm animate-flame-2"></div>
+          <div className="absolute bottom-0 left-1/2 w-6 h-10 bg-gradient-to-t from-red-400/30 to-transparent blur-sm animate-flame-3"></div>
+        </div>
+      )}
+      
+      {/* Brillance au survol */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
       
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4 relative z-10">
@@ -418,15 +532,31 @@ function BetCard({ bet, onRemove }) {
 
           <div className="mt-3">
             <span
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
                 isWin
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-400 text-white border-2 border-emerald-300 animate-pulse-win"
                   : isLose
-                  ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                  ? "bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-red-300"
                   : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
               }`}
             >
-              {isWin ? "✅ Gagnant" : isLose ? "❌ Perdu" : "⏳ En attente"}
+              {isWin ? (
+                <>
+                  <span className="text-2xl animate-bounce">🎉</span>
+                  <span>Gagnant !</span>
+                  <span className="text-2xl animate-bounce" style={{ animationDelay: "0.2s" }}>🎊</span>
+                </>
+              ) : isLose ? (
+                <>
+                  <span className="text-xl">💔</span>
+                  <span>Perdu</span>
+                </>
+              ) : (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>En attente</span>
+                </>
+              )}
             </span>
           </div>
         </div>
