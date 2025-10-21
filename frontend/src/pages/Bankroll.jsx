@@ -210,7 +210,7 @@ export default function Bankroll() {
         </div>
 
         {/* Results Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8 relative z-10">
           <ResultCard 
             title="Mise conseillée"
             value={`${stake.toFixed(2)} €`}
@@ -234,7 +234,7 @@ export default function Bankroll() {
         </div>
 
         {/* Advanced Metrics */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 relative z-10">
           <AdvancedCard 
             title="Valeur espérée (EV)"
             icon="🎯"
