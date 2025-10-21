@@ -124,7 +124,7 @@ export default function Bankroll() {
       </div>
 
       {/* Hero Header avec effet 3D */}
-      <div className="text-center mb-12 relative z-10 animate-slide-down">
+      <div className="text-center mb-12 relative z-10">
         <div className="inline-block px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-green-400/20 border-2 border-emerald-500 rounded-full mb-6 hover:scale-110 transition-all duration-300 cursor-pointer group">
           <span className="text-emerald-400 font-semibold text-sm flex items-center gap-2">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
@@ -144,7 +144,7 @@ export default function Bankroll() {
       </div>
 
       {/* Main Calculator avec effet carte 3D */}
-      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden">
+      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-10 relative group backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden min-h-[600px]">
         {/* Particules lumineuses au survol */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-1 h-8 bg-gradient-to-b from-emerald-400 to-transparent animate-spark-1"></div>
@@ -209,8 +209,8 @@ export default function Bankroll() {
           />
         </div>
 
-        {/* Results Grid - Disposition verticale sur PC, horizontale sur mobile */}
-        <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-3 md:gap-6 mb-8 relative z-10">
+        {/* Results Grid - Disposition fixe pour éviter les layout shifts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
           <ResultCard 
             title="Mise conseillée"
             value={`${stake.toFixed(2)} €`}
@@ -480,7 +480,7 @@ function InputField({ label, value, onChange, type, min, max, step, icon, helper
 
 function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group animate-slide-up cursor-pointer`}>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl group cursor-pointer min-h-[180px] flex flex-col justify-center`}>
       {/* Petites étoiles scintillantes au survol */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
         <div className="absolute top-2 right-4 w-1 h-1 bg-white rounded-full animate-twinkle-1"></div>
