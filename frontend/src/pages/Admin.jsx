@@ -364,9 +364,6 @@ export default function Admin() {
         <Tab tab={tab} id="list" setTab={setTab}>
           Liste des pronostics
         </Tab>
-        <Tab tab={tab} id="manual-scores" setTab={setTab}>
-          Scores manuels
-        </Tab>
         <Tab tab={tab} id="users" setTab={setTab}>
           Utilisateurs
         </Tab>
@@ -820,47 +817,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* SCORES MANUELS - NOUVEAU */}
-      {tab === "manual-scores" && (
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/30 rounded-2xl p-6">
-            <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="text-4xl">✏️</span>
-              Modifier les scores manuellement
-            </h3>
-            <p className="text-gray-400 mb-4">
-              Pour les matchs que l'API ne trouve pas (dates trop anciennes, ligues non couvertes), entre le score final manuellement.
-            </p>
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-yellow-400 text-sm flex items-start gap-2">
-                <span className="text-xl flex-shrink-0">⚠️</span>
-                <span>
-                  <strong>Note :</strong> Le résultat (gagnant/perdu) sera calculé automatiquement selon le type de pari et le score que tu entres.
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {loadingList ? (
-            <p className="text-center text-gray-400">Chargement…</p>
-          ) : (
-            <div className="space-y-4">
-              {pronos.filter(p => p.statut === "en attente" || p.statut === "en cours").map((p) => (
-                <ManualScoreCard key={p._id} prono={p} onUpdate={() => loadPronos()} token={token} />
-              ))}
-              
-              {pronos.filter(p => p.statut === "en attente" || p.statut === "en cours").length === 0 && (
-                <div className="text-center py-20">
-                  <div className="text-7xl mb-4">✅</div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Tous les pronos sont à jour !</h3>
-                  <p className="text-gray-400">Aucun prono en attente nécessitant une mise à jour manuelle.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* UTILISATEURS */}
       {tab === "users" && (
         <div className="max-w-6xl mx-auto">
@@ -1121,106 +1077,5 @@ function Btn({ onClick, label, variant = "primary" }) {
     <button onClick={onClick} className={`px-3 py-1.5 rounded-lg border transition font-semibold text-xs ${styles}`}>
       {label}
     </button>
-  );
-}
-
-function ManualScoreCard({ prono, onUpdate, token }) {
-  const [homeScore, setHomeScore] = useState("");
-  const [awayScore, setAwayScore] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    if (homeScore === "" || awayScore === "") {
-      alert("⚠️ Entre un score valide pour les deux équipes");
-      return;
-    }
-
-    if (!confirm(`✏️ Confirmer le score ${homeScore}-${awayScore} pour ${prono.equipe1} vs ${prono.equipe2} ?`)) return;
-
-    try {
-      setLoading(true);
-      const { data } = await axios.post(
-        `${API_BASE}/api/admin/pronostics/${prono._id}/manual-score`,
-        { 
-          homeScore: parseInt(homeScore), 
-          awayScore: parseInt(awayScore) 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      alert(`✅ Score mis à jour !\nRésultat : ${data.resultat}`);
-      setHomeScore("");
-      setAwayScore("");
-      onUpdate();
-    } catch (e) {
-      alert(e?.response?.data?.message || "Erreur mise à jour score");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-yellow-500/30 rounded-xl p-6 hover:scale-[1.02] transition-all">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        {/* Info match */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold border border-yellow-500/30">
-              ⏳ {prono.statut}
-            </span>
-            <span className="text-xs text-gray-500">
-              {new Date(prono.date).toLocaleDateString("fr-FR")}
-            </span>
-          </div>
-          <h4 className="text-xl font-bold text-white mb-1">
-            {prono.equipe1} <span className="text-primary">vs</span> {prono.equipe2}
-          </h4>
-          <div className="flex items-center gap-3 text-sm text-gray-400">
-            <span>🎯 Type: <span className="text-white font-semibold">{prono.type}</span></span>
-            <span>•</span>
-            <span>📊 Cote: <span className="text-yellow-400 font-bold">{prono.cote}</span></span>
-          </div>
-        </div>
-
-        {/* Input scores */}
-        <div className="flex items-center gap-3">
-          <div className="text-center">
-            <label className="block text-xs text-gray-400 mb-1">{prono.equipe1}</label>
-            <input
-              type="number"
-              min="0"
-              value={homeScore}
-              onChange={(e) => setHomeScore(e.target.value)}
-              placeholder="0"
-              className="w-16 px-3 py-2 bg-black border-2 border-blue-500/40 rounded-lg text-center text-white text-xl font-bold focus:border-blue-500 focus:outline-none"
-              disabled={loading}
-            />
-          </div>
-
-          <span className="text-3xl text-gray-600 font-bold mt-6">-</span>
-
-          <div className="text-center">
-            <label className="block text-xs text-gray-400 mb-1">{prono.equipe2}</label>
-            <input
-              type="number"
-              min="0"
-              value={awayScore}
-              onChange={(e) => setAwayScore(e.target.value)}
-              placeholder="0"
-              className="w-16 px-3 py-2 bg-black border-2 border-blue-500/40 rounded-lg text-center text-white text-xl font-bold focus:border-blue-500 focus:outline-none"
-              disabled={loading}
-            />
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading || homeScore === "" || awayScore === ""}
-            className="ml-3 mt-6 px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-green-500/50"
-          >
-            {loading ? "⏳" : "✅"} Valider
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
