@@ -218,7 +218,7 @@ export default function Strategie() {
       <div className="mb-16 relative z-10 animate-slide-up">
         <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl overflow-hidden group hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 backdrop-blur-xl">
           <div className="aspect-video w-full bg-black/50 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="text-center p-8 relative z-10">
               <div className="text-7xl mb-6 animate-bounce-slow">🎬</div>
               <h3 className="text-3xl font-bold text-white mb-4">
@@ -288,7 +288,7 @@ export default function Strategie() {
 
       {/* Resources */}
       <div className="bg-gradient-to-br from-purple-500/10 via-black to-pink-500/10 border-2 border-purple-500/30 rounded-3xl p-10 relative z-10 animate-slide-up group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
         <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
           <span className="text-5xl animate-bounce-slow">📚</span>
           <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Ressources complémentaires</span>
@@ -313,7 +313,7 @@ export default function Strategie() {
 
       {/* Call to Action */}
       <div className="mt-12 text-center p-8 bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl relative z-10 group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
         <div className="relative z-10">
           <h3 className="text-3xl font-bold text-white mb-4">
             💬 Des questions sur ces stratégies ?
@@ -406,7 +406,7 @@ function StrategyCard({ strategy, isExpanded, onToggle, delay }) {
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Effet brillance */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
       
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-4">
@@ -499,7 +499,7 @@ function QuickTip({ icon, title, desc, color }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <h3 className="text-white font-bold text-lg mb-2">{title}</h3>

@@ -384,7 +384,7 @@ function StatCard({ icon, label, value, color, gradient }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 ${colorClasses[color]} rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group cursor-pointer`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       <div className="relative z-10">
         <div className="text-4xl mb-3 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <div className="text-3xl font-extrabold text-white mb-2">{value}</div>
@@ -419,7 +419,7 @@ function MatchCard({ match, type, delay }) {
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Effet brillance */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
 
       <div className="relative z-10">
         {/* Header */}

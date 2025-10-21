@@ -147,7 +147,7 @@ export default function Bankroll() {
       <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500">
         {/* Effet de brillance au survol */}
         <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer"></div>
         </div>
         
         <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
@@ -416,7 +416,7 @@ function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group animate-slide-up cursor-pointer`}>
       {/* Effet 3D au survol */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/3 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
@@ -456,7 +456,7 @@ function TipCard({ icon, title, desc, color }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
