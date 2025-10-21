@@ -111,4 +111,64 @@ router.post("/check-all-pending", protect, requireAdmin, async (req, res) => {
   }
 });
 
+// ✏️ Mettre à jour manuellement le score d'un prono (admin uniquement)
+router.post("/:id/manual-score", protect, requireAdmin, async (req, res) => {
+  try {
+    const { homeScore, awayScore } = req.body;
+    
+    if (homeScore === undefined || awayScore === undefined) {
+      return res.status(400).json({ success: false, message: "Score manquant" });
+    }
+    
+    const prono = await Pronostic.findById(req.params.id);
+    if (!prono) {
+      return res.status(404).json({ success: false, message: "Prono introuvable" });
+    }
+    
+    // Déterminer le résultat selon le type de pari
+    const { determinePronosticResult } = await import("../services/pronosticChecker.js");
+    const result = determinePronosticResult(
+      prono,
+      prono.equipe1, // homeTeam
+      prono.equipe2, // awayTeam
+      parseInt(homeScore),
+      parseInt(awayScore)
+    );
+    
+    if (!result) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Impossible de déterminer le résultat. Vérifie le type de pari." 
+      });
+    }
+    
+    // Mettre à jour le prono
+    prono.scoreLive = `${homeScore}-${awayScore}`;
+    prono.statut = result;
+    prono.resultat = result;
+    await prono.save();
+    
+    // Sync UserBets
+    await UserBet.updateMany(
+      { pronoId: prono._id },
+      { $set: { resultat: result, scoreLive: `${homeScore}-${awayScore}` } }
+    );
+    
+    console.log(`✅ Score manuel: ${prono.equipe1} vs ${prono.equipe2} = ${homeScore}-${awayScore} → ${result}`);
+    
+    res.json({
+      success: true,
+      message: "Score mis à jour",
+      resultat: result,
+      scoreLive: `${homeScore}-${awayScore}`
+    });
+  } catch (error) {
+    console.error("Erreur score manuel:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 export default router;

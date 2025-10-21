@@ -437,7 +437,7 @@ export async function checkAndUpdatePronosticResults() {
 /**
  * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé
  */
-function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
+export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
   let type = prono.type.toLowerCase().trim();
   
   // Nettoyer le type: enlever "double chance :" ou "double chance -"
