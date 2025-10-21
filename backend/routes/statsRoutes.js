@@ -145,4 +145,37 @@ router.get("/is-following/:pronoId", protect, async (req, res, next) => {
   }
 });
 
+// 🔄 Synchroniser les résultats des UserBets avec les Pronostics
+router.post("/sync-results", protect, async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    
+    // Récupérer tous les UserBets de l'user
+    const userBets = await UserBet.find({ userId });
+    
+    let updated = 0;
+    
+    // Pour chaque UserBet, vérifier le Pronostic associé
+    for (const userBet of userBets) {
+      const prono = await Pronostic.findById(userBet.pronoId);
+      
+      if (prono && prono.resultat !== userBet.resultat) {
+        // Mettre à jour le UserBet avec le résultat du Pronostic
+        userBet.resultat = prono.resultat;
+        userBet.scoreLive = prono.scoreLive;
+        await userBet.save();
+        updated++;
+      }
+    }
+    
+    res.json({ 
+      ok: true, 
+      updated,
+      message: `${updated} résultat(s) synchronisé(s)` 
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

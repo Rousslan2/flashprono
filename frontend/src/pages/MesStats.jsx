@@ -15,6 +15,7 @@ export default function MesStats() {
   });
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!active) {
@@ -74,6 +75,40 @@ export default function MesStats() {
       alert("✅ Prono retiré de tes stats");
     } catch (err) {
       alert(err.response?.data?.message || "Erreur");
+    }
+  };
+
+  // 🔄 Synchroniser les résultats manuellement
+  const syncResults = async () => {
+    if (syncing) return;
+    try {
+      setSyncing(true);
+      const token = localStorage.getItem("token");
+      
+      const { data } = await axios.post(
+        `${API_BASE}/api/stats/sync-results`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const { data: statsData } = await axios.get(
+        `${API_BASE}/api/stats/my-stats`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setStats(statsData);
+
+      const { data: betsData } = await axios.get(
+        `${API_BASE}/api/stats/my-bets`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setBets(betsData);
+
+      alert(`✅ ${data.updated || 0} résultat(s) synchronisé(s) !`);
+    } catch (err) {
+      console.error(err);
+      alert("Erreur de synchronisation");
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -250,12 +285,21 @@ export default function MesStats() {
             Mes pronos suivis
             <span className="text-gray-500 text-lg">({bets.length})</span>
           </h2>
-          <Link
-            to="/pronostics"
-            className="px-4 py-2 bg-primary/20 border border-primary rounded-xl text-primary hover:bg-primary hover:text-black transition-all font-semibold text-sm hover:scale-105"
-          >
-            + Suivre des pronos
-          </Link>
+          <div className="flex gap-3">
+            <button
+              onClick={syncResults}
+              disabled={syncing}
+              className="px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded-xl hover:bg-blue-500/30 transition-all font-semibold text-sm hover:scale-105 disabled:opacity-50"
+            >
+              {syncing ? "⏳ Synchro..." : "🔄 Actualiser"}
+            </button>
+            <Link
+              to="/pronostics"
+              className="px-4 py-2 bg-primary/20 border border-primary rounded-xl text-primary hover:bg-primary hover:text-black transition-all font-semibold text-sm hover:scale-105"
+            >
+              + Suivre des pronos
+            </Link>
+          </div>
         </div>
 
         {bets.length === 0 ? (
