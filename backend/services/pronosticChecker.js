@@ -3,6 +3,7 @@ import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
+import { findMatchScore } from "./flashscoreScraper.js";
 
 const API_KEY = process.env.FOOTBALL_API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
@@ -62,61 +63,102 @@ export async function checkAllPendingPronostics() {
       console.log(`\n📆 Vérification des matchs du ${dateStr}...`);
       
       try {
-        // Requête API pour cette date spécifique
-        const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
-          params: { date: dateStr },
-          headers: {
-            "x-rapidapi-key": API_KEY,
-            "x-rapidapi-host": "v3.football.api-sports.io",
-          },
-        });
-
-        const matchesForDate = data.response || [];
-        console.log(`  ⚽ ${matchesForDate.length} match(s) trouvé(s) pour le ${dateStr}`);
+        let matchesForDate = [];
+        
+        // ESSAYER L'API FOOTBALL D'ABORD
+        if (API_KEY) {
+          try {
+            console.log(`  🌐 Tentative API Football...`);
+            const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
+              params: { date: dateStr },
+              headers: {
+                "x-rapidapi-key": API_KEY,
+                "x-rapidapi-host": "v3.football.api-sports.io",
+              },
+              timeout: 10000
+            });
+            matchesForDate = data.response || [];
+            console.log(`  ✅ API Football: ${matchesForDate.length} match(s) trouvé(s)`);
+          } catch (apiError) {
+            console.log(`  ⚠️ API Football échouée: ${apiError.message}`);
+            console.log(`  🕷️ Passage au scraper FlashScore...`);
+          }
+        }
+        
+        // SI API ÉCHOUE OU PAS DE CLÉ → SCRAPER
+        if (matchesForDate.length === 0) {
+          console.log(`  🕷️ Utilisation du scraper pour les ${pronosByDate[dateStr].length} pronos...`);
+        }
 
         // 4. Vérifier chaque prono de cette date
         for (const prono of pronosByDate[dateStr]) {
           console.log(`\n  🔎 Recherche match pour: ${prono.equipe1} vs ${prono.equipe2}`);
           
-          const matchingMatch = matchesForDate.find((match) => {
-            const homeTeam = match.teams.home.name.toLowerCase().trim();
-            const awayTeam = match.teams.away.name.toLowerCase().trim();
-            const equipe1 = prono.equipe1.toLowerCase().trim();
-            const equipe2 = prono.equipe2.toLowerCase().trim();
-            
-            // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
-            const teamsMatch = (team1, team2) => {
-              // Correspondance exacte
-              if (team1 === team2) return true;
+          let matchingMatch = null;
+          
+          // CHERCHER DANS L'API SI ON A DES RÉSULTATS
+          if (matchesForDate.length > 0) {
+            matchingMatch = matchesForDate.find((match) => {
+              const homeTeam = match.teams.home.name.toLowerCase().trim();
+              const awayTeam = match.teams.away.name.toLowerCase().trim();
+              const equipe1 = prono.equipe1.toLowerCase().trim();
+              const equipe2 = prono.equipe2.toLowerCase().trim();
               
-              // L'un contient l'autre
-              if (team1.includes(team2) || team2.includes(team1)) return true;
-              
-              // Vérifier les mots clés principaux (premiers 3 mots)
-              const words1 = team1.split(/\s+/).slice(0, 3);
-              const words2 = team2.split(/\s+/).slice(0, 3);
-              
-              for (const w1 of words1) {
-                for (const w2 of words2) {
-                  if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
-                    return true;
+              // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
+              const teamsMatch = (team1, team2) => {
+                if (team1 === team2) return true;
+                if (team1.includes(team2) || team2.includes(team1)) return true;
+                
+                const words1 = team1.split(/\s+/).slice(0, 3);
+                const words2 = team2.split(/\s+/).slice(0, 3);
+                
+                for (const w1 of words1) {
+                  for (const w2 of words2) {
+                    if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
+                      return true;
+                    }
                   }
                 }
-              }
-              
-              return false;
-            };
+                return false;
+              };
 
-            // Vérifier les 2 ordres possibles
-            const match1 = teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2);
-            const match2 = teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1);
+              const match1 = teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2);
+              const match2 = teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1);
+              
+              if (match1 || match2) {
+                console.log(`    ✅ Match trouvé (API): ${match.teams.home.name} vs ${match.teams.away.name}`);
+                return true;
+              }
+              return false;
+            });
+          }
+          
+          // SI PAS TROUVÉ DANS L'API → ESSAYER LE SCRAPER
+          if (!matchingMatch) {
+            console.log(`    🕷️ Tentative scraper pour ce match...`);
+            const scrapedMatch = await findMatchScore(prono.equipe1, prono.equipe2, dateStr);
             
-            if (match1 || match2) {
-              console.log(`    ✅ Match trouvé: ${match.teams.home.name} vs ${match.teams.away.name}`);
-              return true;
+            if (scrapedMatch) {
+              // Convertir le format du scraper vers le format API
+              matchingMatch = {
+                teams: {
+                  home: { name: scrapedMatch.homeTeam },
+                  away: { name: scrapedMatch.awayTeam }
+                },
+                goals: {
+                  home: scrapedMatch.homeScore,
+                  away: scrapedMatch.awayScore
+                },
+                fixture: {
+                  status: {
+                    short: scrapedMatch.status,
+                    elapsed: scrapedMatch.elapsed
+                  }
+                }
+              };
+              console.log(`    ✅ Match trouvé (Scraper): ${scrapedMatch.homeTeam} vs ${scrapedMatch.awayTeam}`);
             }
-            return false;
-          });
+          }
 
           if (matchingMatch) {
             const homeScore = matchingMatch.goals.home;
