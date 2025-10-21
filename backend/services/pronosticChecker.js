@@ -159,9 +159,10 @@ export async function checkAndUpdatePronosticResults() {
           // Mettre à jour le statut en "en cours" avec score live + minutes
           const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
           
+          // TOUJOURS mettre à jour si c'est un match LIVE
           if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
             prono.statut = "en cours";
-            prono.resultat = "en cours"; // ✅ Statut du pari
+            prono.resultat = "en cours"; // ✅ IMPORTANT: Mettre le resultat aussi!
             prono.scoreLive = liveScore; // ✅ Score live avec minutes
             await prono.save();
 
@@ -170,7 +171,7 @@ export async function checkAndUpdatePronosticResults() {
             );
 
             // Émettre un événement Socket.io pour le score live
-            io.emit("pronostic:live", {
+            io.emit("prono:live", {
               pronosticId: prono._id,
               statut: "en cours",
               resultat: "en cours",

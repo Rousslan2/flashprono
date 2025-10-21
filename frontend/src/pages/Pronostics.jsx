@@ -66,6 +66,21 @@ export default function Pronostics() {
       setPronos(prev => prev.map(p => p._id === updatedProno._id ? updatedProno : p));
     });
 
+    socket.on('prono:live', (liveData) => {
+      console.log('🔴 Score LIVE reçu:', liveData);
+      setPronos(prev => prev.map(p => {
+        if (p._id === liveData.pronosticId) {
+          return {
+            ...p,
+            scoreLive: liveData.scoreLive,
+            resultat: liveData.resultat,
+            statut: liveData.statut
+          };
+        }
+        return p;
+      }));
+    });
+
     socket.on('prono:deleted', ({ _id }) => {
       console.log('🗑️ Prono supprimé:', _id);
       setPronos(prev => prev.filter(p => p._id !== _id));
@@ -75,6 +90,7 @@ export default function Pronostics() {
     return () => {
       socket.off('prono:created');
       socket.off('prono:updated');
+      socket.off('prono:live');
       socket.off('prono:deleted');
     };
   }, [active]);
