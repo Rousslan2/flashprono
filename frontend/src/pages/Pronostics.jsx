@@ -66,21 +66,6 @@ export default function Pronostics() {
       setPronos(prev => prev.map(p => p._id === updatedProno._id ? updatedProno : p));
     });
 
-    socket.on('prono:live', (liveData) => {
-      console.log('🔴 Score LIVE reçu:', liveData);
-      setPronos(prev => prev.map(p => {
-        if (p._id === liveData.pronosticId) {
-          return {
-            ...p,
-            scoreLive: liveData.scoreLive,
-            resultat: liveData.resultat,
-            statut: liveData.statut
-          };
-        }
-        return p;
-      }));
-    });
-
     socket.on('prono:deleted', ({ _id }) => {
       console.log('🗑️ Prono supprimé:', _id);
       setPronos(prev => prev.filter(p => p._id !== _id));
@@ -90,7 +75,6 @@ export default function Pronostics() {
     return () => {
       socket.off('prono:created');
       socket.off('prono:updated');
-      socket.off('prono:live');
       socket.off('prono:deleted');
     };
   }, [active]);
@@ -594,6 +578,16 @@ function PronoCard({ p, now }) {
         </div>
         <ResultPill value={p.resultat} />
       </div>
+      
+      {/* Score Live - Si disponible */}
+      {p.scoreLive && (
+        <div className="mb-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 rounded-2xl shadow-lg">
+            <span className="text-xs text-gray-400 font-semibold">📊 Score en direct:</span>
+            <span className="text-blue-300 font-black text-xl">{p.scoreLive}</span>
+          </div>
+        </div>
+      )}
       
       {/* Bouton Suivre */}
       {!loadingFollow && (

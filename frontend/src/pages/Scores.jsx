@@ -3,7 +3,6 @@ import axios from "axios";
 import { API_BASE } from "../config";
 import { isSubscriptionActive } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
-import socket from "../services/socket";
 
 export default function Scores() {
   const active = isSubscriptionActive();
@@ -18,79 +17,6 @@ export default function Scores() {
       return;
     }
     loadScores();
-    
-    // 🔥 ÉCOUTER LES EVENTS SOCKET.IO EN TEMPS RÉEL
-    console.log('🔌 Socket.io: Écoute des événements live scores');
-    
-    // Event 1: Score LIVE mis à jour
-    socket.on('prono:live', (liveData) => {
-      console.log('🔴 SCORE LIVE reçu:', liveData);
-      
-      setMatches(prevMatches => {
-        return prevMatches.map(match => {
-          // Comparer les noms d'équipes (flexible)
-          const homeMatch = match.homeTeam.toLowerCase().includes(liveData.equipe1.toLowerCase()) ||
-                           liveData.equipe1.toLowerCase().includes(match.homeTeam.toLowerCase());
-          const awayMatch = match.awayTeam.toLowerCase().includes(liveData.equipe2.toLowerCase()) ||
-                           liveData.equipe2.toLowerCase().includes(match.awayTeam.toLowerCase());
-          
-          if (homeMatch && awayMatch) {
-            // Extraire le score du format "2-1 (67')"
-            const scoreMatch = liveData.scoreLive?.match(/(\d+)-(\d+)/);
-            if (scoreMatch) {
-              return {
-                ...match,
-                homeScore: parseInt(scoreMatch[1]),
-                awayScore: parseInt(scoreMatch[2]),
-                status: liveData.matchStatus || match.status,
-                elapsed: liveData.elapsed
-              };
-            }
-          }
-          return match;
-        });
-      });
-      
-      setLastUpdate(new Date());
-    });
-    
-    // Event 2: Match terminé (score final)
-    socket.on('prono:updated', (updatedData) => {
-      console.log('✅ Match terminé:', updatedData);
-      
-      if (updatedData.matchStatus === 'FT') {
-        setMatches(prevMatches => {
-          return prevMatches.map(match => {
-            const homeMatch = match.homeTeam.toLowerCase().includes(updatedData.equipe1.toLowerCase()) ||
-                             updatedData.equipe1.toLowerCase().includes(match.homeTeam.toLowerCase());
-            const awayMatch = match.awayTeam.toLowerCase().includes(updatedData.equipe2.toLowerCase()) ||
-                             updatedData.equipe2.toLowerCase().includes(match.awayTeam.toLowerCase());
-            
-            if (homeMatch && awayMatch) {
-              // Extraire le score final
-              const scoreMatch = updatedData.scoreLive?.match(/(\d+)-(\d+)/);
-              if (scoreMatch) {
-                return {
-                  ...match,
-                  homeScore: parseInt(scoreMatch[1]),
-                  awayScore: parseInt(scoreMatch[2]),
-                  status: 'FT'
-                };
-              }
-            }
-            return match;
-          });
-        });
-        
-        setLastUpdate(new Date());
-      }
-    });
-    
-    // Nettoyage
-    return () => {
-      socket.off('prono:live');
-      socket.off('prono:updated');
-    };
   }, [active]);
   
   useEffect(() => {

@@ -3,7 +3,6 @@ import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
-import { findMatchScore } from "./flashscoreScraper.js";
 
 const API_KEY = process.env.FOOTBALL_API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
@@ -16,252 +15,6 @@ let matchesCache = {
 };
 
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
-
-/**
- * 🔍 Vérifier TOUS les pronostics en attente, date par date
- * Utile pour rattraper les matchs des jours précédents
- */
-export async function checkAllPendingPronostics() {
-  try {
-    console.log("🔍 Début de la vérification COMPLÈTE de tous les pronos en attente...");
-
-    if (!API_KEY) {
-      console.error("❌ Clé API Football manquante");
-      return { success: false, message: "Clé API manquante" };
-    }
-
-    // 1. Récupérer TOUS les pronostics en attente ou en cours
-    const pendingPronostics = await Pronostic.find({
-      statut: { $in: ["en attente", "en cours"] },
-      sport: "Football",
-    }).sort({ date: 1 }); // Tri par date croissante
-
-    if (pendingPronostics.length === 0) {
-      console.log("✅ Aucun pronostic en attente");
-      return { success: true, checked: 0, updated: 0, message: "Aucun prono en attente" };
-    }
-
-    console.log(`📊 ${pendingPronostics.length} pronostic(s) à vérifier`);
-
-    // 2. Grouper les pronos par date
-    const pronosByDate = {};
-    for (const prono of pendingPronostics) {
-      const dateStr = new Date(prono.date).toISOString().split("T")[0];
-      if (!pronosByDate[dateStr]) {
-        pronosByDate[dateStr] = [];
-      }
-      pronosByDate[dateStr].push(prono);
-    }
-
-    const dates = Object.keys(pronosByDate).sort();
-    console.log(`📅 ${dates.length} date(s) à vérifier: ${dates.join(", ")}`);
-
-    let totalUpdated = 0;
-
-    // 3. Vérifier chaque date
-    for (const dateStr of dates) {
-      console.log(`\n📆 Vérification des matchs du ${dateStr}...`);
-      
-      try {
-        let matchesForDate = [];
-        
-        // ESSAYER L'API FOOTBALL D'ABORD
-        if (API_KEY) {
-          try {
-            console.log(`  🌐 Tentative API Football...`);
-            const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
-              params: { date: dateStr },
-              headers: {
-                "x-rapidapi-key": API_KEY,
-                "x-rapidapi-host": "v3.football.api-sports.io",
-              },
-              timeout: 10000
-            });
-            matchesForDate = data.response || [];
-            console.log(`  ✅ API Football: ${matchesForDate.length} match(s) trouvé(s)`);
-          } catch (apiError) {
-            console.log(`  ⚠️ API Football échouée: ${apiError.message}`);
-            console.log(`  🕷️ Passage au scraper FlashScore...`);
-          }
-        }
-        
-        // SI API ÉCHOUE OU PAS DE CLÉ → SCRAPER
-        if (matchesForDate.length === 0) {
-          console.log(`  🕷️ Utilisation du scraper pour les ${pronosByDate[dateStr].length} pronos...`);
-        }
-
-        // 4. Vérifier chaque prono de cette date
-        for (const prono of pronosByDate[dateStr]) {
-          console.log(`\n  🔎 Recherche match pour: ${prono.equipe1} vs ${prono.equipe2}`);
-          
-          let matchingMatch = null;
-          
-          // CHERCHER DANS L'API SI ON A DES RÉSULTATS
-          if (matchesForDate.length > 0) {
-            matchingMatch = matchesForDate.find((match) => {
-              const homeTeam = match.teams.home.name.toLowerCase().trim();
-              const awayTeam = match.teams.away.name.toLowerCase().trim();
-              const equipe1 = prono.equipe1.toLowerCase().trim();
-              const equipe2 = prono.equipe2.toLowerCase().trim();
-              
-              // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
-              const teamsMatch = (team1, team2) => {
-                if (team1 === team2) return true;
-                if (team1.includes(team2) || team2.includes(team1)) return true;
-                
-                const words1 = team1.split(/\s+/).slice(0, 3);
-                const words2 = team2.split(/\s+/).slice(0, 3);
-                
-                for (const w1 of words1) {
-                  for (const w2 of words2) {
-                    if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
-                      return true;
-                    }
-                  }
-                }
-                return false;
-              };
-
-              const match1 = teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2);
-              const match2 = teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1);
-              
-              if (match1 || match2) {
-                console.log(`    ✅ Match trouvé (API): ${match.teams.home.name} vs ${match.teams.away.name}`);
-                return true;
-              }
-              return false;
-            });
-          }
-          
-          // SI PAS TROUVÉ DANS L'API → ESSAYER LE SCRAPER
-          if (!matchingMatch) {
-            console.log(`    🕷️ Tentative scraper pour ce match...`);
-            const scrapedMatch = await findMatchScore(prono.equipe1, prono.equipe2, dateStr);
-            
-            if (scrapedMatch) {
-              // Convertir le format du scraper vers le format API
-              matchingMatch = {
-                teams: {
-                  home: { name: scrapedMatch.homeTeam },
-                  away: { name: scrapedMatch.awayTeam }
-                },
-                goals: {
-                  home: scrapedMatch.homeScore,
-                  away: scrapedMatch.awayScore
-                },
-                fixture: {
-                  status: {
-                    short: scrapedMatch.status,
-                    elapsed: scrapedMatch.elapsed
-                  }
-                }
-              };
-              console.log(`    ✅ Match trouvé (Scraper): ${scrapedMatch.homeTeam} vs ${scrapedMatch.awayTeam}`);
-            }
-          }
-
-          if (matchingMatch) {
-            const homeScore = matchingMatch.goals.home;
-            const awayScore = matchingMatch.goals.away;
-            const homeTeam = matchingMatch.teams.home.name;
-            const awayTeam = matchingMatch.teams.away.name;
-            const status = matchingMatch.fixture.status.short;
-            const elapsed = matchingMatch.fixture.status.elapsed;
-
-            // Match terminé
-            if (status === "FT") {
-              const result = determinePronosticResult(
-                prono,
-                homeTeam,
-                awayTeam,
-                homeScore,
-                awayScore
-              );
-
-              if (result && prono.statut !== result) {
-                prono.statut = result;
-                prono.resultat = result;
-                prono.scoreLive = `${homeScore}-${awayScore}`;
-                await prono.save();
-
-                // Sync UserBets
-                await UserBet.updateMany(
-                  { pronoId: prono._id },
-                  { $set: { resultat: result, scoreLive: `${homeScore}-${awayScore}` } }
-                );
-
-                totalUpdated++;
-                console.log(`    ✅ ${prono.equipe1} vs ${prono.equipe2}: ${result} (${homeScore}-${awayScore})`);
-
-                // Socket.io
-                io.emit("prono:updated", {
-                  pronosticId: prono._id,
-                  statut: result,
-                  resultat: result,
-                  scoreLive: `${homeScore}-${awayScore}`,
-                  equipe1: prono.equipe1,
-                  equipe2: prono.equipe2,
-                  type: prono.type,
-                  cote: prono.cote,
-                  matchStatus: "FT",
-                });
-              }
-            }
-            // Match en cours
-            else if (["1H", "HT", "2H", "ET", "BT", "P"].includes(status)) {
-              const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
-              
-              if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
-                prono.statut = "en cours";
-                prono.resultat = "en cours";
-                prono.scoreLive = liveScore;
-                await prono.save();
-
-                totalUpdated++;
-                console.log(`    🔴 ${prono.equipe1} vs ${prono.equipe2}: LIVE ${liveScore}`);
-
-                io.emit("prono:live", {
-                  pronosticId: prono._id,
-                  statut: "en cours",
-                  resultat: "en cours",
-                  scoreLive: liveScore,
-                  elapsed: elapsed,
-                  matchStatus: status,
-                  equipe1: prono.equipe1,
-                  equipe2: prono.equipe2,
-                  type: prono.type,
-                  cote: prono.cote,
-                });
-              }
-            }
-          } else {
-            console.log(`    ⚠️ ${prono.equipe1} vs ${prono.equipe2}: Match non trouvé dans l'API`);
-          }
-        }
-
-        // Attendre 500ms entre chaque date pour éviter rate limit
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-      } catch (error) {
-        console.error(`  ❌ Erreur pour la date ${dateStr}:`, error.message);
-      }
-    }
-
-    console.log(`\n🎯 Vérification complète terminée: ${totalUpdated}/${pendingPronostics.length} prono(s) mis à jour`);
-
-    return {
-      success: true,
-      checked: pendingPronostics.length,
-      updated: totalUpdated,
-      dates: dates.length,
-      message: `${totalUpdated} prono(s) mis à jour sur ${dates.length} date(s)`
-    };
-
-  } catch (error) {
-    console.error("❌ Erreur vérification complète:", error.message);
-    return { success: false, message: error.message };
-  }
-}
 
 /**
  * 🎯 Vérifier et mettre à jour automatiquement les résultats des pronostics
@@ -288,9 +41,8 @@ export async function checkAndUpdatePronosticResults() {
 
     console.log(`📊 ${pendingPronostics.length} pronostic(s) en attente à vérifier`);
 
-    // 2. Récupérer les matchs d'AUJOURD'HUI ET D'HIER (avec cache)
+    // 2. Récupérer seulement les matchs d'aujourd'hui (avec cache)
     const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const now = Date.now();
 
     let allMatches = [];
@@ -304,9 +56,8 @@ export async function checkAndUpdatePronosticResults() {
       console.log("📋 Utilisation du cache (pas de requête API)");
       allMatches = matchesCache.data;
     } else {
-      console.log("🌐 Requête API pour les matchs d'aujourd'hui ET d'hier...");
-      
-      // Requête pour AUJOURD'HUI
+      console.log("🌐 Requête API pour les matchs du jour...");
+      // Une seule requête pour aujourd'hui
       const { data: todayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
         params: { date: today },
         headers: {
@@ -315,16 +66,7 @@ export async function checkAndUpdatePronosticResults() {
         },
       });
 
-      // Requête pour HIER
-      const { data: yesterdayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
-        params: { date: yesterday },
-        headers: {
-          "x-rapidapi-key": API_KEY,
-          "x-rapidapi-host": "v3.football.api-sports.io",
-        },
-      });
-
-      allMatches = [...(todayData.response || []), ...(yesterdayData.response || [])];
+      allMatches = todayData.response || [];
       
       // Mettre à jour le cache
       matchesCache = {
@@ -341,37 +83,19 @@ export async function checkAndUpdatePronosticResults() {
     // 3. Pour chaque pronostic, trouver le match correspondant et vérifier le résultat
     for (const prono of pendingPronostics) {
       const matchingMatch = allMatches.find((match) => {
-        const homeTeam = match.teams.home.name.toLowerCase().trim();
-        const awayTeam = match.teams.away.name.toLowerCase().trim();
-        const equipe1 = prono.equipe1.toLowerCase().trim();
-        const equipe2 = prono.equipe2.toLowerCase().trim();
-        
-        // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
-        const teamsMatch = (team1, team2) => {
-          // Correspondance exacte
-          if (team1 === team2) return true;
-          
-          // L'un contient l'autre
-          if (team1.includes(team2) || team2.includes(team1)) return true;
-          
-          // Vérifier les mots clés principaux (premiers 3 mots)
-          const words1 = team1.split(/\s+/).slice(0, 3);
-          const words2 = team2.split(/\s+/).slice(0, 3);
-          
-          for (const w1 of words1) {
-            for (const w2 of words2) {
-              if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
-                return true;
-              }
-            }
-          }
-          
-          return false;
-        };
+        const homeTeam = match.teams.home.name.toLowerCase();
+        const awayTeam = match.teams.away.name.toLowerCase();
+        const equipe1 = prono.equipe1.toLowerCase();
+        const equipe2 = prono.equipe2.toLowerCase();
 
-        // Vérifier les 2 ordres possibles
-        return (teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2)) ||
-               (teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1));
+        // Vérifier si les équipes correspondent
+        return (
+          (homeTeam.includes(equipe1) || equipe1.includes(homeTeam)) &&
+          (awayTeam.includes(equipe2) || equipe2.includes(awayTeam))
+        ) || (
+          (homeTeam.includes(equipe2) || equipe2.includes(homeTeam)) &&
+          (awayTeam.includes(equipe1) || equipe1.includes(awayTeam))
+        );
       });
 
       if (matchingMatch) {
@@ -435,10 +159,9 @@ export async function checkAndUpdatePronosticResults() {
           // Mettre à jour le statut en "en cours" avec score live + minutes
           const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
           
-          // TOUJOURS mettre à jour si c'est un match LIVE
           if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
             prono.statut = "en cours";
-            prono.resultat = "en cours"; // ✅ IMPORTANT: Mettre le resultat aussi!
+            prono.resultat = "en cours"; // ✅ Statut du pari
             prono.scoreLive = liveScore; // ✅ Score live avec minutes
             await prono.save();
 
@@ -447,7 +170,7 @@ export async function checkAndUpdatePronosticResults() {
             );
 
             // Émettre un événement Socket.io pour le score live
-            io.emit("prono:live", {
+            io.emit("pronostic:live", {
               pronosticId: prono._id,
               statut: "en cours",
               resultat: "en cours",
@@ -479,12 +202,8 @@ export async function checkAndUpdatePronosticResults() {
 /**
  * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé
  */
-export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
-  let type = prono.type.toLowerCase().trim();
-  
-  // Nettoyer le type: enlever "double chance :" ou "double chance -"
-  type = type.replace(/^double chance\s*[:\-]?\s*/i, '').trim();
-  
+function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
+  const type = prono.type.toLowerCase().trim();
   const equipe1Lower = prono.equipe1.toLowerCase().trim();
   const equipe2Lower = prono.equipe2.toLowerCase().trim();
   const homeTeamLower = homeTeam.toLowerCase().trim();
@@ -494,30 +213,7 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
   const isEquipe1Home = 
     homeTeamLower.includes(equipe1Lower) || equipe1Lower.includes(homeTeamLower);
 
-  console.log(`🔍 Analyse: "${prono.type}" (nettoyé: "${type}") pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
-  
-  // === Si le type est juste un nom d'équipe = Victoire de cette équipe ===
-  if (!type.includes(' ') && (type === equipe1Lower || type === equipe2Lower || 
-      homeTeamLower.includes(type) || awayTeamLower.includes(type))) {
-    console.log(`💡 Type détecté comme victoire d'équipe`);
-    
-    // Vérifier quelle équipe gagne
-    if (type === equipe1Lower || homeTeamLower.includes(type)) {
-      // Victoire de l'équipe 1
-      if (isEquipe1Home) {
-        return homeScore > awayScore ? "gagnant" : "perdu";
-      } else {
-        return awayScore > homeScore ? "gagnant" : "perdu";
-      }
-    } else {
-      // Victoire de l'équipe 2
-      if (isEquipe1Home) {
-        return awayScore > homeScore ? "gagnant" : "perdu";
-      } else {
-        return homeScore > awayScore ? "gagnant" : "perdu";
-      }
-    }
-  }
+  console.log(`🔍 Analyse: "${prono.type}" pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
 
   // === Double chance - Format "X or draw" / "X or Y" ===
   if (type.includes(" or ") || type.includes("double chance")) {
