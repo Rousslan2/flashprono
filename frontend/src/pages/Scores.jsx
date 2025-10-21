@@ -238,12 +238,12 @@ export default function Scores() {
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
-            <div className="text-7xl mb-6 animate-bounce">🔧</div>
+            <div className="text-7xl mb-6 animate-bounce">📭</div>
             <h3 className="text-3xl font-bold text-white mb-4">
-              API en maintenance
+              Aucun match aujourd'hui
             </h3>
             <p className="text-gray-400 text-lg mb-6">
-              L'API des scores est temporairement indisponible. Reviens plus tard !
+              Pas de matchs pour tes pronos du jour. Reviens demain !
             </p>
             <Link
               to="/pronostics"
