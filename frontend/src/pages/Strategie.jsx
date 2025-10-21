@@ -287,6 +287,225 @@ export default function Strategie() {
         </div>
       </div>
 
+      {/* Section Apprentissage */}
+      <div className="mb-12 relative z-10">
+        <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 animate-slide-up">
+          <span className="text-5xl">🎓</span>
+          <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Parcours d'apprentissage</span>
+        </h2>
+        
+        {/* Niveau Débutant */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-4 py-2 bg-emerald-500/20 text-emerald-300 rounded-full text-sm font-bold border border-emerald-500/40">
+              🌱 NIVEAU 1 : DÉBUTANT
+            </span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <LearningModule
+              icon="📚"
+              title="Comprendre les bases"
+              duration="15 min"
+              topics={[
+                "Qu'est-ce qu'une cote et comment la lire",
+                "Les différents types de paris (1X2, BTTS, Over/Under)",
+                "Comment fonctionnent les bookmakers",
+                "La marge du bookmaker expliquée simplement"
+              ]}
+            />
+            <LearningModule
+              icon="💰"
+              title="Gérer ton budget"
+              duration="20 min"
+              topics={[
+                "Définir ta bankroll initiale",
+                "Règle des 1-3% : pourquoi c'est crucial",
+                "Ne jamais parier l'argent du loyer",
+                "Tenir un journal de tes paris dès le début"
+              ]}
+            />
+            <LearningModule
+              icon="🧠"
+              title="Psychologie du parieur"
+              duration="25 min"
+              topics={[
+                "Reconnaître le biais du joueur",
+                "Gérer ses émotions après une perte",
+                "L'importance de la discipline",
+                "Savoir prendre une pause quand nécessaire"
+              ]}
+            />
+            <LearningModule
+              icon="⚽"
+              title="Choisir son sport"
+              duration="15 min"
+              topics={[
+                "Se spécialiser vs diversifier : le bon équilibre",
+                "Sports les plus rentables pour débuter",
+                "Importance de connaître le sport sur lequel tu paries",
+                "Où trouver des statistiques fiables"
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Niveau Intermédiaire */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-4 py-2 bg-yellow-500/20 text-yellow-300 rounded-full text-sm font-bold border border-yellow-500/40">
+              💡 NIVEAU 2 : INTERMÉDIAIRE
+            </span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <LearningModule
+              icon="🔍"
+              title="Analyse avancée"
+              duration="30 min"
+              topics={[
+                "Comment analyser les statistiques efficacement",
+                "Form home vs away : comprendre les tendances",
+                "L'impact des absences et blessures",
+                "Lire entre les lignes des actualités"
+              ]}
+            />
+            <LearningModule
+              icon="📊"
+              title="Value Betting avancé"
+              duration="40 min"
+              topics={[
+                "Calculer la probabilité réelle d'un événement",
+                "Identifier les cotes sous-évaluées",
+                "Comparaison de cotes entre bookmakers",
+                "Arbitrage : opportunités et limites"
+              ]}
+            />
+            <LearningModule
+              icon="🧮"
+              title="Stratégies de mise"
+              duration="35 min"
+              topics={[
+                "Kelly Criterion : théorie et pratique",
+                "Demi-Kelly vs Quart-Kelly",
+                "Staking plans : progressifs vs fixes",
+                "Quand augmenter ou réduire ses mises"
+              ]}
+            />
+            <LearningModule
+              icon="⏱️"
+              title="Timing des paris"
+              duration="25 min"
+              topics={[
+                "Parier tôt vs parier tard : avantages/inconvénients",
+                "Suivre les mouvements de cotes",
+                "Paris live : opportunités en temps réel",
+                "Cash-out : quand l'utiliser (ou pas)"
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Niveau Expert */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="px-4 py-2 bg-red-500/20 text-red-300 rounded-full text-sm font-bold border border-red-500/40">
+              🏆 NIVEAU 3 : EXPERT
+            </span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <LearningModule
+              icon="🤖"
+              title="Modèles prédictifs"
+              duration="60 min"
+              topics={[
+                "Introduction aux modèles statistiques",
+                "Régression de Poisson pour prédire les scores",
+                "ELO rating appliqué au sport",
+                "Machine Learning : bases pour les paris"
+              ]}
+            />
+            <LearningModule
+              icon="💹"
+              title="Optimisation de portefeuille"
+              duration="45 min"
+              topics={[
+                "Diversification intelligente de tes paris",
+                "Corrélation entre paris : piège à éviter",
+                "Construction d'un portefeuille équilibré",
+                "Ratios risque/rendement optimaux"
+              ]}
+            />
+            <LearningModule
+              icon="🔧"
+              title="Outils pro"
+              duration="50 min"
+              topics={[
+                "Scrapers de cotes : automatisation",
+                "Bases de données : organiser tes analyses",
+                "Excel avancé pour le tracking",
+                "APIs sportives : exploiter les données"
+              ]}
+            />
+            <LearningModule
+              icon="⚖️"
+              title="Aspects légaux & fiscaux"
+              duration="30 min"
+              topics={[
+                "Réglementation des paris en France",
+                "Déclaration des gains : ce qu'il faut savoir",
+                "Limites et exclusions par les bookmakers",
+                "Se protéger : bonnes pratiques"
+              ]}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Erreurs courantes à éviter */}
+      <div className="mb-12 relative z-10">
+        <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 animate-slide-up">
+          <span className="text-5xl">⚠️</span>
+          <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Erreurs courantes à éviter</span>
+        </h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <ErrorCard
+            icon="💔"
+            title="Chasser ses pertes"
+            desc="Augmenter ses mises après une perte pour 'se refaire' est la voie royale vers la ruine. Garde ton plan de mise quoi qu'il arrive."
+            severity="critique"
+          />
+          <ErrorCard
+            icon="🎰"
+            title="Parier sur son équipe favorite"
+            desc="L'émotionnel brouille le jugement. Les meilleurs parieurs sont objectifs et parient sur la value, pas sur le cœur."
+            severity="élevé"
+          />
+          <ErrorCard
+            icon="📉"
+            title="Négliger la gestion de bankroll"
+            desc="Parier 20% de ton capital sur un seul match, même 'sûr', peut te ruiner en quelques paris maléchanceux."
+            severity="critique"
+          />
+          <ErrorCard
+            icon="🎯"
+            title="Se disperser sur trop de sports"
+            desc="Mieux vaut maîtriser 1-2 sports que d'être médiocre sur 10. La spécialisation est la clé de la rentabilité."
+            severity="moyen"
+          />
+          <ErrorCard
+            icon="🕒"
+            title="Parier sans analyse"
+            desc="Se fier à son 'intuition' ou à des tips aléatoires sans vérifier est un pari sur la chance, pas sur la compétence."
+            severity="élevé"
+          />
+          <ErrorCard
+            icon="💸"
+            title="Ignorer la valeur des cotes"
+            desc="Une cote de 1.50 peut être excellente, une de 3.00 peut être mauvaise. Seule la value compte, pas la cote brute."
+            severity="moyen"
+          />
+        </div>
+      </div>
+
       {/* Resources */}
       <div className="bg-gradient-to-br from-purple-500/10 via-black to-pink-500/10 border-2 border-purple-500/30 rounded-3xl p-10 relative z-10 animate-slide-up group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 overflow-hidden">
         {/* Particules lumineuses */}
@@ -613,6 +832,68 @@ function FeaturePreview({ icon, title, desc, delay }) {
       <div className="text-5xl mb-4 animate-bounce">{icon}</div>
       <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
       <p className="text-gray-400 text-sm">{desc}</p>
+    </div>
+  );
+}
+
+function LearningModule({ icon, title, duration, topics }) {
+  return (
+    <div className="group bg-gradient-to-br from-black/80 via-gray-900/80 to-blue-900/10 border-2 border-blue-500/30 rounded-2xl p-6 hover:scale-105 hover:border-blue-400 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 cursor-pointer">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="text-4xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+          <div>
+            <h3 className="text-xl font-bold text-white group-hover:text-blue-300 transition-colors">{title}</h3>
+            <span className="text-sm text-gray-400 flex items-center gap-1">
+              <span>⏱️</span> {duration}
+            </span>
+          </div>
+        </div>
+      </div>
+      <ul className="space-y-2">
+        {topics.map((topic, i) => (
+          <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
+            <span className="text-blue-400 mt-0.5 flex-shrink-0">•</span>
+            <span>{topic}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 pt-4 border-t border-blue-500/20">
+        <button className="w-full px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold">
+          🚀 Commencer le module
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ErrorCard({ icon, title, desc, severity }) {
+  const severityColors = {
+    critique: "from-red-500/20 to-orange-500/20 border-red-500/40 text-red-300",
+    "élevé": "from-orange-500/20 to-yellow-500/20 border-orange-500/40 text-orange-300",
+    moyen: "from-yellow-500/20 to-amber-500/20 border-yellow-500/40 text-yellow-300",
+  };
+
+  const severityLabels = {
+    critique: "🔴 CRITIQUE",
+    "élevé": "🟠 ÉLEVÉ",
+    moyen: "🟡 MOYEN",
+  };
+
+  return (
+    <div className={`group bg-gradient-to-br ${severityColors[severity]} border-2 rounded-2xl p-6 hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer`}>
+      <div className="flex items-start gap-4">
+        <div className="text-4xl group-hover:scale-125 transition-transform duration-500">{icon}</div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xl font-bold text-white">{title}</h3>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${severityColors[severity]}`}>
+              {severityLabels[severity]}
+            </span>
+          </div>
+          <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+        </div>
+      </div>
     </div>
   );
 }
