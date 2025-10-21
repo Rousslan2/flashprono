@@ -131,7 +131,7 @@ export default function Bankroll() {
             💰 Outil de gestion
           </span>
         </div>
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 perspective-text">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6">
           <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-emerald-500 bg-clip-text text-transparent drop-shadow-glow-green animate-gradient">
             Calculateur de Bankroll
           </span>
@@ -441,10 +441,6 @@ export default function Bankroll() {
       }
       .drop-shadow-glow-green {
         filter: drop-shadow(0 0 30px rgba(52, 211, 153, 0.5));
-      }
-      .perspective-text {
-        perspective: 1000px;
-        transform-style: preserve-3d;
       }
     `}</style>
   </section>
