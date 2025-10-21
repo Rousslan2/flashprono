@@ -76,19 +76,46 @@ export async function checkAllPendingPronostics() {
 
         // 4. Vérifier chaque prono de cette date
         for (const prono of pronosByDate[dateStr]) {
+          console.log(`\n  🔎 Recherche match pour: ${prono.equipe1} vs ${prono.equipe2}`);
+          
           const matchingMatch = matchesForDate.find((match) => {
-            const homeTeam = match.teams.home.name.toLowerCase();
-            const awayTeam = match.teams.away.name.toLowerCase();
-            const equipe1 = prono.equipe1.toLowerCase();
-            const equipe2 = prono.equipe2.toLowerCase();
+            const homeTeam = match.teams.home.name.toLowerCase().trim();
+            const awayTeam = match.teams.away.name.toLowerCase().trim();
+            const equipe1 = prono.equipe1.toLowerCase().trim();
+            const equipe2 = prono.equipe2.toLowerCase().trim();
+            
+            // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
+            const teamsMatch = (team1, team2) => {
+              // Correspondance exacte
+              if (team1 === team2) return true;
+              
+              // L'un contient l'autre
+              if (team1.includes(team2) || team2.includes(team1)) return true;
+              
+              // Vérifier les mots clés principaux (premiers 3 mots)
+              const words1 = team1.split(/\s+/).slice(0, 3);
+              const words2 = team2.split(/\s+/).slice(0, 3);
+              
+              for (const w1 of words1) {
+                for (const w2 of words2) {
+                  if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
+                    return true;
+                  }
+                }
+              }
+              
+              return false;
+            };
 
-            return (
-              (homeTeam.includes(equipe1) || equipe1.includes(homeTeam)) &&
-              (awayTeam.includes(equipe2) || equipe2.includes(awayTeam))
-            ) || (
-              (homeTeam.includes(equipe2) || equipe2.includes(homeTeam)) &&
-              (awayTeam.includes(equipe1) || equipe1.includes(awayTeam))
-            );
+            // Vérifier les 2 ordres possibles
+            const match1 = teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2);
+            const match2 = teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1);
+            
+            if (match1 || match2) {
+              console.log(`    ✅ Match trouvé: ${match.teams.home.name} vs ${match.teams.away.name}`);
+              return true;
+            }
+            return false;
           });
 
           if (matchingMatch) {
@@ -272,19 +299,37 @@ export async function checkAndUpdatePronosticResults() {
     // 3. Pour chaque pronostic, trouver le match correspondant et vérifier le résultat
     for (const prono of pendingPronostics) {
       const matchingMatch = allMatches.find((match) => {
-        const homeTeam = match.teams.home.name.toLowerCase();
-        const awayTeam = match.teams.away.name.toLowerCase();
-        const equipe1 = prono.equipe1.toLowerCase();
-        const equipe2 = prono.equipe2.toLowerCase();
+        const homeTeam = match.teams.home.name.toLowerCase().trim();
+        const awayTeam = match.teams.away.name.toLowerCase().trim();
+        const equipe1 = prono.equipe1.toLowerCase().trim();
+        const equipe2 = prono.equipe2.toLowerCase().trim();
+        
+        // Fonction pour vérifier si 2 noms d'équipes correspondent (flexible)
+        const teamsMatch = (team1, team2) => {
+          // Correspondance exacte
+          if (team1 === team2) return true;
+          
+          // L'un contient l'autre
+          if (team1.includes(team2) || team2.includes(team1)) return true;
+          
+          // Vérifier les mots clés principaux (premiers 3 mots)
+          const words1 = team1.split(/\s+/).slice(0, 3);
+          const words2 = team2.split(/\s+/).slice(0, 3);
+          
+          for (const w1 of words1) {
+            for (const w2 of words2) {
+              if (w1.length > 3 && w2.length > 3 && (w1.includes(w2) || w2.includes(w1))) {
+                return true;
+              }
+            }
+          }
+          
+          return false;
+        };
 
-        // Vérifier si les équipes correspondent
-        return (
-          (homeTeam.includes(equipe1) || equipe1.includes(homeTeam)) &&
-          (awayTeam.includes(equipe2) || equipe2.includes(awayTeam))
-        ) || (
-          (homeTeam.includes(equipe2) || equipe2.includes(homeTeam)) &&
-          (awayTeam.includes(equipe1) || equipe1.includes(awayTeam))
-        );
+        // Vérifier les 2 ordres possibles
+        return (teamsMatch(homeTeam, equipe1) && teamsMatch(awayTeam, equipe2)) ||
+               (teamsMatch(homeTeam, equipe2) && teamsMatch(awayTeam, equipe1));
       });
 
       if (matchingMatch) {
@@ -393,7 +438,11 @@ export async function checkAndUpdatePronosticResults() {
  * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé
  */
 function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
-  const type = prono.type.toLowerCase().trim();
+  let type = prono.type.toLowerCase().trim();
+  
+  // Nettoyer le type: enlever "double chance :" ou "double chance -"
+  type = type.replace(/^double chance\s*[:\-]?\s*/i, '').trim();
+  
   const equipe1Lower = prono.equipe1.toLowerCase().trim();
   const equipe2Lower = prono.equipe2.toLowerCase().trim();
   const homeTeamLower = homeTeam.toLowerCase().trim();
@@ -403,7 +452,30 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
   const isEquipe1Home = 
     homeTeamLower.includes(equipe1Lower) || equipe1Lower.includes(homeTeamLower);
 
-  console.log(`🔍 Analyse: "${prono.type}" pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
+  console.log(`🔍 Analyse: "${prono.type}" (nettoyé: "${type}") pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
+  
+  // === Si le type est juste un nom d'équipe = Victoire de cette équipe ===
+  if (!type.includes(' ') && (type === equipe1Lower || type === equipe2Lower || 
+      homeTeamLower.includes(type) || awayTeamLower.includes(type))) {
+    console.log(`💡 Type détecté comme victoire d'équipe`);
+    
+    // Vérifier quelle équipe gagne
+    if (type === equipe1Lower || homeTeamLower.includes(type)) {
+      // Victoire de l'équipe 1
+      if (isEquipe1Home) {
+        return homeScore > awayScore ? "gagnant" : "perdu";
+      } else {
+        return awayScore > homeScore ? "gagnant" : "perdu";
+      }
+    } else {
+      // Victoire de l'équipe 2
+      if (isEquipe1Home) {
+        return awayScore > homeScore ? "gagnant" : "perdu";
+      } else {
+        return homeScore > awayScore ? "gagnant" : "perdu";
+      }
+    }
+  }
 
   // === Double chance - Format "X or draw" / "X or Y" ===
   if (type.includes(" or ") || type.includes("double chance")) {
