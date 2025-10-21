@@ -2,7 +2,7 @@ import express from "express";
 import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import { protect, requireAdmin } from "../middleware/authMiddleware.js";
-import { checkAndUpdatePronosticResults } from "../services/pronosticChecker.js";
+import { checkAndUpdatePronosticResults, checkAllPendingPronostics } from "../services/pronosticChecker.js";
 
 const router = express.Router();
 
@@ -73,6 +73,34 @@ router.post("/check-results", protect, requireAdmin, async (req, res) => {
       res.status(500).json({
         success: false,
         message: "Erreur lors de la vérification"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// 🔍 Vérifier TOUS les pronos en attente (admin uniquement) - NOUVEAU
+router.post("/check-all-pending", protect, requireAdmin, async (req, res) => {
+  try {
+    console.log("🔍 Vérification COMPLÈTE de tous les pronos en attente lancée par", req.user.email);
+    const result = await checkAllPendingPronostics();
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: result.message,
+        checked: result.checked,
+        updated: result.updated,
+        dates: result.dates
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: result.message
       });
     }
   } catch (error) {

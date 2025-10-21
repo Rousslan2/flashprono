@@ -17,6 +17,184 @@ let matchesCache = {
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 /**
+ * 🔍 Vérifier TOUS les pronostics en attente, date par date
+ * Utile pour rattraper les matchs des jours précédents
+ */
+export async function checkAllPendingPronostics() {
+  try {
+    console.log("🔍 Début de la vérification COMPLÈTE de tous les pronos en attente...");
+
+    if (!API_KEY) {
+      console.error("❌ Clé API Football manquante");
+      return { success: false, message: "Clé API manquante" };
+    }
+
+    // 1. Récupérer TOUS les pronostics en attente ou en cours
+    const pendingPronostics = await Pronostic.find({
+      statut: { $in: ["en attente", "en cours"] },
+      sport: "Football",
+    }).sort({ date: 1 }); // Tri par date croissante
+
+    if (pendingPronostics.length === 0) {
+      console.log("✅ Aucun pronostic en attente");
+      return { success: true, checked: 0, updated: 0, message: "Aucun prono en attente" };
+    }
+
+    console.log(`📊 ${pendingPronostics.length} pronostic(s) à vérifier`);
+
+    // 2. Grouper les pronos par date
+    const pronosByDate = {};
+    for (const prono of pendingPronostics) {
+      const dateStr = new Date(prono.date).toISOString().split("T")[0];
+      if (!pronosByDate[dateStr]) {
+        pronosByDate[dateStr] = [];
+      }
+      pronosByDate[dateStr].push(prono);
+    }
+
+    const dates = Object.keys(pronosByDate).sort();
+    console.log(`📅 ${dates.length} date(s) à vérifier: ${dates.join(", ")}`);
+
+    let totalUpdated = 0;
+
+    // 3. Vérifier chaque date
+    for (const dateStr of dates) {
+      console.log(`\n📆 Vérification des matchs du ${dateStr}...`);
+      
+      try {
+        // Requête API pour cette date spécifique
+        const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
+          params: { date: dateStr },
+          headers: {
+            "x-rapidapi-key": API_KEY,
+            "x-rapidapi-host": "v3.football.api-sports.io",
+          },
+        });
+
+        const matchesForDate = data.response || [];
+        console.log(`  ⚽ ${matchesForDate.length} match(s) trouvé(s) pour le ${dateStr}`);
+
+        // 4. Vérifier chaque prono de cette date
+        for (const prono of pronosByDate[dateStr]) {
+          const matchingMatch = matchesForDate.find((match) => {
+            const homeTeam = match.teams.home.name.toLowerCase();
+            const awayTeam = match.teams.away.name.toLowerCase();
+            const equipe1 = prono.equipe1.toLowerCase();
+            const equipe2 = prono.equipe2.toLowerCase();
+
+            return (
+              (homeTeam.includes(equipe1) || equipe1.includes(homeTeam)) &&
+              (awayTeam.includes(equipe2) || equipe2.includes(awayTeam))
+            ) || (
+              (homeTeam.includes(equipe2) || equipe2.includes(homeTeam)) &&
+              (awayTeam.includes(equipe1) || equipe1.includes(awayTeam))
+            );
+          });
+
+          if (matchingMatch) {
+            const homeScore = matchingMatch.goals.home;
+            const awayScore = matchingMatch.goals.away;
+            const homeTeam = matchingMatch.teams.home.name;
+            const awayTeam = matchingMatch.teams.away.name;
+            const status = matchingMatch.fixture.status.short;
+            const elapsed = matchingMatch.fixture.status.elapsed;
+
+            // Match terminé
+            if (status === "FT") {
+              const result = determinePronosticResult(
+                prono,
+                homeTeam,
+                awayTeam,
+                homeScore,
+                awayScore
+              );
+
+              if (result && prono.statut !== result) {
+                prono.statut = result;
+                prono.resultat = result;
+                prono.scoreLive = `${homeScore}-${awayScore}`;
+                await prono.save();
+
+                // Sync UserBets
+                await UserBet.updateMany(
+                  { pronoId: prono._id },
+                  { $set: { resultat: result, scoreLive: `${homeScore}-${awayScore}` } }
+                );
+
+                totalUpdated++;
+                console.log(`    ✅ ${prono.equipe1} vs ${prono.equipe2}: ${result} (${homeScore}-${awayScore})`);
+
+                // Socket.io
+                io.emit("prono:updated", {
+                  pronosticId: prono._id,
+                  statut: result,
+                  resultat: result,
+                  scoreLive: `${homeScore}-${awayScore}`,
+                  equipe1: prono.equipe1,
+                  equipe2: prono.equipe2,
+                  type: prono.type,
+                  cote: prono.cote,
+                  matchStatus: "FT",
+                });
+              }
+            }
+            // Match en cours
+            else if (["1H", "HT", "2H", "ET", "BT", "P"].includes(status)) {
+              const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
+              
+              if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
+                prono.statut = "en cours";
+                prono.resultat = "en cours";
+                prono.scoreLive = liveScore;
+                await prono.save();
+
+                totalUpdated++;
+                console.log(`    🔴 ${prono.equipe1} vs ${prono.equipe2}: LIVE ${liveScore}`);
+
+                io.emit("prono:live", {
+                  pronosticId: prono._id,
+                  statut: "en cours",
+                  resultat: "en cours",
+                  scoreLive: liveScore,
+                  elapsed: elapsed,
+                  matchStatus: status,
+                  equipe1: prono.equipe1,
+                  equipe2: prono.equipe2,
+                  type: prono.type,
+                  cote: prono.cote,
+                });
+              }
+            }
+          } else {
+            console.log(`    ⚠️ ${prono.equipe1} vs ${prono.equipe2}: Match non trouvé dans l'API`);
+          }
+        }
+
+        // Attendre 500ms entre chaque date pour éviter rate limit
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+      } catch (error) {
+        console.error(`  ❌ Erreur pour la date ${dateStr}:`, error.message);
+      }
+    }
+
+    console.log(`\n🎯 Vérification complète terminée: ${totalUpdated}/${pendingPronostics.length} prono(s) mis à jour`);
+
+    return {
+      success: true,
+      checked: pendingPronostics.length,
+      updated: totalUpdated,
+      dates: dates.length,
+      message: `${totalUpdated} prono(s) mis à jour sur ${dates.length} date(s)`
+    };
+
+  } catch (error) {
+    console.error("❌ Erreur vérification complète:", error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
  * 🎯 Vérifier et mettre à jour automatiquement les résultats des pronostics
  */
 export async function checkAndUpdatePronosticResults() {
@@ -41,8 +219,9 @@ export async function checkAndUpdatePronosticResults() {
 
     console.log(`📊 ${pendingPronostics.length} pronostic(s) en attente à vérifier`);
 
-    // 2. Récupérer seulement les matchs d'aujourd'hui (avec cache)
+    // 2. Récupérer les matchs d'AUJOURD'HUI ET D'HIER (avec cache)
     const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const now = Date.now();
 
     let allMatches = [];
@@ -56,8 +235,9 @@ export async function checkAndUpdatePronosticResults() {
       console.log("📋 Utilisation du cache (pas de requête API)");
       allMatches = matchesCache.data;
     } else {
-      console.log("🌐 Requête API pour les matchs du jour...");
-      // Une seule requête pour aujourd'hui
+      console.log("🌐 Requête API pour les matchs d'aujourd'hui ET d'hier...");
+      
+      // Requête pour AUJOURD'HUI
       const { data: todayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
         params: { date: today },
         headers: {
@@ -66,7 +246,16 @@ export async function checkAndUpdatePronosticResults() {
         },
       });
 
-      allMatches = todayData.response || [];
+      // Requête pour HIER
+      const { data: yesterdayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
+        params: { date: yesterday },
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      });
+
+      allMatches = [...(todayData.response || []), ...(yesterdayData.response || [])];
       
       // Mettre à jour le cache
       matchesCache = {
