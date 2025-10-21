@@ -209,8 +209,8 @@ export default function Bankroll() {
           />
         </div>
 
-        {/* Results Grid - Toujours 3 colonnes horizontales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+        {/* Results Grid - Disposition verticale sur PC, horizontale sur mobile */}
+        <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-3 md:gap-6 mb-8 relative z-10">
           <ResultCard 
             title="Mise conseillée"
             value={`${stake.toFixed(2)} €`}
