@@ -598,9 +598,14 @@ function PronoCard({ p, now }) {
       {/* Score Live - Toujours affiché */}
       <div className="mb-4 relative z-10">
         <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 rounded-2xl shadow-lg">
-          <span className="text-xs text-gray-400 font-semibold">📊 Score en direct:</span>
+          <span className="text-xs text-gray-400 font-semibold">📊 Score :</span>
           {p.scoreLive ? (
-            <span className="text-blue-300 font-black text-xl">{p.scoreLive}</span>
+            <>
+              <span className="text-blue-300 font-black text-xl">{p.scoreLive}</span>
+              {(p.resultat?.toLowerCase().includes("gagnant") || p.resultat?.toLowerCase().includes("perdu")) && (
+                <span className="text-xs text-gray-500 ml-1">(Terminé)</span>
+              )}
+            </>
           ) : (
             <span className="text-gray-500 font-bold text-lg flex items-center gap-2">
               <span className="animate-pulse">---</span>
