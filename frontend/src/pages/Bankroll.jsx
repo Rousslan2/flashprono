@@ -144,7 +144,7 @@ export default function Bankroll() {
       </div>
 
       {/* Main Calculator avec effet carte 3D */}
-      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden">
+      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden">
         {/* Particules lumineuses au survol */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-1 h-8 bg-gradient-to-b from-emerald-400 to-transparent animate-spark-1"></div>
@@ -209,8 +209,8 @@ export default function Bankroll() {
           />
         </div>
 
-        {/* Results Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8 relative z-10">
+        {/* Results Grid - Toujours 3 colonnes horizontales */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
           <ResultCard 
             title="Mise conseillée"
             value={`${stake.toFixed(2)} €`}
