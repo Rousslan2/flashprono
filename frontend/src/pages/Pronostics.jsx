@@ -579,15 +579,20 @@ function PronoCard({ p, now }) {
         <ResultPill value={p.resultat} />
       </div>
       
-      {/* Score Live - Si disponible */}
-      {p.scoreLive && (
-        <div className="mb-4 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 rounded-2xl shadow-lg">
-            <span className="text-xs text-gray-400 font-semibold">📊 Score en direct:</span>
+      {/* Score Live - Toujours affiché */}
+      <div className="mb-4 relative z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500/40 rounded-2xl shadow-lg">
+          <span className="text-xs text-gray-400 font-semibold">📊 Score en direct:</span>
+          {p.scoreLive ? (
             <span className="text-blue-300 font-black text-xl">{p.scoreLive}</span>
-          </div>
+          ) : (
+            <span className="text-gray-500 font-bold text-lg flex items-center gap-2">
+              <span className="animate-pulse">---</span>
+              <span className="text-xs">(En attente)</span>
+            </span>
+          )}
         </div>
-      )}
+      </div>
       
       {/* Bouton Suivre */}
       {!loadingFollow && (
