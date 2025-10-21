@@ -57,79 +57,76 @@ export default function Navbar() {
               👑 Abonnements
             </NavLink>
 
-            {/* 📊 Dropdown Mon Espace */}
-            {isAuth && (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
-                    ["/bankroll", "/strategies", "/mes-stats", "/chat", "/admin"].includes(location.pathname)
-                      ? "text-primary border-2 border-primary"
-                      : "text-green-400 hover:text-white"
+            {/* 📊 Dropdown Mon Espace - TOUJOURS VISIBLE */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${
+                  ["/bankroll", "/strategies", "/mes-stats", "/chat", "/admin"].includes(location.pathname)
+                    ? "text-primary border-2 border-primary"
+                    : "text-green-400 hover:text-white"
+                }`}
+              >
+                📊 Mon Espace
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
                   }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  📊 Mon Espace
-                  <svg
-                    className={`w-4 h-4 transition-transform ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
-                {dropdownOpen && (
-                  <div className="absolute top-full mt-2 w-56 bg-black border-2 border-primary/50 rounded-xl shadow-2xl overflow-hidden">
+              {dropdownOpen && (
+                <div className="absolute top-full mt-2 w-56 bg-black border-2 border-primary/50 rounded-xl shadow-2xl overflow-hidden">
+                  <DropdownLink
+                    to="/bankroll"
+                    icon="💰"
+                    label="Bankroll"
+                    onClick={() => setDropdownOpen(false)}
+                    active={isActive("/bankroll")}
+                  />
+                  <DropdownLink
+                    to="/strategies"
+                    icon="🎯"
+                    label="Stratégies"
+                    onClick={() => setDropdownOpen(false)}
+                    active={isActive("/strategies")}
+                  />
+                  <DropdownLink
+                    to="/mes-stats"
+                    icon="📊"
+                    label="Mes Stats"
+                    onClick={() => setDropdownOpen(false)}
+                    active={isActive("/mes-stats")}
+                  />
+                  <DropdownLink
+                    to="/chat"
+                    icon="💬"
+                    label="Chat"
+                    onClick={() => setDropdownOpen(false)}
+                    active={isActive("/chat")}
+                  />
+                  {isAuth && user?.isAdmin && (
                     <DropdownLink
-                      to="/bankroll"
-                      icon="💰"
-                      label="Bankroll"
+                      to="/admin"
+                      icon="🔧"
+                      label="Admin"
                       onClick={() => setDropdownOpen(false)}
-                      active={isActive("/bankroll")}
+                      active={isActive("/admin")}
                     />
-                    <DropdownLink
-                      to="/strategies"
-                      icon="🎯"
-                      label="Stratégies"
-                      onClick={() => setDropdownOpen(false)}
-                      active={isActive("/strategies")}
-                    />
-                    <DropdownLink
-                      to="/mes-stats"
-                      icon="📊"
-                      label="Mes Stats"
-                      onClick={() => setDropdownOpen(false)}
-                      active={isActive("/mes-stats")}
-                    />
-                    <DropdownLink
-                      to="/chat"
-                      icon="💬"
-                      label="Chat"
-                      onClick={() => setDropdownOpen(false)}
-                      active={isActive("/chat")}
-                    />
-                    {user?.isAdmin && (
-                      <DropdownLink
-                        to="/admin"
-                        icon="🔧"
-                        label="Admin"
-                        onClick={() => setDropdownOpen(false)}
-                        active={isActive("/admin")}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Droite : Auth */}
@@ -227,8 +224,12 @@ export default function Navbar() {
             >
               🟢 Scores Live
             </Link>
+
+            {/* Section Mon Espace */}
+            <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-900/50">
+              📊 Mon Espace
+            </div>
             
-            {/* Toujours visible pour tous */}
             <Link
               to="/bankroll"
               className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
@@ -265,6 +266,7 @@ export default function Navbar() {
             >
               💬 Chat
             </Link>
+
             <Link
               to="/abonnements"
               className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
