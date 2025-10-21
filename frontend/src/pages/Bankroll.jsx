@@ -115,29 +115,44 @@ export default function Bankroll() {
   }, [stakePct]);
 
   return (
-    <section className="py-16 px-4 max-w-6xl mx-auto">
-      {/* Hero Header */}
-      <div className="text-center mb-12">
-        <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-          <span className="text-primary font-semibold text-sm">💰 Outil de gestion</span>
+    <section className="py-16 px-4 max-w-6xl mx-auto relative overflow-hidden">
+      {/* Particules de fond animées */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "0s" }}></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-green-400/15 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }}></div>
+      </div>
+
+      {/* Hero Header avec effet 3D */}
+      <div className="text-center mb-12 relative z-10 animate-slide-down">
+        <div className="inline-block px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-green-400/20 border-2 border-emerald-500 rounded-full mb-6 hover:scale-110 transition-all duration-300 cursor-pointer group">
+          <span className="text-emerald-400 font-semibold text-sm flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            💰 Outil de gestion
+          </span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 perspective-text">
+          <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-emerald-500 bg-clip-text text-transparent drop-shadow-glow-green animate-gradient">
             Calculateur de Bankroll
           </span>
         </h1>
-        <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
-          Définis ton <span className="text-primary font-semibold">capital</span>, ton{" "}
-          <span className="text-primary font-semibold">pourcentage de mise</span> et obtiens
+        <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+          Définis ton <span className="text-emerald-400 font-bold">capital</span>, ton{" "}
+          <span className="text-green-400 font-bold">pourcentage de mise</span> et obtiens
           des recommandations intelligentes pour protéger ta bankroll.
         </p>
       </div>
 
-      {/* Main Calculator */}
-      <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl p-8 mb-10">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <span>🎯</span>
-          Paramètres de calcul
+      {/* Main Calculator avec effet carte 3D */}
+      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500">
+        {/* Effet de brillance au survol */}
+        <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer"></div>
+        </div>
+        
+        <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
+          <span className="text-4xl animate-bounce-slow">🎯</span>
+          <span className="bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">Paramètres de calcul</span>
         </h2>
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -295,11 +310,78 @@ export default function Bankroll() {
       {/* Disclaimer */}
       <div className="mt-10 p-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl">
         <p className="text-amber-300 text-center leading-relaxed">
-          <span className="font-bold">⚠️ Important :</span> Les résultats sont indicatifs et basés sur tes paramètres.
-          Aucun système ne garantit des gains. Parie de manière responsable et ne mise jamais plus que ce que tu peux te permettre de perdre.
+        <span className="font-bold">⚠️ Important :</span> Les résultats sont indicatifs et basés sur tes paramètres.
+        Aucun système ne garantit des gains. Parie de manière responsable et ne mise jamais plus que ce que tu peux te permettre de perdre.
         </p>
-      </div>
-    </section>
+        </div>
+
+    {/* Styles CSS pour les animations */}
+    <style>{`
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        33% { transform: translateY(-20px) rotate(5deg); }
+        66% { transform: translateY(-10px) rotate(-5deg); }
+      }
+      @keyframes gradient {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      @keyframes slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes slide-up {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      .animate-gradient {
+        background-size: 200% auto;
+        animation: gradient 3s linear infinite;
+      }
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+      .animate-slide-down {
+        animation: slide-down 0.6s ease-out;
+      }
+      .animate-slide-up {
+        animation: slide-up 0.6s ease-out;
+      }
+      .animate-bounce-slow {
+        animation: bounce-slow 2s ease-in-out infinite;
+      }
+      .drop-shadow-glow-green {
+        filter: drop-shadow(0 0 30px rgba(52, 211, 153, 0.5));
+      }
+      .perspective-text {
+        perspective: 1000px;
+        transform-style: preserve-3d;
+      }
+    `}</style>
+  </section>
   );
 }
 
@@ -307,9 +389,9 @@ export default function Bankroll() {
 
 function InputField({ label, value, onChange, type, min, max, step, icon, helper }) {
   return (
-    <div className="space-y-2">
-      <label className="flex items-center gap-2 text-white font-semibold">
-        <span>{icon}</span>
+    <div className="space-y-2 relative z-10 group">
+      <label className="flex items-center gap-2 text-white font-semibold group-hover:text-emerald-400 transition-colors">
+        <span className="text-2xl group-hover:scale-125 transition-transform">{icon}</span>
         {label}
       </label>
       <input 
@@ -319,7 +401,7 @@ function InputField({ label, value, onChange, type, min, max, step, icon, helper
         step={step}
         value={value}
         onChange={onChange}
-        className="w-full bg-black/50 border-2 border-primary/30 rounded-xl p-3 text-white font-semibold focus:border-primary focus:outline-none transition-all"
+        className="w-full bg-black/50 border-2 border-emerald-500/30 rounded-xl p-4 text-white font-semibold focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/20"
       />
       {helper && (
         <div className="text-gray-400 text-sm">
@@ -332,11 +414,18 @@ function InputField({ label, value, onChange, type, min, max, step, icon, helper
 
 function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
-    <div className={`bg-gradient-to-br ${gradient} border-2 border-primary/30 rounded-2xl p-6 text-center hover:scale-105 transition-all duration-300`}>
-      <div className="text-4xl mb-3">{icon}</div>
-      <div className="text-gray-300 text-sm mb-2">{title}</div>
-      <div className={`text-3xl font-extrabold ${positive ? "text-emerald-400" : negative ? "text-red-400" : "text-white"}`}>
-        {value}
+    <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group animate-slide-up cursor-pointer`}>
+      {/* Effet 3D au survol */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      
+      <div className="relative z-10">
+        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <div className="text-gray-300 text-sm mb-2 uppercase tracking-wider">{title}</div>
+        <div className={`text-4xl font-extrabold ${
+          positive ? "text-emerald-400" : negative ? "text-red-400" : "text-white"
+        } drop-shadow-lg`}>
+          {value}
+        </div>
       </div>
     </div>
   );
@@ -360,16 +449,19 @@ function AdvancedCard({ title, icon, value, unit, valueColor, description }) {
 
 function TipCard({ icon, title, desc, color }) {
   const colors = {
-    emerald: "from-emerald-500/20 to-green-500/20 border-emerald-500/30",
-    yellow: "from-yellow-500/20 to-amber-500/20 border-yellow-500/30",
-    red: "from-red-500/20 to-orange-500/20 border-red-500/30",
+    emerald: "from-emerald-500/20 to-green-500/20 border-emerald-500/40 hover:shadow-emerald-500/50",
+    yellow: "from-yellow-500/20 to-amber-500/20 border-yellow-500/40 hover:shadow-yellow-500/50",
+    red: "from-red-500/20 to-orange-500/20 border-red-500/40 hover:shadow-red-500/50",
   };
 
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-105 transition-all duration-300`}>
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
-      <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="relative z-10">
+        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
+        <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+      </div>
     </div>
   );
 }

@@ -187,36 +187,47 @@ export default function Strategie() {
   ];
 
   return (
-    <section className="py-16 px-4 max-w-7xl mx-auto">
+    <section className="py-16 px-4 max-w-7xl mx-auto relative overflow-hidden">
+      {/* Particules animées */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 right-10 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-float" style={{ animationDelay: "0s" }}></div>
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-pink-400/15 rounded-full blur-3xl animate-float" style={{ animationDelay: "3s" }}></div>
+        <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "6s" }}></div>
+      </div>
+
       {/* Hero Header */}
-      <div className="text-center mb-12">
-        <div className="inline-block px-4 py-2 bg-primary/20 border border-primary rounded-full mb-4">
-          <span className="text-primary font-semibold text-sm">🎓 Formation exclusive</span>
+      <div className="text-center mb-12 relative z-10 animate-fade-in">
+        <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-500/20 to-pink-400/20 border-2 border-purple-500 rounded-full mb-6 hover:scale-110 transition-all duration-300 cursor-pointer group">
+          <span className="text-purple-400 font-semibold text-sm flex items-center gap-2">
+            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+            🎯 Formation exclusive
+          </span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 perspective-text">
+          <span className="bg-gradient-to-r from-purple-400 via-pink-300 to-purple-500 bg-clip-text text-transparent drop-shadow-glow-purple animate-gradient">
             Stratégies & Apprentissage
           </span>
         </h1>
-        <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
-          Découvre les <span className="text-primary font-semibold">méthodes gagnantes</span> des
+        <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+          Découvre les <span className="text-purple-400 font-bold">méthodes gagnantes</span> des
           parieurs professionnels et apprends à gérer ton capital comme un pro.
         </p>
       </div>
 
-      {/* Video Section */}
-      <div className="mb-16">
-        <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl overflow-hidden">
-          <div className="aspect-video w-full bg-black/50 flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="text-6xl mb-4">🎬</div>
-              <h3 className="text-2xl font-bold text-white mb-3">
+      {/* Video Section avec effet 3D */}
+      <div className="mb-16 relative z-10 animate-slide-up">
+        <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl overflow-hidden group hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 backdrop-blur-xl">
+          <div className="aspect-video w-full bg-black/50 flex items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="text-center p-8 relative z-10">
+              <div className="text-7xl mb-6 animate-bounce-slow">🎬</div>
+              <h3 className="text-3xl font-bold text-white mb-4">
                 Vidéo d'introduction complète
               </h3>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-400 mb-6 text-lg">
                 Intègre ici ta vidéo explicative (YouTube, Vimeo, ou lecteur direct)
               </p>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 px-4 py-2 bg-gray-800/50 rounded-lg inline-block">
                 📹 Format recommandé : MP4 • Durée : 10-15 minutes
               </div>
             </div>
@@ -225,13 +236,13 @@ export default function Strategie() {
       </div>
 
       {/* Strategies Grid */}
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-          <span>🎯</span>
-          Les 4 piliers du pari rentable
+      <div className="mb-12 relative z-10">
+        <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 animate-slide-up">
+          <span className="text-5xl animate-bounce-slow">🎯</span>
+          <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Les 4 piliers du pari rentable</span>
         </h2>
         <div className="grid md:grid-cols-2 gap-6">
-          {strategies.map((strategy) => (
+          {strategies.map((strategy, index) => (
             <StrategyCard
               key={strategy.id}
               strategy={strategy}
@@ -241,16 +252,17 @@ export default function Strategie() {
                   expandedStrategy === strategy.id ? null : strategy.id
                 )
               }
+              delay={index * 100}
             />
           ))}
         </div>
       </div>
 
       {/* Quick Tips */}
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-          <span>⚡</span>
-          Conseils rapides
+      <div className="mb-12 relative z-10">
+        <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 animate-slide-up">
+          <span className="text-5xl">⚡</span>
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Conseils rapides</span>
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           <QuickTip
@@ -275,12 +287,13 @@ export default function Strategie() {
       </div>
 
       {/* Resources */}
-      <div className="bg-gradient-to-br from-primary/10 via-black to-primary/10 border-2 border-primary/30 rounded-3xl p-10">
-        <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-          <span>📚</span>
-          Ressources complémentaires
+      <div className="bg-gradient-to-br from-purple-500/10 via-black to-pink-500/10 border-2 border-purple-500/30 rounded-3xl p-10 relative z-10 animate-slide-up group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+        <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
+          <span className="text-5xl animate-bounce-slow">📚</span>
+          <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Ressources complémentaires</span>
         </h2>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 relative z-10">
           <ResourceCard
             icon="🧮"
             title="Calculateur de Bankroll"
@@ -299,120 +312,199 @@ export default function Strategie() {
       </div>
 
       {/* Call to Action */}
-      <div className="mt-12 text-center p-8 bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-3xl">
-        <h3 className="text-2xl font-bold text-white mb-4">
-          💬 Des questions sur ces stratégies ?
-        </h3>
-        <p className="text-gray-300 mb-6">
-          Notre équipe est là pour t'aider à mettre en place ces méthodes efficacement.
-        </p>
-        <a
-          href="https://wa.me/33695962084"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-black px-8 py-4 rounded-2xl font-bold hover:scale-105 transition-all shadow-xl"
-        >
-          Contacter le support
-        </a>
+      <div className="mt-12 text-center p-8 bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl relative z-10 group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+        <div className="relative z-10">
+          <h3 className="text-3xl font-bold text-white mb-4">
+            💬 Des questions sur ces stratégies ?
+          </h3>
+          <p className="text-gray-300 mb-6 text-lg">
+            Notre équipe est là pour t'aider à mettre en place ces méthodes efficacement.
+          </p>
+          <a
+            href="https://wa.me/33695962084"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block bg-gradient-to-r from-purple-500 to-pink-400 text-white px-10 py-4 rounded-2xl font-bold hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-purple-500/50"
+          >
+            📞 Contacter le support
+          </a>
+        </div>
       </div>
+
+      {/* Styles CSS */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-25px) rotate(3deg); }
+          66% { transform: translateY(-15px) rotate(-3deg); }
+        }
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+        .animate-float {
+          animation: float 7s ease-in-out infinite;
+        }
+        .animate-gradient {
+          background-size: 200% auto;
+          animation: gradient 3s linear infinite;
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.7s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.7s ease-out;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2.5s ease-in-out infinite;
+        }
+        .drop-shadow-glow-purple {
+          filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.6));
+        }
+        .perspective-text {
+          perspective: 1000px;
+          transform-style: preserve-3d;
+        }
+      `}</style>
     </section>
   );
 }
 
 /* ---------- Composants ---------- */
 
-function StrategyCard({ strategy, isExpanded, onToggle }) {
+function StrategyCard({ strategy, isExpanded, onToggle, delay }) {
   const levelColors = {
-    emerald: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    yellow: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-    red: "bg-red-500/20 text-red-300 border-red-500/30",
-    blue: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    emerald: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    yellow: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
+    red: "bg-red-500/20 text-red-300 border-red-500/40",
+    blue: "bg-blue-500/20 text-blue-300 border-blue-500/40",
   };
 
   return (
-    <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-primary/30 rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="text-4xl">{strategy.icon}</div>
-          <div>
-            <h3 className="text-xl font-bold text-white">{strategy.title}</h3>
-            <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold border ${levelColors[strategy.levelColor]}`}>
-              {strategy.level}
-            </span>
+    <div 
+      className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/10 border-2 border-purple-500/30 rounded-2xl p-6 hover:scale-[1.03] transition-all duration-500 group backdrop-blur-xl hover:shadow-2xl hover:shadow-purple-500/20 animate-slide-up relative overflow-hidden"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {/* Effet brillance */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="text-5xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{strategy.icon}</div>
+            <div>
+              <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">{strategy.title}</h3>
+              <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold border ${levelColors[strategy.levelColor]}`}>
+                {strategy.level}
+              </span>
+            </div>
           </div>
         </div>
+
+        <p className="text-gray-300 mb-4 leading-relaxed">{strategy.short}</p>
+
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-purple-500/30 rounded-xl hover:bg-purple-500/10 hover:border-purple-400 transition-all font-semibold text-sm group/btn"
+        >
+          <span className="group-hover/btn:text-purple-400 transition-colors">
+            {isExpanded ? "Masquer les détails" : "Voir les détails"}
+          </span>
+          <span className="group-hover/btn:scale-125 transition-transform">{isExpanded ? "▲" : "▼"}</span>
+        </button>
+
+        {isExpanded && (
+          <div className="mt-6 space-y-6 pt-6 border-t border-purple-500/20 animate-slide-up">
+            <div>
+              <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <span>📋</span> Description
+              </h4>
+              <p className="text-gray-300 leading-relaxed">{strategy.description}</p>
+            </div>
+
+            <div>
+              <h4 className="text-emerald-400 font-semibold mb-3 flex items-center gap-2">
+                <span>✅</span> Avantages
+              </h4>
+              <ul className="space-y-2">
+                {strategy.pros.map((pro, i) => (
+                  <li key={i} className="flex items-start gap-2 text-gray-300">
+                    <span className="text-emerald-400 mt-1">•</span>
+                    {pro}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-red-400 font-semibold mb-3 flex items-center gap-2">
+                <span>⚠️</span> Inconvénients
+              </h4>
+              <ul className="space-y-2">
+                {strategy.cons.map((con, i) => (
+                  <li key={i} className="flex items-start gap-2 text-gray-300">
+                    <span className="text-red-400 mt-1">•</span>
+                    {con}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-purple-400 font-semibold mb-3 flex items-center gap-2">
+                <span>💡</span> Conseils pratiques
+              </h4>
+              <ul className="space-y-2">
+                {strategy.tips.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2 text-gray-300">
+                    <span className="text-purple-400 mt-1">→</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
-
-      <p className="text-gray-300 mb-4">{strategy.short}</p>
-
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-primary/30 rounded-xl hover:bg-primary/10 transition-all font-semibold text-sm"
-      >
-        {isExpanded ? "Masquer les détails" : "Voir les détails"}
-        <span>{isExpanded ? "▲" : "▼"}</span>
-      </button>
-
-      {isExpanded && (
-        <div className="mt-6 space-y-6 pt-6 border-t border-primary/20">
-          <div>
-            <h4 className="text-white font-semibold mb-3">📋 Description</h4>
-            <p className="text-gray-300 leading-relaxed">{strategy.description}</p>
-          </div>
-
-          <div>
-            <h4 className="text-emerald-400 font-semibold mb-3">✅ Avantages</h4>
-            <ul className="space-y-2">
-              {strategy.pros.map((pro, i) => (
-                <li key={i} className="flex items-start gap-2 text-gray-300">
-                  <span className="text-emerald-400 mt-1">•</span>
-                  {pro}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-red-400 font-semibold mb-3">⚠️ Inconvénients</h4>
-            <ul className="space-y-2">
-              {strategy.cons.map((con, i) => (
-                <li key={i} className="flex items-start gap-2 text-gray-300">
-                  <span className="text-red-400 mt-1">•</span>
-                  {con}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-primary font-semibold mb-3">💡 Conseils pratiques</h4>
-            <ul className="space-y-2">
-              {strategy.tips.map((tip, i) => (
-                <li key={i} className="flex items-start gap-2 text-gray-300">
-                  <span className="text-primary mt-1">→</span>
-                  {tip}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 function QuickTip({ icon, title, desc, color }) {
   const colors = {
-    red: "from-red-500/20 to-orange-500/20 border-red-500/30",
-    blue: "from-blue-500/20 to-cyan-500/20 border-blue-500/30",
-    purple: "from-purple-500/20 to-pink-500/20 border-purple-500/30",
+    red: "from-red-500/20 to-orange-500/20 border-red-500/40 hover:shadow-red-500/50",
+    blue: "from-blue-500/20 to-cyan-500/20 border-blue-500/40 hover:shadow-blue-500/50",
+    purple: "from-purple-500/20 to-pink-500/20 border-purple-500/40 hover:shadow-purple-500/50",
   };
 
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-105 transition-all duration-300`}>
-      <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
-      <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="relative z-10">
+        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
+        <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+      </div>
     </div>
   );
 }
@@ -421,16 +513,16 @@ function ResourceCard({ icon, title, desc, link, linkText }) {
   return (
     <Link
       to={link}
-      className="block bg-black/50 border-2 border-primary/30 rounded-2xl p-6 hover:scale-105 transition-all duration-300 hover:border-primary/50"
+      className="block bg-black/50 border-2 border-purple-500/30 rounded-2xl p-6 hover:scale-105 hover:border-purple-400 transition-all duration-300 group hover:shadow-xl hover:shadow-purple-500/20"
     >
       <div className="flex items-start gap-4">
-        <div className="text-4xl flex-shrink-0">{icon}</div>
+        <div className="text-5xl flex-shrink-0 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <div className="flex-grow">
-          <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
-          <p className="text-gray-400 text-sm mb-4">{desc}</p>
-          <div className="flex items-center gap-2 text-primary font-semibold">
+          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-purple-300 transition-colors">{title}</h3>
+          <p className="text-gray-400 text-sm mb-4 leading-relaxed">{desc}</p>
+          <div className="flex items-center gap-2 text-purple-400 font-semibold group-hover:gap-4 transition-all">
             {linkText}
-            <span>→</span>
+            <span className="group-hover:translate-x-2 transition-transform">→</span>
           </div>
         </div>
       </div>
