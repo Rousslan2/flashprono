@@ -309,6 +309,18 @@ export default function Scores() {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
+        @keyframes twinkle-1 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+        @keyframes twinkle-2 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(2); }
+        }
+        @keyframes twinkle-3 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.8); }
+        }
         .animate-float {
           animation: float 7s ease-in-out infinite;
         }
@@ -330,6 +342,15 @@ export default function Scores() {
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
+        }
+        .animate-twinkle-1 {
+          animation: twinkle-1 1s ease-in-out infinite;
+        }
+        .animate-twinkle-2 {
+          animation: twinkle-2 1.2s ease-in-out infinite 0.3s;
+        }
+        .animate-twinkle-3 {
+          animation: twinkle-3 1.4s ease-in-out infinite 0.6s;
         }
         .drop-shadow-glow-green {
           filter: drop-shadow(0 0 30px rgba(74, 222, 128, 0.6));
@@ -384,7 +405,12 @@ function StatCard({ icon, label, value, color, gradient }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 ${colorClasses[color]} rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group cursor-pointer`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      {/* Étoiles scintillantes */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-3 right-5 w-1 h-1 bg-white rounded-full animate-twinkle-1"></div>
+        <div className="absolute bottom-4 left-6 w-1 h-1 bg-green-300 rounded-full animate-twinkle-2"></div>
+        <div className="absolute top-1/2 right-8 w-1 h-1 bg-lime-300 rounded-full animate-twinkle-3"></div>
+      </div>
       <div className="relative z-10">
         <div className="text-4xl mb-3 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <div className="text-3xl font-extrabold text-white mb-2">{value}</div>
@@ -419,7 +445,11 @@ function MatchCard({ match, type, delay }) {
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Effet brillance */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-4 left-8 w-1 h-1 bg-green-300 rounded-full animate-twinkle-1"></div>
+        <div className="absolute bottom-8 right-10 w-1 h-1 bg-lime-300 rounded-full animate-twinkle-2"></div>
+        <div className="absolute top-1/3 right-12 w-1 h-1 bg-emerald-300 rounded-full animate-twinkle-3"></div>
+      </div>
 
       <div className="relative z-10">
         {/* Header */}

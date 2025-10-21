@@ -218,7 +218,12 @@ export default function Strategie() {
       <div className="mb-16 relative z-10 animate-slide-up">
         <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl overflow-hidden group hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 backdrop-blur-xl">
           <div className="aspect-video w-full bg-black/50 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {/* Particules lumineuses violettes */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+              <div className="absolute top-10 left-20 w-1 h-10 bg-gradient-to-b from-purple-400 to-transparent animate-spark-1"></div>
+              <div className="absolute bottom-20 right-24 w-1 h-10 bg-gradient-to-b from-pink-400 to-transparent animate-spark-2"></div>
+              <div className="absolute top-1/2 left-1/3 w-1 h-8 bg-gradient-to-b from-purple-300 to-transparent animate-spark-3"></div>
+            </div>
             <div className="text-center p-8 relative z-10">
               <div className="text-7xl mb-6 animate-bounce-slow">🎬</div>
               <h3 className="text-3xl font-bold text-white mb-4">
@@ -287,8 +292,12 @@ export default function Strategie() {
       </div>
 
       {/* Resources */}
-      <div className="bg-gradient-to-br from-purple-500/10 via-black to-pink-500/10 border-2 border-purple-500/30 rounded-3xl p-10 relative z-10 animate-slide-up group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+      <div className="bg-gradient-to-br from-purple-500/10 via-black to-pink-500/10 border-2 border-purple-500/30 rounded-3xl p-10 relative z-10 animate-slide-up group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 overflow-hidden">
+        {/* Particules lumineuses */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className="absolute top-8 left-12 w-1 h-6 bg-gradient-to-b from-purple-400 to-transparent animate-spark-1"></div>
+          <div className="absolute bottom-10 right-16 w-1 h-6 bg-gradient-to-b from-pink-400 to-transparent animate-spark-2"></div>
+        </div>
         <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
           <span className="text-5xl animate-bounce-slow">📚</span>
           <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Ressources complémentaires</span>
@@ -312,8 +321,13 @@ export default function Strategie() {
       </div>
 
       {/* Call to Action */}
-      <div className="mt-12 text-center p-8 bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl relative z-10 group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
+      <div className="mt-12 text-center p-8 bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl relative z-10 group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 backdrop-blur-xl overflow-hidden">
+        {/* Étoiles scintillantes */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="absolute top-6 left-10 w-1 h-1 bg-purple-300 rounded-full animate-twinkle-1"></div>
+          <div className="absolute bottom-8 right-12 w-1 h-1 bg-pink-300 rounded-full animate-twinkle-2"></div>
+          <div className="absolute top-10 right-20 w-1 h-1 bg-purple-400 rounded-full animate-twinkle-3"></div>
+        </div>
         <div className="relative z-10">
           <h3 className="text-3xl font-bold text-white mb-4">
             💬 Des questions sur ces stratégies ?
@@ -343,6 +357,38 @@ export default function Strategie() {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
+        @keyframes spark-1 {
+          0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+          50% { opacity: 1; transform: translateY(20px) scale(1.2); }
+        }
+        @keyframes spark-2 {
+          0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+          50% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+        }
+        @keyframes spark-3 {
+          0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+          50% { opacity: 1; transform: translateY(15px) scale(1.1); }
+        }
+        @keyframes twinkle-1 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+        @keyframes twinkle-2 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(2); }
+        }
+        @keyframes twinkle-3 {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.8); }
+        }
+        @keyframes blink-1 {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 1; }
+        }
+        @keyframes blink-2 {
+          0%, 100% { opacity: 0; }
+          25%, 75% { opacity: 1; }
+        }
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
@@ -365,6 +411,30 @@ export default function Strategie() {
         .animate-gradient {
           background-size: 200% auto;
           animation: gradient 3s linear infinite;
+        }
+        .animate-spark-1 {
+          animation: spark-1 1.5s ease-in-out infinite;
+        }
+        .animate-spark-2 {
+          animation: spark-2 1.8s ease-in-out infinite 0.3s;
+        }
+        .animate-spark-3 {
+          animation: spark-3 2s ease-in-out infinite 0.6s;
+        }
+        .animate-twinkle-1 {
+          animation: twinkle-1 1s ease-in-out infinite;
+        }
+        .animate-twinkle-2 {
+          animation: twinkle-2 1.2s ease-in-out infinite 0.3s;
+        }
+        .animate-twinkle-3 {
+          animation: twinkle-3 1.4s ease-in-out infinite 0.6s;
+        }
+        .animate-blink-1 {
+          animation: blink-1 1s ease-in-out infinite;
+        }
+        .animate-blink-2 {
+          animation: blink-2 1.5s ease-in-out infinite 0.5s;
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
@@ -405,8 +475,12 @@ function StrategyCard({ strategy, isExpanded, onToggle, delay }) {
       className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/10 border-2 border-purple-500/30 rounded-2xl p-6 hover:scale-[1.03] transition-all duration-500 group backdrop-blur-xl hover:shadow-2xl hover:shadow-purple-500/20 animate-slide-up relative overflow-hidden"
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Effet brillance */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+      {/* Étoiles scintillantes */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-4 right-6 w-1 h-1 bg-purple-300 rounded-full animate-twinkle-1"></div>
+        <div className="absolute bottom-8 left-8 w-1 h-1 bg-pink-300 rounded-full animate-twinkle-2"></div>
+        <div className="absolute top-1/2 right-10 w-1 h-1 bg-purple-400 rounded-full animate-twinkle-3"></div>
+      </div>
       
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-4">
@@ -499,7 +573,11 @@ function QuickTip({ icon, title, desc, color }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      {/* Points lumineux clignotants */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-4 left-6 w-1.5 h-1.5 bg-white rounded-full animate-blink-1"></div>
+        <div className="absolute bottom-6 right-8 w-1.5 h-1.5 bg-white rounded-full animate-blink-2"></div>
+      </div>
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <h3 className="text-white font-bold text-lg mb-2">{title}</h3>

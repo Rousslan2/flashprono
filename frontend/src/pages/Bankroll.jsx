@@ -144,10 +144,13 @@ export default function Bankroll() {
       </div>
 
       {/* Main Calculator avec effet carte 3D */}
-      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500">
-        {/* Effet de brillance au survol */}
-        <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/5 to-transparent animate-shimmer"></div>
+      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-8 mb-10 relative group animate-slide-up backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden">
+        {/* Particules lumineuses au survol */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-1 h-8 bg-gradient-to-b from-emerald-400 to-transparent animate-spark-1"></div>
+          <div className="absolute top-1/3 right-1/4 w-1 h-8 bg-gradient-to-b from-emerald-400 to-transparent animate-spark-2"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-1 h-8 bg-gradient-to-b from-green-400 to-transparent animate-spark-3"></div>
+          <div className="absolute top-1/2 right-1/3 w-1 h-8 bg-gradient-to-b from-emerald-300 to-transparent animate-spark-4"></div>
         </div>
         
         <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
@@ -330,6 +333,42 @@ export default function Bankroll() {
         0% { transform: translateX(-100%); }
         100% { transform: translateX(100%); }
       }
+      @keyframes spark-1 {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+        50% { opacity: 1; transform: translateY(20px) scale(1.2); }
+      }
+      @keyframes spark-2 {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+        50% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+      }
+      @keyframes spark-3 {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+        50% { opacity: 1; transform: translateY(15px) scale(1.1); }
+      }
+      @keyframes spark-4 {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+        50% { opacity: 1; transform: translateY(-15px) scale(1.1); }
+      }
+      @keyframes twinkle-1 {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1.5); }
+      }
+      @keyframes twinkle-2 {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(2); }
+      }
+      @keyframes twinkle-3 {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1.8); }
+      }
+      @keyframes blink-1 {
+        0%, 100% { opacity: 0; }
+        50% { opacity: 1; }
+      }
+      @keyframes blink-2 {
+        0%, 100% { opacity: 0; }
+        25%, 75% { opacity: 1; }
+      }
       @keyframes slide-down {
         from {
           opacity: 0;
@@ -363,6 +402,33 @@ export default function Bankroll() {
       }
       .animate-shimmer {
         animation: shimmer 2s infinite;
+      }
+      .animate-spark-1 {
+        animation: spark-1 1.5s ease-in-out infinite;
+      }
+      .animate-spark-2 {
+        animation: spark-2 1.8s ease-in-out infinite 0.3s;
+      }
+      .animate-spark-3 {
+        animation: spark-3 2s ease-in-out infinite 0.6s;
+      }
+      .animate-spark-4 {
+        animation: spark-4 1.6s ease-in-out infinite 0.9s;
+      }
+      .animate-twinkle-1 {
+        animation: twinkle-1 1s ease-in-out infinite;
+      }
+      .animate-twinkle-2 {
+        animation: twinkle-2 1.2s ease-in-out infinite 0.3s;
+      }
+      .animate-twinkle-3 {
+        animation: twinkle-3 1.4s ease-in-out infinite 0.6s;
+      }
+      .animate-blink-1 {
+        animation: blink-1 1s ease-in-out infinite;
+      }
+      .animate-blink-2 {
+        animation: blink-2 1.5s ease-in-out infinite 0.5s;
       }
       .animate-slide-down {
         animation: slide-down 0.6s ease-out;
@@ -415,8 +481,13 @@ function InputField({ label, value, onChange, type, min, max, step, icon, helper
 function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-110 transition-all duration-500 shadow-xl hover:shadow-2xl group animate-slide-up cursor-pointer`}>
-      {/* Effet 3D au survol */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/3 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      {/* Petites étoiles scintillantes au survol */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-2 right-4 w-1 h-1 bg-white rounded-full animate-twinkle-1"></div>
+        <div className="absolute top-4 left-6 w-1 h-1 bg-emerald-300 rounded-full animate-twinkle-2"></div>
+        <div className="absolute bottom-6 right-8 w-1 h-1 bg-white rounded-full animate-twinkle-3"></div>
+        <div className="absolute bottom-3 left-4 w-1 h-1 bg-emerald-400 rounded-full animate-twinkle-1" style={{ animationDelay: "0.5s" }}></div>
+      </div>
       
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
@@ -456,7 +527,11 @@ function TipCard({ icon, title, desc, color }) {
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      {/* Points lumineux qui clignotent */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <div className="absolute top-3 left-5 w-1.5 h-1.5 bg-white rounded-full animate-blink-1"></div>
+        <div className="absolute bottom-5 right-6 w-1.5 h-1.5 bg-white rounded-full animate-blink-2"></div>
+      </div>
       <div className="relative z-10">
         <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
         <h3 className="text-white font-bold text-lg mb-2">{title}</h3>
