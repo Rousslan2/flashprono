@@ -222,11 +222,13 @@ export default function Scores() {
           </div>
         ) : error ? (
           <div className="text-center py-20 animate-shake">
-            <div className="text-7xl mb-6">⚠️</div>
-            <h3 className="text-3xl font-bold text-yellow-400 mb-4">
-              Information
+            <div className="text-7xl mb-6">🔧</div>
+            <h3 className="text-3xl font-bold text-amber-400 mb-4">
+              API en maintenance
             </h3>
-            <p className="text-gray-300 mb-6 max-w-lg mx-auto text-lg bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">{error}</p>
+            <p className="text-gray-300 mb-6 max-w-lg mx-auto text-lg bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+              L'API des scores est temporairement indisponible. Reviens plus tard !
+            </p>
             <button
               onClick={loadScores}
               className="px-8 py-4 bg-gradient-to-r from-green-500 to-lime-400 text-white rounded-xl font-bold hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-green-500/50"
