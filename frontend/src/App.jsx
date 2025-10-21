@@ -85,42 +85,11 @@ export default function App() {
             }
           />
 
-          {/* 🧠 Nouvelle section : Bankroll & Stratégies */}
-          <Route
-            path="/bankroll"
-            element={
-              <ProtectedRoute>
-                <Bankroll />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/strategies"
-            element={
-              <ProtectedRoute>
-                <Strategie />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/mes-stats"
-            element={
-              <ProtectedRoute>
-                <MesStats />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
+          {/* 🧠 Nouvelle section : Bankroll & Stratégies - ACCESSIBLE À TOUS */}
+          <Route path="/bankroll" element={<Bankroll />} />
+          <Route path="/strategies" element={<Strategie />} />
+          <Route path="/mes-stats" element={<MesStats />} />
+          <Route path="/chat" element={<Chat />} />
           
           <Route path="/scores" element={<Scores />} />
         </Routes>

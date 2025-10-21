@@ -92,44 +92,69 @@ export default function MesStats() {
   if (!active) {
     return (
       <section className="py-20 px-4 text-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-          <div className="absolute top-20 left-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-emerald-500 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-64 sm:w-80 md:w-96 h-64 sm:h-80 md:h-96 bg-blue-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        {/* Animated background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
+          <div className="absolute w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse" style={{ animationDelay: "1s" }}></div>
         </div>
 
         <div className="max-w-3xl mx-auto relative z-10">
-          <div className="mb-8 animate-bounce-slow">
-            <div className="inline-block w-24 h-24 bg-gradient-to-br from-emerald-500 to-blue-400 rounded-full flex items-center justify-center mb-6 text-5xl border-4 border-white/20 shadow-2xl">
+          <div className="mb-8 animate-float">
+            <div className="inline-block w-24 h-24 bg-gradient-to-br from-blue-500/30 to-indigo-400/30 rounded-3xl flex items-center justify-center mb-6 text-5xl border-2 border-blue-500/40 shadow-2xl backdrop-blur-sm transform hover:scale-110 transition-all duration-500">
               🔒
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent animate-gradient-x">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent animate-gradient">
                 Mes Statistiques
               </span>
               <br />
-              <span className="text-white drop-shadow-lg">Réservées aux membres VIP</span>
+              <span className="text-white drop-shadow-glow">Réservées aux membres</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed mb-8">
-              Suis tous tes <span className="text-emerald-400 font-bold">pronos</span>, analyse ton <span className="text-blue-400 font-bold">taux de réussite</span> et optimise tes <span className="text-yellow-400 font-bold">gains</span> !
+            <p className="text-xl text-gray-300 leading-relaxed mb-8">
+              Suis tous tes <span className="text-blue-400 font-semibold">pronos</span>, analyse ton{" "}
+              <span className="text-indigo-400 font-semibold">taux de réussite</span> et optimise tes{" "}
+              <span className="text-yellow-400 font-semibold">gains</span> !
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <FeaturePreview icon="🎯" title="Taux de réussite" desc="Analyse tes performances" />
-            <FeaturePreview icon="📈" title="ROI en temps réel" desc="Suivi de ta rentabilité" />
-            <FeaturePreview icon="💰" title="Gains totaux" desc="Vue d'ensemble de tes profits" />
+            <FeaturePreviewLock icon="🎯" title="Taux de réussite" desc="Analyse tes performances" delay="0" />
+            <FeaturePreviewLock icon="📈" title="ROI en temps réel" desc="Suivi de ta rentabilité" delay="100" />
+            <FeaturePreviewLock icon="💰" title="Gains totaux" desc="Vue d'ensemble de tes profits" delay="200" />
           </div>
 
           <Link
             to="/abonnements"
-            className="group relative inline-block"
+            className="inline-block bg-gradient-to-r from-blue-500 via-indigo-400 to-blue-500 text-white px-12 py-5 rounded-2xl font-bold text-lg hover:scale-110 hover:rotate-1 transition-all duration-300 shadow-2xl hover:shadow-blue-500/60 animate-gradient-slow"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-            <div className="relative bg-gradient-to-r from-emerald-500 to-blue-400 text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
-              ✨ Devenir membre VIP
-            </div>
+            🚀 Voir les abonnements
           </Link>
         </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          .animate-gradient {
+            background-size: 200% auto;
+            animation: gradient 3s linear infinite;
+          }
+          .animate-gradient-slow {
+            background-size: 200% auto;
+            animation: gradient 5s linear infinite;
+          }
+          .drop-shadow-glow {
+            filter: drop-shadow(0 0 20px rgba(96, 165, 250, 0.3));
+          }
+        `}</style>
       </section>
     );
   }
@@ -297,6 +322,19 @@ function FeaturePreview({ icon, title, desc }) {
   return (
     <div className="group bg-gradient-to-br from-emerald-500/10 to-blue-500/5 border-2 border-emerald-500/30 rounded-2xl p-6 text-center hover:scale-110 hover:shadow-2xl hover:shadow-emerald-500/50 transition-all duration-500 cursor-pointer">
       <div className="text-5xl mb-4 group-hover:scale-125 transition-transform duration-300">{icon}</div>
+      <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
+      <p className="text-gray-400 text-sm">{desc}</p>
+    </div>
+  );
+}
+
+function FeaturePreviewLock({ icon, title, desc, delay }) {
+  return (
+    <div 
+      className="bg-gradient-to-br from-blue-500/10 to-indigo-400/5 border-2 border-blue-500/30 rounded-2xl p-6 text-center transform hover:scale-110 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 cursor-pointer"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="text-5xl mb-4 animate-bounce">{icon}</div>
       <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
       <p className="text-gray-400 text-sm">{desc}</p>
     </div>

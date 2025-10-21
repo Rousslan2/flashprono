@@ -15,27 +15,69 @@ export default function Bankroll() {
 
   if (!active) {
     return (
-      <section className="py-20 px-4 text-center">
-        <div className="max-w-3xl mx-auto">
-          <div className="inline-block w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6 text-4xl border-2 border-primary/30">
-            🔒
+      <section className="py-20 px-4 text-center relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
+          <div className="absolute w-96 h-96 bg-green-400/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse" style={{ animationDelay: "1s" }}></div>
+        </div>
+
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="mb-8 animate-float">
+            <div className="inline-block w-24 h-24 bg-gradient-to-br from-emerald-500/30 to-green-400/30 rounded-3xl flex items-center justify-center mb-6 text-5xl border-2 border-emerald-500/40 shadow-2xl backdrop-blur-sm transform hover:scale-110 transition-all duration-500">
+              🔒
+            </div>
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+              <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-400 bg-clip-text text-transparent animate-gradient">
+                Gestion de Bankroll
+              </span>
+              <br />
+              <span className="text-white drop-shadow-glow">Réservé aux membres</span>
+            </h1>
+            <p className="text-xl text-gray-300 leading-relaxed mb-8">
+              Accède au <span className="text-emerald-400 font-semibold">calculateur intelligent</span> de bankroll,
+              apprends les meilleures stratégies de mise et protège ton capital.
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-            <span className="text-primary">Gestion de Bankroll</span>
-            <br />
-            <span className="text-white">Réservé aux membres</span>
-          </h1>
-          <p className="text-xl text-gray-300 leading-relaxed mb-8">
-            Accède au calculateur intelligent de bankroll, apprends les meilleures
-            stratégies de mise et protège ton capital.
-          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <FeaturePreview icon="💰" title="Calculateur intelligent" desc="Optimise tes mises" delay="0" />
+            <FeaturePreview icon="🛡️" title="Protection du capital" desc="Stratégies sécurisées" delay="100" />
+            <FeaturePreview icon="📈" title="Suivi de performance" desc="Analyse tes résultats" delay="200" />
+          </div>
+
           <Link
             to="/abonnements"
-            className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-black px-10 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-primary/50"
+            className="inline-block bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 text-white px-12 py-5 rounded-2xl font-bold text-lg hover:scale-110 hover:rotate-1 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/60 animate-gradient-slow"
           >
-            Voir les abonnements
+            🚀 Voir les abonnements
           </Link>
         </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          .animate-gradient {
+            background-size: 200% auto;
+            animation: gradient 3s linear infinite;
+          }
+          .animate-gradient-slow {
+            background-size: 200% auto;
+            animation: gradient 5s linear infinite;
+          }
+          .drop-shadow-glow {
+            filter: drop-shadow(0 0 20px rgba(52, 211, 153, 0.3));
+          }
+        `}</style>
       </section>
     );
   }
@@ -340,6 +382,19 @@ function BestPractice({ icon, title, desc }) {
         <h4 className="text-white font-bold mb-2">{title}</h4>
         <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
       </div>
+    </div>
+  );
+}
+
+function FeaturePreview({ icon, title, desc, delay }) {
+  return (
+    <div 
+      className="bg-gradient-to-br from-emerald-500/10 to-green-400/5 border-2 border-emerald-500/30 rounded-2xl p-6 text-center transform hover:scale-110 hover:-rotate-2 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/30 cursor-pointer"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="text-5xl mb-4 animate-bounce">{icon}</div>
+      <h3 className="text-white font-bold mb-2 text-lg">{title}</h3>
+      <p className="text-gray-400 text-sm">{desc}</p>
     </div>
   );
 }
