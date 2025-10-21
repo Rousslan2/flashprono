@@ -115,7 +115,7 @@ export default function Navbar() {
                     onClick={() => setDropdownOpen(false)}
                     active={isActive("/chat")}
                   />
-                  {isAuth && user?.isAdmin && (
+                  {user?.isAdmin && (
                     <DropdownLink
                       to="/admin"
                       icon="🔧"
@@ -278,7 +278,7 @@ export default function Navbar() {
             </Link>
 
             {/* Admin uniquement pour les admins */}
-            {isAuth && user?.isAdmin && (
+            {user?.isAdmin && (
               <Link
                 to="/admin"
                 className={`px-4 py-3 border-b border-white/10 hover:bg-[#111] ${
