@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import Pronostic from "../models/Pronostic.js";
+import { findMatchScore } from "../services/flashscoreScraper.js";
 
 const router = express.Router();
 
@@ -72,22 +73,73 @@ router.get("/my-matches", async (req, res) => {
     
     console.log('📡 Appel API Football pour le', todayStr);
     
-    const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
-      params: { date: todayStr },
-      headers: {
-        "x-rapidapi-key": API_KEY,
-        "x-rapidapi-host": "v3.football.api-sports.io",
-      },
-      timeout: 10000, // 10 secondes max
-    });
+    let apiMatches = [];
+    let usingAPI = false;
+    
+    // ESSAYER L'API D'ABORD
+    if (API_KEY) {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
+          params: { date: todayStr },
+          headers: {
+            "x-rapidapi-key": API_KEY,
+            "x-rapidapi-host": "v3.football.api-sports.io",
+          },
+          timeout: 10000,
+        });
+        
+        apiMatches = data.response || [];
+        usingAPI = apiMatches.length > 0;
+        console.log(`⚽ API Football: ${apiMatches.length} matchs reçus`);
+      } catch (apiError) {
+        console.log(`⚠️ API Football échouée: ${apiError.message}`);
+        console.log('🕷️ Passage au scraper FlashScore...');
+      }
+    }
 
-    console.log(`⚽ ${data.response?.length || 0} matchs reçus de l'API`);
-
-    if (!data.response || data.response.length === 0) {
+    // SI PAS DE RÉSULTATS API → UTILISER LE SCRAPER
+    if (apiMatches.length === 0) {
+      console.log('🕷️ Utilisation du scraper pour tous les pronos...');
+      const matchedMatches = [];
+      
+      for (const prono of activePronos) {
+        const scrapedMatch = await findMatchScore(prono.equipe1, prono.equipe2, todayStr);
+        
+        if (scrapedMatch) {
+          const matchData = {
+            id: `scraper-${prono._id}`,
+            pronoId: prono._id,
+            status: scrapedMatch.status,
+            elapsed: scrapedMatch.elapsed,
+            date: prono.date,
+            league: 'N/A',
+            country: 'N/A',
+            homeTeam: scrapedMatch.homeTeam,
+            awayTeam: scrapedMatch.awayTeam,
+            homeScore: scrapedMatch.homeScore,
+            awayScore: scrapedMatch.awayScore,
+            homeLogo: 'https://via.placeholder.com/40',
+            awayLogo: 'https://via.placeholder.com/40',
+          };
+          
+          matchedMatches.push(matchData);
+          cache.data[matchData.id] = matchData;
+          console.log(`✅ Scraper: ${scrapedMatch.homeTeam} vs ${scrapedMatch.awayTeam}`);
+        } else {
+          console.log(`⚠️ Scraper: Match non trouvé pour ${prono.equipe1} vs ${prono.equipe2}`);
+        }
+        
+        // Délai entre chaque scrape pour éviter rate limit
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      cache.lastUpdate = now;
+      
       return res.json({
         success: true,
-        matches: [],
-        message: "Aucun match aujourd'hui dans l'API"
+        matches: matchedMatches,
+        fromCache: false,
+        source: 'scraper'
       });
     }
 
