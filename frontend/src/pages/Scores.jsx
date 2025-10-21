@@ -236,12 +236,12 @@ export default function Scores() {
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
-            <div className="text-7xl mb-6 animate-bounce">📭</div>
+            <div className="text-7xl mb-6 animate-bounce">🔧</div>
             <h3 className="text-3xl font-bold text-white mb-4">
-              Aucun match aujourd'hui
+              API en maintenance
             </h3>
             <p className="text-gray-400 text-lg mb-6">
-              Ajoute des pronos football pour aujourd'hui pour voir les scores en direct !
+              L'API des scores est temporairement indisponible. Reviens plus tard !
             </p>
             <Link
               to="/pronostics"
