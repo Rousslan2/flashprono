@@ -9,6 +9,72 @@ import { useState } from "react";
 export default function Strategie() {
   const active = isSubscriptionActive();
   const [expandedStrategy, setExpandedStrategy] = useState(null);
+  const [expandedModule, setExpandedModule] = useState(null);
+
+  // Contenu détaillé des modules
+  const modulesContent = {
+    "comprendre-bases": {
+      sections: [
+        {
+          title: "Qu'est-ce qu'une cote ?",
+          content: "Une cote représente la probabilité qu'un événement se produise selon le bookmaker. Par exemple, une cote de 2.00 signifie que le bookmaker estime qu'il y a 50% de chances que cet événement se réalise. Plus la cote est élevée, moins l'événement est probable selon le bookmaker. Si tu mises 10€ à 2.00 et que tu gagnes, tu reçois 20€ (10€ x 2.00 = 20€, soit 10€ de gain net)."
+        },
+        {
+          title: "Les types de paris essentiels",
+          content: "**1X2** : Le pari le plus simple - 1 pour victoire domicile, X pour match nul, 2 pour victoire extérieur. **BTTS (Both Teams To Score)** : Les deux équipes marquent-elles ? Oui ou Non. **Over/Under** : Le nombre total de buts sera-t-il supérieur (Over) ou inférieur (Under) à un seuil (souvent 2.5 buts). **Handicap** : Une équipe part avec un avantage ou désavantage fictif pour équilibrer les cotes."
+        },
+        {
+          title: "Comment fonctionnent les bookmakers",
+          content: "Les bookmakers ne sont PAS des philanthropes. Ils gagnent de l'argent grâce à la marge qu'ils intègrent dans leurs cotes. Par exemple, sur un match PSG vs OM, les probabilités réelles pourraient être 50% PSG, 25% Nul, 25% OM. Mais le bookmaker proposera des cotes qui, converties en probabilités, totalisent 105-110% au lieu de 100%. Cette différence, c'est leur marge bénéficiaire garantie."
+        },
+        {
+          title: "La marge du bookmaker expliquée",
+          content: "Exemple concret : Match France vs Angleterre. Cotes : France 2.10 | Nul 3.20 | Angleterre 3.80. Convertissons en probabilités : France = 1/2.10 = 47.6% | Nul = 1/3.20 = 31.3% | Angleterre = 1/3.80 = 26.3%. Total = 105.2%. La marge du bookmaker est de 5.2%. Plus cette marge est faible, meilleures sont les cotes pour toi. Compare toujours plusieurs bookmakers pour trouver les meilleures cotes !"
+        }
+      ]
+    },
+    "gerer-budget": {
+      sections: [
+        {
+          title: "Définir ta bankroll initiale",
+          content: "Ta bankroll est l'argent que tu dédies EXCLUSIVEMENT aux paris sportifs. Règle d'or : ne JAMAIS utiliser l'argent du loyer, des courses ou des factures. C'est de l'argent que tu peux te permettre de perdre sans que ça impacte ta vie. Pour débuter, 100-500€ est raisonnable. Moins de 100€ rend la gestion difficile, plus de 1000€ nécessite déjà de l'expérience. Commence petit, apprends, puis augmente progressivement."
+        },
+        {
+          title: "Règle des 1-3% : VITAL pour survivre",
+          content: "C'est LA règle qui sépare les parieurs rentables des autres. Sur chaque pari, mise entre 1% et 3% de ta bankroll totale. Exemple : Bankroll de 500€ → Mise entre 5€ et 15€ par pari. Pourquoi ? Avec une mise de 2%, tu peux perdre 50 paris d'affilée avant de tout perdre (impossible en pratique si tu analyses bien). Avec 20% par pari ? 5 pertes et c'est fini. La variance fait partie du jeu - protège-toi !"
+        },
+        {
+          title: "L'argent du loyer : JAMAIS",
+          content: "Cette règle semble évidente mais trop de parieurs la brisent. Les paris sportifs doivent rester un loisir ou une activité secondaire rentable, jamais une nécessité. Si tu te retrouves à parier l'argent de tes besoins essentiels, STOP immédiatement. C'est le début d'une spirale dangereuse. Prends une pause, parles-en à quelqu'un, contacte Joueurs Info Service (09 74 75 13 13). Ta santé mentale et financière passe AVANT tout."
+        },
+        {
+          title: "Tenir un journal : obligatoire",
+          content: "Dès ton premier pari, note TOUT dans un tableur : Date | Sport | Match | Type de pari | Cote | Mise | Résultat | Gain/Perte | Raison du pari | Confiance (1-10). Après 50-100 paris, analyse : Quel sport est le plus rentable pour toi ? Quel type de pari ? À quelle cote gagnes-tu le plus ? Tes paris 'haute confiance' sont-ils vraiment meilleurs ? Sans ces données, tu navigues à l'aveugle. Modèle gratuit sur Google Sheets !"
+        }
+      ]
+    },
+    "psychologie-parieur": {
+      sections: [
+        {
+          title: "Le biais du joueur : le piège classique",
+          content: "'J'ai perdu 5 fois d'affilée, le prochain pari DOIT être gagnant !' FAUX. Chaque pari est indépendant. Une pièce lancée 10 fois donnant 'face' a toujours 50% de chances de donner 'face' au 11ème lancer. Tes paris passés n'influencent PAS les futurs. Ce biais pousse à 'chasser ses pertes' en augmentant les mises après une série perdante. C'est le meilleur moyen de se ruiner. Reste rationnel, suit ton plan, chaque pari est nouveau."
+        },
+        {
+          title: "Gérer ses émotions après une perte",
+          content: "Perdre fait mal. C'est normal. Mais ta réaction détermine ton succès futur. Technique du 'circuit breaker' : Après une grosse perte (ou 3 petites d'affilée), PAUSE de 24h minimum. Va courir, regarde un film, sors avec des amis. Ne consulte PAS les cotes. Ton cerveau a besoin de se déconnecter de l'émotion pour revenir à l'analyse rationnelle. Les meilleurs parieurs sont ceux qui gèrent le mieux leurs émotions, pas ceux qui prédisent le mieux."
+        },
+        {
+          title: "Discipline : ton meilleur allié",
+          content: "La discipline bat le talent. Tu peux avoir les meilleures analyses du monde, si tu ne suis pas ton plan de mise, tu perdras. Règles d'or : 1) Définis tes règles À L'AVANCE (% de mise, types de paris, sports). 2) RESPECTE-LES quoi qu'il arrive. 3) Réévalue ton plan tous les mois, PAS après chaque pari. 4) Si tu sens que tu perds le contrôle, arrête immédiatement. La discipline se construit avec le temps. Sois patient avec toi-même."
+        },
+        {
+          title: "Savoir prendre une pause",
+          content: "Les meilleurs parieurs prennent des pauses régulières. Signes qu'il faut s'arrêter : Tu penses constamment aux paris | Tu paries pour 'compenser' une mauvaise journée | Tu caches tes paris à tes proches | Tu paries sur des sports que tu ne connais pas | Tu dépasses ton budget prévu. Solution : Pause de 1 semaine minimum. Désactive les notifications, supprime temporairement les apps de bookmakers. Utilise cet argent pour autre chose. Tu reviendras plus fort et plus lucide."
+        }
+      ]
+    }
+    // ... Ajoute les autres modules ici
+  };
 
   if (!active) {
     return (
@@ -226,7 +292,7 @@ export default function Strategie() {
             </div>
             <iframe
               className="w-full h-full relative z-0"
-              src="https://www.youtube.com/embed/uF9YSldu1oE"
+              src="https://www.youtube.com/embed/zld-R-Yullc"
               title="Formation FlashProno - Stratégies de Paris Sportifs"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -303,6 +369,7 @@ export default function Strategie() {
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <LearningModule
+              id="comprendre-bases"
               icon="📚"
               title="Comprendre les bases"
               duration="15 min"
@@ -312,8 +379,12 @@ export default function Strategie() {
                 "Comment fonctionnent les bookmakers",
                 "La marge du bookmaker expliquée simplement"
               ]}
+              content={modulesContent["comprendre-bases"]}
+              isExpanded={expandedModule === "comprendre-bases"}
+              onToggle={() => setExpandedModule(expandedModule === "comprendre-bases" ? null : "comprendre-bases")}
             />
             <LearningModule
+              id="gerer-budget"
               icon="💰"
               title="Gérer ton budget"
               duration="20 min"
@@ -323,8 +394,12 @@ export default function Strategie() {
                 "Ne jamais parier l'argent du loyer",
                 "Tenir un journal de tes paris dès le début"
               ]}
+              content={modulesContent["gerer-budget"]}
+              isExpanded={expandedModule === "gerer-budget"}
+              onToggle={() => setExpandedModule(expandedModule === "gerer-budget" ? null : "gerer-budget")}
             />
             <LearningModule
+              id="psychologie-parieur"
               icon="🧠"
               title="Psychologie du parieur"
               duration="25 min"
@@ -334,6 +409,9 @@ export default function Strategie() {
                 "L'importance de la discipline",
                 "Savoir prendre une pause quand nécessaire"
               ]}
+              content={modulesContent["psychologie-parieur"]}
+              isExpanded={expandedModule === "psychologie-parieur"}
+              onToggle={() => setExpandedModule(expandedModule === "psychologie-parieur" ? null : "psychologie-parieur")}
             />
             <LearningModule
               icon="⚽"
@@ -836,9 +914,9 @@ function FeaturePreview({ icon, title, desc, delay }) {
   );
 }
 
-function LearningModule({ icon, title, duration, topics }) {
+function LearningModule({ id, icon, title, duration, topics, content, isExpanded, onToggle }) {
   return (
-    <div className="group bg-gradient-to-br from-black/80 via-gray-900/80 to-blue-900/10 border-2 border-blue-500/30 rounded-2xl p-6 hover:scale-105 hover:border-blue-400 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 cursor-pointer">
+    <div className="group bg-gradient-to-br from-black/80 via-gray-900/80 to-blue-900/10 border-2 border-blue-500/30 rounded-2xl p-6 hover:scale-105 hover:border-blue-400 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="text-4xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
@@ -850,7 +928,7 @@ function LearningModule({ icon, title, duration, topics }) {
           </div>
         </div>
       </div>
-      <ul className="space-y-2">
+      <ul className="space-y-2 mb-4">
         {topics.map((topic, i) => (
           <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
             <span className="text-blue-400 mt-0.5 flex-shrink-0">•</span>
@@ -858,11 +936,49 @@ function LearningModule({ icon, title, duration, topics }) {
           </li>
         ))}
       </ul>
-      <div className="mt-4 pt-4 border-t border-blue-500/20">
-        <button className="w-full px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold">
-          🚀 Commencer le module
-        </button>
-      </div>
+      
+      {content && (
+        <>
+          <div className="mt-4 pt-4 border-t border-blue-500/20">
+            <button 
+              onClick={onToggle}
+              className="w-full px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              {isExpanded ? "👁️ Masquer le contenu" : "📖 Lire le cours complet"}
+            </button>
+          </div>
+
+          {isExpanded && (
+            <div className="mt-6 space-y-6 animate-slide-up">
+              {content.sections.map((section, i) => (
+                <div key={i} className="bg-black/40 border border-blue-500/20 rounded-xl p-5">
+                  <h4 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
+                    <span className="text-2xl">💡</span>
+                    {section.title}
+                  </h4>
+                  <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                    {section.content}
+                  </p>
+                </div>
+              ))}
+              
+              <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 rounded-xl p-5 text-center">
+                <div className="text-4xl mb-3">🎓</div>
+                <h4 className="text-xl font-bold text-white mb-2">Module terminé !</h4>
+                <p className="text-gray-300 text-sm">Applique ces concepts dans tes prochains paris et reviens régulièrement pour consolider.</p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      
+      {!content && (
+        <div className="mt-4 pt-4 border-t border-blue-500/20">
+          <button className="w-full px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold">
+            🔒 Contenu bientôt disponible
+          </button>
+        </div>
+      )}
     </div>
   );
 }
