@@ -115,7 +115,7 @@ export default function Bankroll() {
   }, [stakePct]);
 
   return (
-    <section className="py-16 px-4 max-w-6xl mx-auto relative overflow-hidden">
+    <section className="py-16 px-4 max-w-6xl mx-auto relative overflow-hidden min-h-screen">
       {/* Particules de fond animées */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "0s" }}></div>
@@ -143,8 +143,8 @@ export default function Bankroll() {
         </p>
       </div>
 
-      {/* Main Calculator avec effet carte 3D */}
-      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-10 relative group backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 overflow-hidden min-h-[600px]">
+      {/* Main Calculator avec hauteur fixe */}
+      <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-emerald-900/20 border-2 border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-10 relative group backdrop-blur-xl shadow-2xl hover:shadow-emerald-500/30 transition-shadow duration-500 overflow-hidden">
         {/* Particules lumineuses au survol */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-1 h-8 bg-gradient-to-b from-emerald-400 to-transparent animate-spark-1"></div>
@@ -476,7 +476,7 @@ function InputField({ label, value, onChange, type, min, max, step, icon, helper
 
 function ResultCard({ title, value, icon, gradient, positive, negative }) {
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl group cursor-pointer min-h-[180px] flex flex-col justify-center`}>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} border-2 border-emerald-500/40 rounded-2xl p-6 text-center transition-transform duration-300 hover:scale-105 shadow-xl hover:shadow-2xl group cursor-pointer h-[200px] flex flex-col justify-center`}>
       {/* Petites étoiles scintillantes au survol */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
         <div className="absolute top-2 right-4 w-1 h-1 bg-white rounded-full animate-twinkle-1"></div>
@@ -486,7 +486,7 @@ function ResultCard({ title, value, icon, gradient, positive, negative }) {
       </div>
       
       <div className="relative z-10">
-        <div className="text-5xl mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500">{icon}</div>
+        <div className="text-5xl mb-4 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">{icon}</div>
         <div className="text-gray-300 text-sm mb-2 uppercase tracking-wider">{title}</div>
         <div className={`text-4xl font-extrabold ${
           positive ? "text-emerald-400" : negative ? "text-red-400" : "text-white"
@@ -522,7 +522,7 @@ function TipCard({ icon, title, desc, color }) {
   };
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 hover:scale-110 hover:-rotate-3 transition-all duration-500 cursor-pointer group shadow-xl hover:shadow-2xl`}>
+    <div className={`relative overflow-hidden bg-gradient-to-br ${colors[color]} border-2 rounded-2xl p-6 transition-transform duration-300 hover:scale-105 cursor-pointer group shadow-xl hover:shadow-2xl`}>
       {/* Points lumineux qui clignotent */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
         <div className="absolute top-3 left-5 w-1.5 h-1.5 bg-white rounded-full animate-blink-1"></div>
