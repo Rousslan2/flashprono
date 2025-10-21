@@ -2,7 +2,7 @@ import express from "express";
 import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import { protect, requireAdmin } from "../middleware/authMiddleware.js";
-import { checkAndUpdatePronosticResults, checkAllPendingPronostics } from "../services/pronosticChecker.js";
+import { checkAndUpdatePronosticResults, checkAllPendingPronostics, determinePronosticResult } from "../services/pronosticChecker.js";
 
 const router = express.Router();
 
@@ -116,6 +116,8 @@ router.post("/:id/manual-score", protect, requireAdmin, async (req, res) => {
   try {
     const { homeScore, awayScore } = req.body;
     
+    console.log(`✏️ Score manuel demandé pour ${req.params.id}: ${homeScore}-${awayScore}`);
+    
     if (homeScore === undefined || awayScore === undefined) {
       return res.status(400).json({ success: false, message: "Score manquant" });
     }
@@ -125,8 +127,9 @@ router.post("/:id/manual-score", protect, requireAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: "Prono introuvable" });
     }
     
+    console.log(`🎯 Prono trouvé: ${prono.equipe1} vs ${prono.equipe2} - Type: ${prono.type}`);
+    
     // Déterminer le résultat selon le type de pari
-    const { determinePronosticResult } = await import("../services/pronosticChecker.js");
     const result = determinePronosticResult(
       prono,
       prono.equipe1, // homeTeam
@@ -135,10 +138,12 @@ router.post("/:id/manual-score", protect, requireAdmin, async (req, res) => {
       parseInt(awayScore)
     );
     
+    console.log(`📊 Résultat calculé: ${result}`);
+    
     if (!result) {
       return res.status(400).json({ 
         success: false, 
-        message: "Impossible de déterminer le résultat. Vérifie le type de pari." 
+        message: `Impossible de déterminer le résultat pour le type "${prono.type}". Vérifie le type de pari.` 
       });
     }
     
@@ -149,24 +154,29 @@ router.post("/:id/manual-score", protect, requireAdmin, async (req, res) => {
     await prono.save();
     
     // Sync UserBets
-    await UserBet.updateMany(
+    const syncResult = await UserBet.updateMany(
       { pronoId: prono._id },
       { $set: { resultat: result, scoreLive: `${homeScore}-${awayScore}` } }
     );
     
-    console.log(`✅ Score manuel: ${prono.equipe1} vs ${prono.equipe2} = ${homeScore}-${awayScore} → ${result}`);
+    console.log(`✅ Score manuel: ${prono.equipe1} vs ${prono.equipe2} = ${homeScore}-${awayScore} → ${result} (${syncResult.modifiedCount} UserBets sync)`);
     
     res.json({
       success: true,
-      message: "Score mis à jour",
+      message: "Score mis à jour avec succès",
       resultat: result,
-      scoreLive: `${homeScore}-${awayScore}`
+      scoreLive: `${homeScore}-${awayScore}`,
+      prono: {
+        equipe1: prono.equipe1,
+        equipe2: prono.equipe2,
+        type: prono.type
+      }
     });
   } catch (error) {
-    console.error("Erreur score manuel:", error);
+    console.error("❌ Erreur score manuel:", error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || "Erreur serveur"
     });
   }
 });
