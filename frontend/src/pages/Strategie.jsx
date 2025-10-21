@@ -217,25 +217,21 @@ export default function Strategie() {
       {/* Video Section avec effet 3D */}
       <div className="mb-16 relative z-10 animate-slide-up">
         <div className="bg-gradient-to-br from-black/80 via-gray-900/80 to-purple-900/20 border-2 border-purple-500/30 rounded-3xl overflow-hidden group hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 backdrop-blur-xl">
-          <div className="aspect-video w-full bg-black/50 flex items-center justify-center relative overflow-hidden">
+          <div className="aspect-video w-full bg-black relative overflow-hidden">
             {/* Particules lumineuses violettes */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10">
               <div className="absolute top-10 left-20 w-1 h-10 bg-gradient-to-b from-purple-400 to-transparent animate-spark-1"></div>
               <div className="absolute bottom-20 right-24 w-1 h-10 bg-gradient-to-b from-pink-400 to-transparent animate-spark-2"></div>
               <div className="absolute top-1/2 left-1/3 w-1 h-8 bg-gradient-to-b from-purple-300 to-transparent animate-spark-3"></div>
             </div>
-            <div className="text-center p-8 relative z-10">
-              <div className="text-7xl mb-6 animate-bounce-slow">🎬</div>
-              <h3 className="text-3xl font-bold text-white mb-4">
-                Vidéo d'introduction complète
-              </h3>
-              <p className="text-gray-400 mb-6 text-lg">
-                Intègre ici ta vidéo explicative (YouTube, Vimeo, ou lecteur direct)
-              </p>
-              <div className="text-sm text-gray-500 px-4 py-2 bg-gray-800/50 rounded-lg inline-block">
-                📹 Format recommandé : MP4 • Durée : 10-15 minutes
-              </div>
-            </div>
+            <iframe
+              className="w-full h-full relative z-0"
+              src="https://www.youtube.com/embed/uF9YSldu1oE"
+              title="Formation FlashProno - Stratégies de Paris Sportifs"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
           </div>
         </div>
       </div>
