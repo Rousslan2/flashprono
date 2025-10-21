@@ -1,5 +1,6 @@
 import express from "express";
 import Pronostic from "../models/Pronostic.js";
+import UserBet from "../models/UserBet.js";
 import { protect, requireAdmin } from "../middleware/authMiddleware.js";
 import { checkAndUpdatePronosticResults } from "../services/pronosticChecker.js";
 
@@ -31,7 +32,7 @@ router.post("/", protect, async (req, res) => {
   res.json(prono);
 });
 
-// PUT pronostic — réservé admin
+// PUT pronostic — réservé admin + SYNC UserBets
 router.put("/:id", protect, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const allowed = [
@@ -42,6 +43,16 @@ router.put("/:id", protect, requireAdmin, async (req, res) => {
   for (const k of allowed) if (k in req.body) update[k] = req.body[k];
   const prono = await Pronostic.findByIdAndUpdate(id, update, { new: true });
   if (!prono) return res.status(404).json({ message: "Pronostic introuvable" });
+  
+  // 🔥 SYNC: Mettre à jour tous les UserBets liés à ce prono
+  if (update.resultat) {
+    await UserBet.updateMany(
+      { pronoId: id },
+      { $set: { resultat: update.resultat } }
+    );
+    console.log(`✅ UserBets synchronisés pour prono ${id}: ${update.resultat}`);
+  }
+  
   res.json(prono);
 });
 

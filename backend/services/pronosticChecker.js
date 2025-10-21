@@ -1,5 +1,6 @@
 import axios from "axios";
 import Pronostic from "../models/Pronostic.js";
+import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
 
@@ -123,14 +124,22 @@ export async function checkAndUpdatePronosticResults() {
             prono.scoreLive = `${homeScore}-${awayScore}`; // ✅ Score final
             await prono.save();
 
+            // 🔥 SYNC: Mettre à jour tous les UserBets liés
+            const syncResult = await UserBet.updateMany(
+              { pronoId: prono._id },
+              { $set: { resultat: result, scoreLive: `${homeScore}-${awayScore}` } }
+            );
+
+            console.log(`🔄 SYNC UserBets: ${syncResult.modifiedCount} paris utilisateur(s) synchronisés pour prono ${prono._id}`);
+
             updatedCount++;
 
             console.log(
-              `✅ Pronostic terminé: ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
+              `✅ Pronostic terminé: ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore}) - UserBets synchro!`
             );
 
             // Émettre un événement Socket.io pour notifier en temps réel
-            io.emit("pronostic:updated", {
+            io.emit("prono:updated", {
               pronosticId: prono._id,
               statut: result,
               resultat: result,
@@ -141,6 +150,8 @@ export async function checkAndUpdatePronosticResults() {
               cote: prono.cote,
               matchStatus: "FT",
             });
+
+            console.log(`📡 Socket.io event emitted: prono:updated for ${prono._id}`);
           }
         }
         // Match en cours (1H, HT, 2H, ET, P, etc.)
