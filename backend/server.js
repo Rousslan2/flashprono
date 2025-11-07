@@ -30,7 +30,7 @@ import User from "./models/User.js";
 import ConnectionHistory from "./models/ConnectionHistory.js";
 
 // 🔧 Services
-import { checkAndUpdatePronosticResults } from "./services/pronosticChecker.js";
+import { checkAndUpdatePronosticResults, quickCheckForLiveMatches } from "./services/pronosticChecker.js";
 
 // ⚙️ Initialisation
 dotenv.config();
@@ -150,22 +150,50 @@ app.post("/api/admin/log-test", (req, res) => {
 // 🕛 CRON JOBS
 // =============================
 
-// Job 1 : Vérification automatique des résultats de pronostics (toutes les 2 minutes - LIVE optimisé)
+// Job 1 : Vérification rapide des matchs en cours (toutes les 1 minute)
 cron.schedule(
-  "*/2 * * * *", // Toutes les 2 minutes = bon compromis vitesse/performance
+  "*/1 * * * *", // Toutes les 1 minute pour les matchs en cours
   async () => {
-    console.log("🔄 CRON: Vérification des résultats de pronostics...");
+    try {
+      await quickCheckForLiveMatches();
+    } catch (error) {
+      console.error("❌ Erreur vérification rapide:", error.message);
+    }
+  },
+  { timezone: "Europe/Paris" }
+);
+
+// Job 2 : Vérification complète des résultats de pronostics (toutes les 2 minutes)
+cron.schedule(
+  "*/2 * * * *", // Toutes les 2 minutes = vérification complète
+  async () => {
+    console.log("🔄 CRON: Vérification complète des résultats...");
     const result = await checkAndUpdatePronosticResults();
     if (result) {
       console.log(
-        `✅ CRON: ${result.updated}/${result.checked} pronostic(s) mis à jour`
+        `✅ CRON: ${result.updated}/${result.checked} pronostic(s) mis à jour (${result.live} en cours)`
       );
     }
   },
   { timezone: "Europe/Paris" }
 );
 
-// Job 2 : Déconnexions automatiques (toutes les 5 minutes)
+// Job 3 : Vérification de rattrapage (toutes les 3 minutes) - pour les matchs terminés entre les checks
+cron.schedule(
+  "*/3 * * * *",
+  async () => {
+    console.log("🔄 CRON: Vérification de rattrapage...");
+    const result = await checkAndUpdatePronosticResults();
+    if (result && result.updated > 0) {
+      console.log(
+        `🔄 RATTRAPAGE: ${result.updated} pronostic(s) supplémentaire(s) détecté(s)`
+      );
+    }
+  },
+  { timezone: "Europe/Paris" }
+);
+
+// Job 4 : Déconnexions automatiques (toutes les 5 minutes)
 cron.schedule(
   "*/5 * * * *",
   async () => {
@@ -218,7 +246,7 @@ cron.schedule(
   { timezone: "Europe/Paris" }
 );
 
-// Job 3 : Nettoyage des abonnements expirés (tous les jours à 3h)
+// Job 5 : Nettoyage des abonnements expirés (tous les jours à 3h)
 cron.schedule(
   "0 3 * * *",
   async () => {
