@@ -117,7 +117,7 @@ export async function checkAndUpdatePronosticResults() {
         let matchData = null;
         let source = null;
 
-        // 🔄 Recherche via API Football
+        // 🔄 Recherche via API Football (à la date du match)
         try {
           console.log(`   🔍 API Football (date: ${matchDate})...`);
           
