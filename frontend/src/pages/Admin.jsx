@@ -685,12 +685,14 @@ export default function Admin() {
             <div className="flex gap-3">
               <button
                 onClick={async () => {
+                  if (!confirm("⚠️ Vérifier tous les pronostics en attente ? (peut prendre quelques secondes)")) return;
                   try {
                     const { data } = await axios.post(`${API_BASE}/api/admin/pronostics/check-results`, {}, {
                       headers: { Authorization: `Bearer ${token}` },
                     });
-                    alert(`✅ ${data.message}`);
-                    loadPronos(pronosPage); // Recharger la page actuelle
+                    alert(`✅ ${data.message}\n\nDétails:\n- Vérifié: ${data.checked}\n- Mis à jour: ${data.updated}\n- En cours: ${data.live}`);
+                    loadPronos(pronosPage);
+                    loadStats(); // Rafraîchir aussi les stats
                   } catch (error) {
                     alert(`❌ Erreur: ${error.response?.data?.message || error.message}`);
                   }
@@ -698,22 +700,6 @@ export default function Admin() {
                 className="px-4 py-2 bg-green-500/20 border border-green-500/40 text-green-400 rounded-lg hover:bg-green-500/30 transition font-semibold"
               >
                 ⚽ Vérifier résultats
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const { data } = await axios.post(`${API_BASE}/api/admin/check-results`, {}, {
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    alert(`✅ ${data.message}`);
-                    loadPronos(pronosPage); // Recharger la page actuelle
-                  } catch (error) {
-                    alert(`❌ Erreur: ${error.response?.data?.message || error.message}`);
-                  }
-                }}
-                className="px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-400 rounded-lg hover:bg-blue-500/30 transition font-semibold"
-              >
-                🔄 Vérifier API
               </button>
               <button
                 onClick={() => loadPronos(pronosPage)}
