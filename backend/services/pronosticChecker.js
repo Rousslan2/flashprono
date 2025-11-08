@@ -92,7 +92,11 @@ export async function checkAndUpdatePronosticResults() {
 
     if (pendingPronostics.length === 0) {
       console.log("✅ Aucun pronostic en attente à vérifier");
-      return;
+      return {
+        checked: 0,
+        updated: 0,
+        live: 0,
+      };
     }
 
     console.log(`📊 ${pendingPronostics.length} pronostic(s) en attente à vérifier`);
