@@ -14,10 +14,10 @@ let matchesCache = {
   data: [],
   timestamp: null,
   date: null,
-  leagues: [] // Track which leagues we've cached
+  leagues: []
 };
 
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes (reduced for better accuracy)
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 const API_RATE_LIMIT_DELAY = 1000; // 1 second between API calls
 
 // Enhanced team name mappings for better matching
@@ -65,6 +65,7 @@ const TEAM_ALIASES = {
 
 /**
  * 🎯 Vérifier et mettre à jour automatiquement les résultats des pronostics
+ * ✅ CORRIGÉ : Cherche chaque match à SA date (pas seulement aujourd'hui)
  */
 export async function checkAndUpdatePronosticResults() {
   try {
@@ -75,18 +76,16 @@ export async function checkAndUpdatePronosticResults() {
       return;
     }
 
-    // 1. Récupérer TOUS les pronostics Football (pas seulement en attente/en cours)
-    // Cela permet de corriger les pronostics qui sont mal marqués
+    // 1. Récupérer TOUS les pronostics en attente
     const allPronostics = await Pronostic.find({
       sport: "Football",
     });
 
-    // Filtrer pour ne traiter que ceux qui peuvent encore être mis à jour
     const pendingPronostics = allPronostics.filter(p =>
       p.statut === "en attente" ||
       p.statut === "en cours" ||
-      !p.statut || // Cas où statut est null/undefined
-      p.statut === "" // Cas où statut est vide
+      !p.statut ||
+      p.statut === ""
     );
 
     console.log(`📊 ${allPronostics.length} pronostic(s) au total, ${pendingPronostics.length} à vérifier/corriger`);
@@ -100,225 +99,225 @@ export async function checkAndUpdatePronosticResults() {
       };
     }
 
-    console.log(`📊 ${pendingPronostics.length} pronostic(s) en attente à vérifier`);
+    let updatedCount = 0;
+    let liveMatchCount = 0;
 
-    // 2. Récupérer les matchs d'aujourd'hui et d'hier (pour les matchs terminaés tard)
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const now = Date.now();
-
-    let allMatches = [];
-
-    // Check cache validity
-    if (
-      matchesCache.date === today &&
-      matchesCache.timestamp &&
-      (now - matchesCache.timestamp) < CACHE_DURATION
-    ) {
-      console.log("📋 Utilisation du cache (pas de requête API)");
-      allMatches = matchesCache.data;
-    } else {
-      console.log("🌐 Requête API pour les matchs...");
-      // Try today first, then yesterday if needed
+    // 2. ✅ CORRECTION : Pour chaque pronostic, chercher à SA date
+    for (const prono of pendingPronostics) {
       try {
-        const { data: todayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
-          params: { date: today },
-          headers: {
-            "x-rapidapi-key": API_KEY,
-            "x-rapidapi-host": "v3.football.api-sports.io",
-          },
-        });
-
-        allMatches = todayData.response || [];
-        
-        // If no matches today, try yesterday
-        if (allMatches.length === 0) {
-          console.log("📅 Aucun match aujourd'hui, vérification d'hier...");
-          await new Promise(resolve => setTimeout(resolve, API_RATE_LIMIT_DELAY));
-          
-          const { data: yesterdayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
-            params: { date: yesterday },
-            headers: {
-              "x-rapidapi-key": API_KEY,
-              "x-rapidapi-host": "v3.football.api-sports.io",
-            },
-          });
-          
-          allMatches = yesterdayData.response || [];
-        }
-        
-        // Update cache
-        matchesCache = {
-          data: allMatches,
-          timestamp: now,
-          date: today
-        };
-        
-      } catch (apiError) {
-        console.error("❌ Erreur API:", apiError.message);
-        console.log("🔄 Tentative de récupération des matchs via cache seulement...");
-
-        // Si l'API échoue, essayer d'utiliser le cache existant
-        if (matchesCache.data && matchesCache.data.length > 0) {
-          console.log("📋 Utilisation du cache existant malgré l'erreur API");
-          allMatches = matchesCache.data;
+        // ✅ Déterminer la date du match
+        let matchDate;
+        if (prono.date) {
+          matchDate = new Date(prono.date).toISOString().split("T")[0];
         } else {
-          console.log("❌ Aucun cache disponible, tentative avec les matchs d'hier...");
+          matchDate = new Date(prono.createdAt).toISOString().split("T")[0];
+        }
 
-          // Essayer de récupérer les matchs d'hier même en cas d'erreur API
+        console.log(`\n⚽ Vérification: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
+        console.log(`   📅 Date du match: ${matchDate}`);
+
+        let matchData = null;
+        let source = null;
+
+        // 🔄 TENTATIVE 1: Soccer Data API
+        try {
+          console.log(`   1️⃣ Soccer Data API...`);
+          const soccerResult = await soccerDataService.findMatch(
+            prono.equipe1,
+            prono.equipe2,
+            matchDate
+          );
+
+          if (soccerResult && soccerResult.goals.home !== null && soccerResult.goals.away !== null) {
+            matchData = {
+              homeScore: soccerResult.goals.home,
+              awayScore: soccerResult.goals.away,
+              homeTeam: soccerResult.teams.home.name,
+              awayTeam: soccerResult.teams.away.name,
+              status: soccerResult.fixture.status.short,
+              source: "soccer_data_api"
+            };
+            source = "soccer_data_api";
+            console.log(`   ✅ Soccer Data: ${soccerResult.goals.home}-${soccerResult.goals.away} (${soccerResult.fixture.status.short})`);
+          } else {
+            console.log(`   ❌ Soccer Data: Pas trouvé`);
+          }
+        } catch (error) {
+          console.log(`   ❌ Soccer Data: Erreur - ${error.message}`);
+        }
+
+        // 🔄 TENTATIVE 2: Soccer Data API (lendemain)
+        if (!matchData) {
           try {
-            await new Promise(resolve => setTimeout(resolve, API_RATE_LIMIT_DELAY));
+            const nextDay = new Date(matchDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const nextDayStr = nextDay.toISOString().split("T")[0];
+            
+            console.log(`   2️⃣ Soccer Data (lendemain ${nextDayStr})...`);
+            
+            const soccerResultNext = await soccerDataService.findMatch(
+              prono.equipe1,
+              prono.equipe2,
+              nextDayStr
+            );
 
-            const { data: yesterdayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
-              params: { date: yesterday },
+            if (soccerResultNext && soccerResultNext.goals.home !== null && soccerResultNext.goals.away !== null) {
+              matchData = {
+                homeScore: soccerResultNext.goals.home,
+                awayScore: soccerResultNext.goals.away,
+                homeTeam: soccerResultNext.teams.home.name,
+                awayTeam: soccerResultNext.teams.away.name,
+                status: soccerResultNext.fixture.status.short,
+                source: "soccer_data_api_nextday"
+              };
+              source = "soccer_data_api_nextday";
+              console.log(`   ✅ Soccer Data (lendemain): ${soccerResultNext.goals.home}-${soccerResultNext.goals.away}`);
+            } else {
+              console.log(`   ❌ Soccer Data (lendemain): Pas trouvé`);
+            }
+          } catch (error) {
+            console.log(`   ❌ Soccer Data (lendemain): Erreur - ${error.message}`);
+          }
+        }
+
+        // 🔄 TENTATIVE 3: API Football
+        if (!matchData) {
+          try {
+            console.log(`   3️⃣ API Football...`);
+            
+            const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
+              params: { date: matchDate },
               headers: {
                 "x-rapidapi-key": API_KEY,
                 "x-rapidapi-host": "v3.football.api-sports.io",
               },
             });
 
-            allMatches = yesterdayData.response || [];
-            console.log(`📅 Récupération des matchs d'hier malgré l'erreur API: ${allMatches.length} matchs`);
-          } catch (yesterdayError) {
-            console.error("❌ Impossible de récupérer les matchs d'hier:", yesterdayError.message);
-            return;
+            const matchesForDate = data.response || [];
+            console.log(`   📊 ${matchesForDate.length} matchs trouvés le ${matchDate}`);
+            
+            const matchingMatch = findBestMatch(prono, matchesForDate);
+            
+            if (matchingMatch) {
+              const status = matchingMatch.fixture.status.short;
+              const homeScore = matchingMatch.goals.home;
+              const awayScore = matchingMatch.goals.away;
+              
+              if (homeScore !== null && awayScore !== null) {
+                matchData = {
+                  homeScore,
+                  awayScore,
+                  homeTeam: matchingMatch.teams.home.name,
+                  awayTeam: matchingMatch.teams.away.name,
+                  status,
+                  elapsed: matchingMatch.fixture.status.elapsed,
+                  source: "api_football"
+                };
+                source = "api_football";
+                console.log(`   ✅ API Football: ${homeScore}-${awayScore} (${status})`);
+              } else {
+                console.log(`   ⚠️ API Football: Match trouvé mais scores null`);
+              }
+            } else {
+              console.log(`   ❌ API Football: Aucun match correspondant`);
+            }
+          } catch (apiError) {
+            console.log(`   ❌ API Football: Erreur - ${apiError.message}`);
           }
         }
-      }
-    }
 
-    console.log(`⚽ ${allMatches.length} matchs récupérés pour vérification`);
-
-    let updatedCount = 0;
-    let liveMatchCount = 0;
-
-    // 3. Pour chaque pronostic, trouver le match correspondant et vérifier le résultat
-    for (const prono of pendingPronostics) {
-      try {
-        let matchingMatch = findBestMatch(prono, allMatches);
-        let matchData = null;
-        let source = "api";
-
-        // 🔄 Recherche via Soccer Data API (API principale)
-        console.log(`⚽ Recherche Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
-
-        const soccerResult = await soccerDataService.findMatch(
-          prono.equipe1,
-          prono.equipe2,
-          today
-        );
-
-        if (soccerResult) {
-          matchData = {
-            homeScore: soccerResult.goals.home,
-            awayScore: soccerResult.goals.away,
-            homeTeam: soccerResult.teams.home.name,
-            awayTeam: soccerResult.teams.away.name,
-            status: soccerResult.fixture.status.short,
-            source: "soccer_data_api"
-          };
-          source = "soccer_data_api";
-          console.log(`✅ Match trouvé via Soccer Data API: ${soccerResult.goals.home}-${soccerResult.goals.away}`);
-        } else {
-          console.log(`❌ Aucun résultat trouvé via Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2}`);
-          // Aucun fallback - on ne fait rien si Soccer Data API ne trouve pas
+        // Aucune source n'a trouvé le match
+        if (!matchData) {
+          console.log(`   ❌ AUCUNE SOURCE: Match non trouvé`);
+          continue;
         }
 
-        if (matchData) {
-          const { homeScore, awayScore, homeTeam, awayTeam, status, elapsed } = matchData;
+        const { homeScore, awayScore, homeTeam, awayTeam, status, elapsed } = matchData;
 
-          // Match terminé (enhanced status detection)
-          if (isMatchFinished(status)) {
-            const result = determinePronosticResult(
-              prono,
-              homeTeam,
-              awayTeam,
-              homeScore,
-              awayScore
+        // Match terminé
+        if (isMatchFinished(status)) {
+          const result = determinePronosticResult(
+            prono,
+            homeTeam,
+            awayTeam,
+            homeScore,
+            awayScore
+          );
+
+          if (result && prono.statut !== result) {
+            prono.statut = result;
+            prono.resultat = result;
+            prono.scoreLive = `${homeScore}-${awayScore}`;
+            prono.dateValidation = new Date();
+            await prono.save();
+
+            const syncResult = await UserBet.updateMany(
+              { pronoId: prono._id },
+              {
+                $set: {
+                  resultat: result,
+                  scoreLive: `${homeScore}-${awayScore}`,
+                  dateValidation: new Date()
+                }
+              }
             );
 
-            if (result && prono.statut !== result) {
-              // Update pronostic
-              prono.statut = result;
-              prono.resultat = result;
-              prono.scoreLive = `${homeScore}-${awayScore}`;
-              prono.dateValidation = new Date();
-              await prono.save();
+            console.log(`   🔄 UserBets: ${syncResult.modifiedCount} paris synchronisés`);
+            updatedCount++;
 
-              // Update all UserBets
-              const syncResult = await UserBet.updateMany(
-                { pronoId: prono._id },
-                {
-                  $set: {
-                    resultat: result,
-                    scoreLive: `${homeScore}-${awayScore}`,
-                    dateValidation: new Date()
-                  }
-                }
-              );
+            console.log(`   ✅ Pronostic terminé (${source}): ${result} (${homeScore}-${awayScore})`);
 
-              console.log(`🔄 SYNC UserBets: ${syncResult.modifiedCount} paris synchronisés pour prono ${prono._id}`);
-
-              updatedCount++;
-
-              console.log(
-                `✅ Pronostic terminé (${source}): ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
-              );
-
-              // Emit socket event
-              io.emit("prono:updated", {
-                pronosticId: prono._id,
-                statut: result,
-                resultat: result,
-                scoreLive: `${homeScore}-${awayScore}`,
-                equipe1: prono.equipe1,
-                equipe2: prono.equipe2,
-                type: prono.type,
-                cote: prono.cote,
-                matchStatus: status,
-                source: source
-              });
-            }
+            io.emit("prono:updated", {
+              pronosticId: prono._id,
+              statut: result,
+              resultat: result,
+              scoreLive: `${homeScore}-${awayScore}`,
+              equipe1: prono.equipe1,
+              equipe2: prono.equipe2,
+              type: prono.type,
+              cote: prono.cote,
+              matchStatus: status,
+              source: source
+            });
           }
-          // Match en cours (enhanced detection) - seulement pour API
-          else if (isMatchLive(status) && source === "api") {
-            const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
-            liveMatchCount++;
-
-            if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
-              prono.statut = "en cours";
-              prono.resultat = "en cours";
-              prono.scoreLive = liveScore;
-              await prono.save();
-
-              console.log(
-                `🔴 Match en cours: ${prono.equipe1} vs ${prono.equipe2} - ${homeScore}-${awayScore} (${elapsed}')`
-              );
-
-              // Emit live score event
-              io.emit("pronostic:live", {
-                pronosticId: prono._id,
-                statut: "en cours",
-                resultat: "en cours",
-                scoreLive: liveScore,
-                elapsed: elapsed,
-                matchStatus: status,
-                equipe1: prono.equipe1,
-                equipe2: prono.equipe2,
-                type: prono.type,
-                cote: prono.cote,
-              });
-            }
-          }
-        } else {
-          console.log(`⚠️ Aucun match trouvé pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
         }
+        // Match en cours
+        else if (isMatchLive(status) && source !== "soccer_data_api_nextday") {
+          const liveScore = elapsed ? `${homeScore}-${awayScore} (${elapsed}')` : `${homeScore}-${awayScore}`;
+          liveMatchCount++;
+
+          if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
+            prono.statut = "en cours";
+            prono.resultat = "en cours";
+            prono.scoreLive = liveScore;
+            await prono.save();
+
+            console.log(`   🔴 Match en cours: ${homeScore}-${awayScore}${elapsed ? ` (${elapsed}')` : ''}`);
+
+            io.emit("pronostic:live", {
+              pronosticId: prono._id,
+              statut: "en cours",
+              resultat: "en cours",
+              scoreLive: liveScore,
+              elapsed: elapsed || null,
+              matchStatus: status,
+              equipe1: prono.equipe1,
+              equipe2: prono.equipe2,
+              type: prono.type,
+              cote: prono.cote,
+            });
+          }
+        }
+
       } catch (pronoError) {
-        console.error(`❌ Erreur traitement prono ${prono._id}:`, pronoError.message);
+        console.error(`   ❌ Erreur prono ${prono._id}:`, pronoError.message);
       }
+      
+      // Pause pour ne pas surcharger les APIs
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log(`🎯 Vérification terminée: ${updatedCount} terminé(s), ${liveMatchCount} en cours`);
+    console.log(`\n🎯 Vérification terminée: ${updatedCount} terminé(s), ${liveMatchCount} en cours`);
 
     return {
       checked: pendingPronostics.length,
@@ -352,7 +351,7 @@ function findBestMatch(prono, matches) {
 
     const currentScore = Math.max(homeScore, awayScore);
 
-    if (currentScore > bestScore && currentScore >= 0.4) { // Lowered threshold to 40%
+    if (currentScore > bestScore && currentScore >= 0.4) {
       bestScore = currentScore;
       bestMatch = match;
     }
@@ -363,25 +362,21 @@ function findBestMatch(prono, matches) {
 
 /**
  * Calculate similarity between two team names with alias support
- * Exporté pour les tests
  */
 export function calculateTeamSimilarity(pronoTeam, matchTeam) {
   const pronoNormalized = normalizeTeamName(pronoTeam);
   const matchNormalized = normalizeTeamName(matchTeam);
 
-  // Direct match
   if (pronoNormalized === matchNormalized) {
     return 1.0;
   }
 
-  // Check aliases
   for (const [mainName, aliases] of Object.entries(TEAM_ALIASES)) {
     if (aliases.includes(pronoNormalized) && aliases.includes(matchNormalized)) {
       return 0.9;
     }
   }
 
-  // Fuzzy matching with word overlap
   const pronoWords = pronoNormalized.split(' ').filter(word => word.length > 2);
   const matchWords = matchNormalized.split(' ').filter(word => word.length > 2);
   
@@ -404,31 +399,49 @@ export function calculateTeamSimilarity(pronoTeam, matchTeam) {
 function normalizeTeamName(teamName) {
   return teamName
     .toLowerCase()
-    .replace(/[^\w\s]/g, '') // Remove special characters
-    .replace(/\b(fc|cf|ac|as|ogc|ssc|olympique|football club|sport|de|united|afc|ufc)\b/g, '') // Remove common terms
-    .replace(/\s+/g, ' ') // Normalize spaces
+    .replace(/[^\w\s]/g, '')
+    .replace(/\b(fc|cf|ac|as|ogc|ssc|olympique|football club|sport|de|united|afc|ufc)\b/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
 /**
- * Check if match is finished (enhanced status detection)
+ * Check if match is finished (IMPROVED - more statuses)
  */
 function isMatchFinished(status) {
-  const finalStatuses = ['FT', 'AET', 'PEN', 'SUSP', 'INT', 'POSTP', 'CANC', 'ABD', 'AWD', 'WO'];
-  return finalStatuses.includes(status);
+  const finalStatuses = [
+    'FT', 'AET', 'PEN', 'SUSP', 'INT', 'POSTP', 'CANC', 
+    'ABD', 'AWD', 'WO', 'PST',
+    'played', 'finished', 'fulltime', 'full-time'
+  ];
+  
+  const statusLower = (status || '').toLowerCase();
+  const statusUpper = (status || '').toUpperCase();
+  
+  return finalStatuses.includes(statusUpper) || 
+         finalStatuses.includes(statusLower) ||
+         finalStatuses.includes(status);
 }
 
 /**
- * Check if match is live
+ * Check if match is live (IMPROVED)
  */
 function isMatchLive(status) {
-  const liveStatuses = ['NS', '1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE'];
-  return liveStatuses.includes(status);
+  const liveStatuses = [
+    'NS', '1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE', 'INT',
+    'playing', 'inprogress', 'in_progress', 'live'
+  ];
+  
+  const statusLower = (status || '').toLowerCase();
+  const statusUpper = (status || '').toUpperCase();
+  
+  return liveStatuses.includes(statusUpper) || 
+         liveStatuses.includes(statusLower) ||
+         liveStatuses.includes(status);
 }
 
 /**
- * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé (FIXED)
- * Exporté pour les tests
+ * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé
  */
 export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
   const type = prono.type.toLowerCase().trim();
@@ -437,32 +450,30 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
   const homeTeamLower = homeTeam.toLowerCase().trim();
   const awayTeamLower = awayTeam.toLowerCase().trim();
 
-  // Determine which team is home/away - FIXED LOGIC
   const isEquipe1Home = calculateTeamSimilarity(equipe1Lower, homeTeamLower) >= 
                        calculateTeamSimilarity(equipe1Lower, awayTeamLower);
 
-  console.log(`🔍 Analyse: "${prono.type}" pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
-  console.log(`   Equipe1 "${equipe1Lower}" est-elle à domicile: ${isEquipe1Home}`);
+  console.log(`   🔍 Analyse: "${prono.type}" pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
 
   try {
-    // === Double chance - ENHANCED AND FIXED ===
+    // Double chance
     if (type.includes(" or ") || type.includes("double chance") || 
         type.includes("1x") || type.includes("x2") || type.includes("12") ||
         (type.includes("draw") && (type.includes(" or ") || type.includes("double")))) {
       return handleDoubleChanceFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
     }
 
-    // === Nul / Draw / Match nul ===
+    // Nul
     if ((type.includes("nul") || type.includes("draw") || type === "x") && !type.includes(" or ")) {
       return homeScore === awayScore ? "gagnant" : "perdu";
     }
 
-    // === Victoire spécifique d'une équipe ===
+    // Victoire
     if (type.includes("victoire") || type.includes("win") || type.includes("vainqueur")) {
       return handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
     }
 
-    // === Simple 1, X, 2 ===
+    // 1, X, 2
     if (type === "1" || (type.includes("1") && !type.includes("12") && !type.includes("1x"))) {
       return homeScore > awayScore ? "gagnant" : "perdu";
     }
@@ -471,7 +482,7 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
       return awayScore > homeScore ? "gagnant" : "perdu";
     }
 
-    // === BTTS (Both Teams To Score) ===
+    // BTTS
     if (type.includes("btts") || type.includes("les deux équipes marquent") || 
         type.includes("both teams to score") || type.includes("marquent tous les deux")) {
       const bothScored = homeScore > 0 && awayScore > 0;
@@ -481,11 +492,10 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
       if (type.includes("non") || type.includes("no") || type.includes("marquent pas")) {
         return !bothScored ? "gagnant" : "perdu";
       }
-      // Default BTTS = Yes
       return bothScored ? "gagnant" : "perdu";
     }
 
-    // === Over / Under ===
+    // Over / Under
     if (type.includes("over") || type.includes("plus de") || type.includes("+")) {
       const threshold = parseFloat(type.match(/\d+\.?\d*/)?.[0] || "2.5");
       const totalGoals = homeScore + awayScore;
@@ -498,7 +508,7 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
       return totalGoals < threshold ? "gagnant" : "perdu";
     }
 
-    // === Score exact ===
+    // Score exact
     if (type.includes("score exact") || type.includes("exact score") || type.match(/\d+-\d+/)) {
       const expectedScore = type.match(/(\d+)-(\d+)/);
       if (expectedScore) {
@@ -517,40 +527,17 @@ export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, a
       }
     }
 
-    // === Mi-temps ===
-    if (type.includes("mi-temps") || type.includes("half time") || type.includes("ht")) {
-      console.log("⚠️ Mi-temps prediction detected but HT scores not available");
-      return null;
-    }
-
-    // === Handicap asiatique ===
-    if (type.includes("handicap") || type.includes("asian handicap")) {
-      const handicapMatch = type.match(/[-+](\d+\.?\d*)/);
-      if (handicapMatch) {
-        const handicap = parseFloat(handicapMatch[1]);
-        const adjustedHomeScore = homeScore + handicap;
-        
-        if (type.includes(equipe1Lower.split(" ")[0])) {
-          return adjustedHomeScore > awayScore ? "gagnant" : "perdu";
-        } else {
-          return awayScore > adjustedHomeScore ? "gagnant" : "perdu";
-        }
-      }
-    }
-
-    // Par défaut, si on ne peut pas déterminer
-    console.warn(`⚠️ Type de pari non reconnu: "${prono.type}" pour ${prono.equipe1} vs ${prono.equipe2}`);
+    console.warn(`   ⚠️ Type de pari non reconnu: "${prono.type}"`);
     return null;
     
   } catch (error) {
-    console.error(`❌ Erreur détermination résultat:`, error.message);
+    console.error(`   ❌ Erreur détermination résultat:`, error.message);
     return null;
   }
 }
 
 /**
- * FIXED Handle double chance bets - CORRECTED LOGIC
- * Exporté pour les tests
+ * Handle double chance bets - CORRECTED LOGIC
  */
 export function handleDoubleChanceFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
   const premierMotEquipe1 = equipe1Lower.split(" ")[0];
@@ -558,73 +545,53 @@ export function handleDoubleChanceFixed(type, equipe1Lower, equipe2Lower, isEqui
   const premierMotEquipe2 = equipe2Lower.split(" ")[0];
   const dernierMotEquipe2 = equipe2Lower.split(" ").pop();
 
-  // Check for specific team mentions
   const mentionEquipe1 = type.includes(premierMotEquipe1) || type.includes(dernierMotEquipe1) || 
                          type.includes(equipe1Lower) || type.toLowerCase().includes(equipe1Lower);
   const mentionEquipe2 = type.includes(premierMotEquipe2) || type.includes(dernierMotEquipe2) || 
                          type.includes(equipe2Lower) || type.toLowerCase().includes(equipe2Lower);
   const mentionDraw = type.includes("draw") || type.includes("nul") || type.includes("x");
 
-  console.log(`   Double chance - E1: ${mentionEquipe1}, E2: ${mentionEquipe2}, Draw: ${mentionDraw}`);
-
-  // Format: "Equipe1 or draw" (1X) - E1 OU MATCH NUL = GAGNE si E1 gagne OU match nul
+  // Equipe1 or draw (1X)
   if (mentionEquipe1 && mentionDraw && !mentionEquipe2) {
     if (isEquipe1Home) {
-      const result = homeScore >= awayScore ? "gagnant" : "perdu";
-      console.log(`   Double chance 1X: ${homeScore} >= ${awayScore} = ${result}`);
-      return result;
+      return homeScore >= awayScore ? "gagnant" : "perdu";
     } else {
-      const result = awayScore >= homeScore ? "gagnant" : "perdu";
-      console.log(`   Double chance 1X: ${awayScore} >= ${homeScore} = ${result}`);
-      return result;
+      return awayScore >= homeScore ? "gagnant" : "perdu";
     }
   }
 
-  // Format: "Equipe2 or draw" (X2) - E2 OU MATCH NUL = GAGNE si E2 gagne OU match nul
+  // Equipe2 or draw (X2)
   if (mentionEquipe2 && mentionDraw && !mentionEquipe1) {
     if (isEquipe1Home) {
-      const result = homeScore <= awayScore ? "gagnant" : "perdu";
-      console.log(`   Double chance X2: ${homeScore} <= ${awayScore} = ${result}`);
-      return result;
+      return homeScore <= awayScore ? "gagnant" : "perdu";
     } else {
-      const result = awayScore <= homeScore ? "gagnant" : "perdu";
-      console.log(`   Double chance X2: ${awayScore} <= ${homeScore} = ${result}`);
-      return result;
+      return awayScore <= homeScore ? "gagnant" : "perdu";
     }
   }
 
-  // Format: "Equipe1 or Equipe2" (12) - E1 OU E2 = GAGNE si ce n'est pas match nul
+  // Equipe1 or Equipe2 (12)
   if (mentionEquipe1 && mentionEquipe2 && !mentionDraw) {
-    const result = homeScore !== awayScore ? "gagnant" : "perdu";
-    console.log(`   Double chance 12: ${homeScore} !== ${awayScore} = ${result}`);
-    return result;
+    return homeScore !== awayScore ? "gagnant" : "perdu";
   }
 
-  // Format classique: 1X, X2, 12
+  // Format classique
   if (type.includes("1x") || type.includes("1 x")) {
-    const result = (isEquipe1Home ? homeScore >= awayScore : awayScore >= homeScore) ? "gagnant" : "perdu";
-    console.log(`   Double chance 1X classique: ${result}`);
-    return result;
+    return (isEquipe1Home ? homeScore >= awayScore : awayScore >= homeScore) ? "gagnant" : "perdu";
   }
   
   if (type.includes("x2") || type.includes("x 2") || type.includes("2x") || type.includes("2 x")) {
-    const result = (isEquipe1Home ? homeScore <= awayScore : awayScore <= homeScore) ? "gagnant" : "perdu";
-    console.log(`   Double chance X2 classique: ${result}`);
-    return result;
+    return (isEquipe1Home ? homeScore <= awayScore : awayScore <= homeScore) ? "gagnant" : "perdu";
   }
   
   if (type.includes("12") || type.includes("1 2") || type.includes("21") || type.includes("2 1")) {
-    const result = homeScore !== awayScore ? "gagnant" : "perdu";
-    console.log(`   Double chance 12 classique: ${result}`);
-    return result;
+    return homeScore !== awayScore ? "gagnant" : "perdu";
   }
 
-  console.log(`   Double chance non reconnu pour: "${type}"`);
   return null;
 }
 
 /**
- * FIXED Handle team victory bets
+ * Handle team victory bets
  */
 function handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
   const premierMotEquipe1 = equipe1Lower.split(" ")[0];
@@ -632,18 +599,12 @@ function handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home,
   const premierMotEquipe2 = equipe2Lower.split(" ")[0];
   const dernierMotEquipe2 = equipe2Lower.split(" ").pop();
   
-  // Check if type mentions team 1
   if (type.includes(premierMotEquipe1) || type.includes(dernierMotEquipe1)) {
-    const result = isEquipe1Home ? (homeScore > awayScore ? "gagnant" : "perdu") : (awayScore > homeScore ? "gagnant" : "perdu");
-    console.log(`   Victoire équipe1: ${result}`);
-    return result;
+    return isEquipe1Home ? (homeScore > awayScore ? "gagnant" : "perdu") : (awayScore > homeScore ? "gagnant" : "perdu");
   }
   
-  // Check if type mentions team 2
   if (type.includes(premierMotEquipe2) || type.includes(dernierMotEquipe2)) {
-    const result = isEquipe1Home ? (awayScore > homeScore ? "gagnant" : "perdu") : (homeScore > awayScore ? "gagnant" : "perdu");
-    console.log(`   Victoire équipe2: ${result}`);
-    return result;
+    return isEquipe1Home ? (awayScore > homeScore ? "gagnant" : "perdu") : (homeScore > awayScore ? "gagnant" : "perdu");
   }
 
   return null;
@@ -655,7 +616,7 @@ function handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home,
 export async function calculateUserStats(userId) {
   try {
     const allPronostics = await Pronostic.find({
-      userId: userId // Si vous avez un champ userId dans le modèle Pronostic
+      userId: userId
     });
 
     const stats = {
@@ -672,8 +633,7 @@ export async function calculateUserStats(userId) {
         ? ((stats.gagnants / (stats.gagnants + stats.perdus)) * 100).toFixed(2)
         : 0;
 
-    // Calculer le ROI (Return On Investment)
-    const totalMises = allPronostics.length * 10; // Mise moyenne de 10€
+    const totalMises = allPronostics.length * 10;
     const totalGains = allPronostics
       .filter((p) => p.statut === "gagnant")
       .reduce((sum, p) => sum + p.cote * 10, 0);
@@ -708,13 +668,11 @@ export async function quickCheckForLiveMatches() {
 
     console.log(`🔴 Vérification rapide de ${livePronostics.length} match(s) en cours...`);
 
-    // Short cache for live matches
     const now = Date.now();
-    if ((now - matchesCache.timestamp) < 5 * 60 * 1000) { // 5 minutes cache
-      return; // Skip if cache is fresh
+    if ((now - matchesCache.timestamp) < 5 * 60 * 1000) {
+      return;
     }
 
-    // Quick API call for live matches
     const today = new Date().toISOString().split("T")[0];
     try {
       const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
@@ -729,14 +687,12 @@ export async function quickCheckForLiveMatches() {
       matchesCache.timestamp = now;
       matchesCache.date = today;
 
-      // Process just the live matches
       for (const prono of livePronostics) {
         const matchingMatch = findBestMatch(prono, matchesCache.data);
         if (matchingMatch) {
           const status = matchingMatch.fixture.status.short;
           
           if (isMatchFinished(status)) {
-            // Update to finished
             const homeScore = matchingMatch.goals.home;
             const awayScore = matchingMatch.goals.away;
             
