@@ -199,70 +199,28 @@ export async function checkAndUpdatePronosticResults() {
         let matchData = null;
         let source = "api";
 
-        // 🔄 FALLBACK 1: Si pas trouvé via API Football, essayer Soccer Data API
-        if (!matchingMatch) {
-          console.log(`⚽ Recherche Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
+        // 🔄 Recherche via Soccer Data API (API principale)
+        console.log(`⚽ Recherche Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
 
-          const soccerResult = await soccerDataService.findMatch(
-            prono.equipe1,
-            prono.equipe2,
-            today
-          );
+        const soccerResult = await soccerDataService.findMatch(
+          prono.equipe1,
+          prono.equipe2,
+          today
+        );
 
-          if (soccerResult) {
-            matchData = {
-              homeScore: soccerResult.goals.home,
-              awayScore: soccerResult.goals.away,
-              homeTeam: soccerResult.teams.home.name,
-              awayTeam: soccerResult.teams.away.name,
-              status: soccerResult.fixture.status.short,
-              source: "soccer_data_api"
-            };
-            source = "soccer_data_api";
-            console.log(`✅ Match trouvé via Soccer Data API: ${soccerResult.goals.home}-${soccerResult.goals.away}`);
-          } else {
-            console.log(`❌ Aucun résultat trouvé via Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2}`);
-          }
-        }
-
-        // 🔄 FALLBACK 2: Si toujours pas trouvé, utiliser la recherche web avec IA
-        if (!matchingMatch && !matchData) {
-          console.log(`🌐 Recherche web pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
-
-          const webResult = await webSearchService.searchWithRetry(
-            prono.equipe1,
-            prono.equipe2,
-            today
-          );
-
-          if (webResult && webResult.status === "FT") {
-            // Créer un objet match simulé à partir des données web
-            matchData = {
-              homeScore: webResult.homeScore,
-              awayScore: webResult.awayScore,
-              homeTeam: prono.equipe1, // Approximation
-              awayTeam: prono.equipe2,
-              status: "FT",
-              source: "web_search"
-            };
-            source = "web_search";
-            console.log(`✅ Match trouvé via web: ${webResult.homeScore}-${webResult.awayScore}`);
-          } else {
-            console.log(`❌ Aucun résultat trouvé via web pour: ${prono.equipe1} vs ${prono.equipe2}`);
-          }
-        }
-
-        // Données depuis l'API Football (premier choix)
-        if (matchingMatch && !matchData) {
+        if (soccerResult) {
           matchData = {
-            homeScore: matchingMatch.goals.home,
-            awayScore: matchingMatch.goals.away,
-            homeTeam: matchingMatch.teams.home.name,
-            awayTeam: matchingMatch.teams.away.name,
-            status: matchingMatch.fixture.status.short,
-            elapsed: matchingMatch.fixture.status.elapsed,
-            source: "api"
+            homeScore: soccerResult.goals.home,
+            awayScore: soccerResult.goals.away,
+            homeTeam: soccerResult.teams.home.name,
+            awayTeam: soccerResult.teams.away.name,
+            status: soccerResult.fixture.status.short,
+            source: "soccer_data_api"
           };
+          source = "soccer_data_api";
+          console.log(`✅ Match trouvé via Soccer Data API: ${soccerResult.goals.home}-${soccerResult.goals.away}`);
+        } else {
+          console.log(`❌ Aucun résultat trouvé via Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2}`);
         }
 
         if (matchData) {
