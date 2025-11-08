@@ -20,30 +20,45 @@ const API_RATE_LIMIT_DELAY = 1000; // 1 second between API calls
 
 // Enhanced team name mappings for better matching
 const TEAM_ALIASES = {
-  'psg': ['psg', 'paris saint-germain', 'paris sg', 'paris saint germain'],
-  'barcelona': ['barcelona', 'fc barcelona', 'barca', 'fc barça'],
-  'real madrid': ['real madrid', 'real madrid cf', 'rm', 'madrid'],
-  'manchester united': ['manchester united', 'man utd', 'mu', 'man united'],
-  'manchester city': ['manchester city', 'man city', 'mc', 'city'],
-  'chelsea': ['chelsea', 'cfc', 'chelsea fc'],
-  'liverpool': ['liverpool', 'liverpool fc', 'liverpool f.c.'],
+  'psg': ['psg', 'paris saint-germain', 'paris sg', 'paris saint germain', 'paris'],
+  'barcelona': ['barcelona', 'fc barcelona', 'barca', 'fc barça', 'barcelone'],
+  'real madrid': ['real madrid', 'real madrid cf', 'rm', 'madrid', 'real'],
+  'manchester united': ['manchester united', 'man utd', 'mu', 'man united', 'man u'],
+  'manchester city': ['manchester city', 'man city', 'mc', 'city', 'man city'],
+  'chelsea': ['chelsea', 'cfc', 'chelsea fc', 'chelsea f.c.'],
+  'liverpool': ['liverpool', 'liverpool fc', 'liverpool f.c.', 'liverpool football club'],
   'arsenal': ['arsenal', 'arsenal fc', 'arsenal f.c.', 'gunners'],
   'tottenham': ['tottenham', 'tottenham hotspur', 'spurs', 'tottenham fc'],
   'juventus': ['juventus', 'juve', 'juventus fc'],
-  'ac milan': ['ac milan', 'milan', 'milan ac', 'a.c. milan'],
-  'inter milan': ['inter milan', 'inter', 'inter milano'],
+  'ac milan': ['ac milan', 'milan', 'milan ac', 'a.c. milan', 'acm'],
+  'inter milan': ['inter milan', 'inter', 'inter milano', 'inter de milan'],
   'napoli': ['napoli', 'ssc napoli'],
   'atletico madrid': ['atletico madrid', 'atletico madridi', 'atleti', 'atletico'],
-  'bayern munich': ['bayern munich', 'bayern', 'bayern münchen', 'bayern munchen'],
+  'bayern munich': ['bayern munich', 'bayern', 'bayern münchen', 'bayern munchen', 'bayern de munich'],
   'dortmund': ['dortmund', 'borussia dortmund', 'bvb'],
   'marseille': ['marseille', 'olympique marseille', 'olympique de marseille', 'om'],
   'lyon': ['lyon', 'olympique lyonnais', 'ol', 'lyonnais'],
   'monaco': ['monaco', 'as monaco', 'asso monaco'],
   'nice': ['nice', 'ogc nice', 'olympique gymnaste club nice'],
-  'lille': ['lille', 'losc lille', 'lille osc'],
+  'lille': ['lille', 'losc lille', 'lille osc', 'losc'],
   'rennes': ['rennes', 'stade rennais', 'srfc'],
   'montpellier': ['montpellier', 'montpellier hérault sport', 'mhsc'],
-  'toulouse': ['toulouse', 'toulouse fc', 'tfc']
+  'toulouse': ['toulouse', 'toulouse fc', 'tfc'],
+  'bournemouth': ['bournemouth', 'afc bournemouth', 'afc b'],
+  'crystal palace': ['crystal palace', 'cpfc', 'crystal p'],
+  'west ham': ['west ham', 'west ham united', 'whu', 'west h'],
+  'brighton': ['brighton', 'brighton and hove albion', 'bha', 'brighton & hove'],
+  'wolves': ['wolves', 'wolverhampton', 'wolverhampton wanderers', 'wwfc'],
+  'everton': ['everton', 'everton fc', 'efc'],
+  'leicester': ['leicester', 'leicester city', 'lcfc'],
+  'leeds': ['leeds', 'leeds united', 'lufc'],
+  'southampton': ['southampton', 'southampton fc', 'saints', 'sotn'],
+  'newcastle': ['newcastle', 'newcastle united', 'nufc', 'new'],
+  'nottingham': ['nottingham', 'nottingham forest', 'forest'],
+  'aston villa': ['aston villa', 'villa', 'avfc'],
+  'fulham': ['fulham', 'ffc'],
+  'burnley': ['burnley', 'burnley fc'],
+  'brentford': ['brentford', 'brentford fc', 'b fc']
 };
 
 /**
@@ -271,7 +286,7 @@ function findBestMatch(prono, matches) {
 
     const currentScore = Math.max(homeScore, awayScore);
 
-    if (currentScore > bestScore && currentScore >= 0.6) { // Minimum 60% similarity
+    if (currentScore > bestScore && currentScore >= 0.4) { // Lowered threshold to 40%
       bestScore = currentScore;
       bestMatch = match;
     }
@@ -282,8 +297,9 @@ function findBestMatch(prono, matches) {
 
 /**
  * Calculate similarity between two team names with alias support
+ * Exporté pour les tests
  */
-function calculateTeamSimilarity(pronoTeam, matchTeam) {
+export function calculateTeamSimilarity(pronoTeam, matchTeam) {
   const pronoNormalized = normalizeTeamName(pronoTeam);
   const matchNormalized = normalizeTeamName(matchTeam);
 
@@ -323,7 +339,7 @@ function normalizeTeamName(teamName) {
   return teamName
     .toLowerCase()
     .replace(/[^\w\s]/g, '') // Remove special characters
-    .replace(/\b(fc|cf|ac|as|ogc|ssc|olympique|football club|sport)\b/g, '') // Remove common terms
+    .replace(/\b(fc|cf|ac|as|ogc|ssc|olympique|football club|sport|de|united|afc|ufc)\b/g, '') // Remove common terms
     .replace(/\s+/g, ' ') // Normalize spaces
     .trim();
 }
@@ -345,25 +361,29 @@ function isMatchLive(status) {
 }
 
 /**
- * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé (enhanced)
+ * 🎲 Déterminer si un pronostic est gagnant, perdu ou remboursé (FIXED)
+ * Exporté pour les tests
  */
-function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
+export function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScore) {
   const type = prono.type.toLowerCase().trim();
   const equipe1Lower = prono.equipe1.toLowerCase().trim();
   const equipe2Lower = prono.equipe2.toLowerCase().trim();
   const homeTeamLower = homeTeam.toLowerCase().trim();
   const awayTeamLower = awayTeam.toLowerCase().trim();
 
-  // Determine which team is home/away
-  const isEquipe1Home = calculateTeamSimilarity(equipe1Lower, homeTeamLower) > 
+  // Determine which team is home/away - FIXED LOGIC
+  const isEquipe1Home = calculateTeamSimilarity(equipe1Lower, homeTeamLower) >= 
                        calculateTeamSimilarity(equipe1Lower, awayTeamLower);
 
   console.log(`🔍 Analyse: "${prono.type}" pour ${homeTeam} ${homeScore}-${awayScore} ${awayTeam}`);
+  console.log(`   Equipe1 "${equipe1Lower}" est-elle à domicile: ${isEquipe1Home}`);
 
   try {
-    // === Double chance - Enhanced ===
-    if (type.includes(" or ") || type.includes("double chance") || type.includes("1x") || type.includes("x2") || type.includes("12")) {
-      return handleDoubleChance(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
+    // === Double chance - ENHANCED AND FIXED ===
+    if (type.includes(" or ") || type.includes("double chance") || 
+        type.includes("1x") || type.includes("x2") || type.includes("12") ||
+        (type.includes("draw") && (type.includes(" or ") || type.includes("double")))) {
+      return handleDoubleChanceFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
     }
 
     // === Nul / Draw / Match nul ===
@@ -373,7 +393,7 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
 
     // === Victoire spécifique d'une équipe ===
     if (type.includes("victoire") || type.includes("win") || type.includes("vainqueur")) {
-      return handleTeamVictory(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
+      return handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore);
     }
 
     // === Simple 1, X, 2 ===
@@ -386,7 +406,8 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
     }
 
     // === BTTS (Both Teams To Score) ===
-    if (type.includes("btts") || type.includes("les deux équipes marquent") || type.includes("both teams to score") || type.includes("marquent tous les deux")) {
+    if (type.includes("btts") || type.includes("les deux équipes marquent") || 
+        type.includes("both teams to score") || type.includes("marquent tous les deux")) {
       const bothScored = homeScore > 0 && awayScore > 0;
       if (type.includes("oui") || type.includes("yes") || type.includes("marquent")) {
         return bothScored ? "gagnant" : "perdu";
@@ -432,7 +453,6 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
 
     // === Mi-temps ===
     if (type.includes("mi-temps") || type.includes("half time") || type.includes("ht")) {
-      // This would require HT scores from API, for now return null
       console.log("⚠️ Mi-temps prediction detected but HT scores not available");
       return null;
     }
@@ -463,44 +483,84 @@ function determinePronosticResult(prono, homeTeam, awayTeam, homeScore, awayScor
 }
 
 /**
- * Handle double chance bets
+ * FIXED Handle double chance bets - CORRECTED LOGIC
+ * Exporté pour les tests
  */
-function handleDoubleChance(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
+export function handleDoubleChanceFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
   const premierMotEquipe1 = equipe1Lower.split(" ")[0];
   const dernierMotEquipe1 = equipe1Lower.split(" ").pop();
   const premierMotEquipe2 = equipe2Lower.split(" ")[0];
   const dernierMotEquipe2 = equipe2Lower.split(" ").pop();
 
-  // Format: "Equipe1 or draw" (1X)
-  if (type.includes("1x") || (type.includes(premierMotEquipe1) && (type.includes("draw") || type.includes("nul")))) {
+  // Check for specific team mentions
+  const mentionEquipe1 = type.includes(premierMotEquipe1) || type.includes(dernierMotEquipe1) || 
+                         type.includes(equipe1Lower) || type.toLowerCase().includes(equipe1Lower);
+  const mentionEquipe2 = type.includes(premierMotEquipe2) || type.includes(dernierMotEquipe2) || 
+                         type.includes(equipe2Lower) || type.toLowerCase().includes(equipe2Lower);
+  const mentionDraw = type.includes("draw") || type.includes("nul") || type.includes("x");
+
+  console.log(`   Double chance - E1: ${mentionEquipe1}, E2: ${mentionEquipe2}, Draw: ${mentionDraw}`);
+
+  // Format: "Equipe1 or draw" (1X) - E1 OU MATCH NUL = GAGNE si E1 gagne OU match nul
+  if (mentionEquipe1 && mentionDraw && !mentionEquipe2) {
     if (isEquipe1Home) {
-      return homeScore >= awayScore ? "gagnant" : "perdu";
+      const result = homeScore >= awayScore ? "gagnant" : "perdu";
+      console.log(`   Double chance 1X: ${homeScore} >= ${awayScore} = ${result}`);
+      return result;
     } else {
-      return awayScore >= homeScore ? "gagnant" : "perdu";
+      const result = awayScore >= homeScore ? "gagnant" : "perdu";
+      console.log(`   Double chance 1X: ${awayScore} >= ${homeScore} = ${result}`);
+      return result;
     }
   }
 
-  // Format: "Equipe2 or draw" (X2)
-  if (type.includes("x2") || (type.includes(premierMotEquipe2) && (type.includes("draw") || type.includes("nul")))) {
+  // Format: "Equipe2 or draw" (X2) - E2 OU MATCH NUL = GAGNE si E2 gagne OU match nul
+  if (mentionEquipe2 && mentionDraw && !mentionEquipe1) {
     if (isEquipe1Home) {
-      return homeScore <= awayScore ? "gagnant" : "perdu";
+      const result = homeScore <= awayScore ? "gagnant" : "perdu";
+      console.log(`   Double chance X2: ${homeScore} <= ${awayScore} = ${result}`);
+      return result;
     } else {
-      return awayScore <= homeScore ? "gagnant" : "perdu";
+      const result = awayScore <= homeScore ? "gagnant" : "perdu";
+      console.log(`   Double chance X2: ${awayScore} <= ${homeScore} = ${result}`);
+      return result;
     }
   }
 
-  // Format: "Equipe1 or Equipe2" (12)
-  if (type.includes("12") || (type.includes(premierMotEquipe1) && type.includes(premierMotEquipe2))) {
-    return homeScore !== awayScore ? "gagnant" : "perdu";
+  // Format: "Equipe1 or Equipe2" (12) - E1 OU E2 = GAGNE si ce n'est pas match nul
+  if (mentionEquipe1 && mentionEquipe2 && !mentionDraw) {
+    const result = homeScore !== awayScore ? "gagnant" : "perdu";
+    console.log(`   Double chance 12: ${homeScore} !== ${awayScore} = ${result}`);
+    return result;
   }
 
+  // Format classique: 1X, X2, 12
+  if (type.includes("1x") || type.includes("1 x")) {
+    const result = (isEquipe1Home ? homeScore >= awayScore : awayScore >= homeScore) ? "gagnant" : "perdu";
+    console.log(`   Double chance 1X classique: ${result}`);
+    return result;
+  }
+  
+  if (type.includes("x2") || type.includes("x 2") || type.includes("2x") || type.includes("2 x")) {
+    const result = (isEquipe1Home ? homeScore <= awayScore : awayScore <= homeScore) ? "gagnant" : "perdu";
+    console.log(`   Double chance X2 classique: ${result}`);
+    return result;
+  }
+  
+  if (type.includes("12") || type.includes("1 2") || type.includes("21") || type.includes("2 1")) {
+    const result = homeScore !== awayScore ? "gagnant" : "perdu";
+    console.log(`   Double chance 12 classique: ${result}`);
+    return result;
+  }
+
+  console.log(`   Double chance non reconnu pour: "${type}"`);
   return null;
 }
 
 /**
- * Handle team victory bets
+ * FIXED Handle team victory bets
  */
-function handleTeamVictory(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
+function handleTeamVictoryFixed(type, equipe1Lower, equipe2Lower, isEquipe1Home, homeScore, awayScore) {
   const premierMotEquipe1 = equipe1Lower.split(" ")[0];
   const dernierMotEquipe1 = equipe1Lower.split(" ").pop();
   const premierMotEquipe2 = equipe2Lower.split(" ")[0];
@@ -508,20 +568,16 @@ function handleTeamVictory(type, equipe1Lower, equipe2Lower, isEquipe1Home, home
   
   // Check if type mentions team 1
   if (type.includes(premierMotEquipe1) || type.includes(dernierMotEquipe1)) {
-    if (isEquipe1Home) {
-      return homeScore > awayScore ? "gagnant" : "perdu";
-    } else {
-      return awayScore > homeScore ? "gagnant" : "perdu";
-    }
+    const result = isEquipe1Home ? (homeScore > awayScore ? "gagnant" : "perdu") : (awayScore > homeScore ? "gagnant" : "perdu");
+    console.log(`   Victoire équipe1: ${result}`);
+    return result;
   }
   
   // Check if type mentions team 2
   if (type.includes(premierMotEquipe2) || type.includes(dernierMotEquipe2)) {
-    if (isEquipe1Home) {
-      return awayScore > homeScore ? "gagnant" : "perdu";
-    } else {
-      return homeScore > awayScore ? "gagnant" : "perdu";
-    }
+    const result = isEquipe1Home ? (awayScore > homeScore ? "gagnant" : "perdu") : (homeScore > awayScore ? "gagnant" : "perdu");
+    console.log(`   Victoire équipe2: ${result}`);
+    return result;
   }
 
   return null;
