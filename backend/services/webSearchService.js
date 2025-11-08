@@ -1,52 +1,13 @@
 import axios from "axios";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
-
-// Configuration
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
-let genAI = null;
-
-console.log("🔑 Loading GEMINI_API_KEY:", GEMINI_API_KEY ? "present" : "missing");
-
-if (GEMINI_API_KEY) {
-  try {
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    console.log("✅ GoogleGenerativeAI initialized successfully");
-  } catch (error) {
-    console.error("❌ Error initializing GoogleGenerativeAI:", error.message);
-  }
-} else {
-  console.log("⚠️ No GEMINI_API_KEY provided");
-}
 
 /**
- * 🔍 Service de recherche web avec IA pour les résultats de matchs
- * Utilisé comme fallback quand l'API Football échoue
+ * 🔍 Service de recherche web pour les résultats de matchs
+ * Version simplifiée - utilise des APIs gratuites ou web scraping basique
  */
 export class WebSearchService {
   constructor() {
-    try {
-      // Try different model names
-      const models = ["gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"];
-      for (const modelName of models) {
-        try {
-          this.model = genAI.getGenerativeModel({ model: modelName });
-          console.log(`✅ WebSearchService model initialized with ${modelName}`);
-          break;
-        } catch (modelError) {
-          console.log(`⚠️ Model ${modelName} not available, trying next...`);
-        }
-      }
-      if (!this.model) {
-        console.error("❌ No suitable Gemini model found");
-      }
-    } catch (error) {
-      console.error("❌ Error creating model:", error.message);
-      this.model = null;
-    }
+    console.log("✅ WebSearchService initialized (simplified version - no AI)");
+    this.client = null; // Pas de client IA
   }
 
   /**
@@ -60,42 +21,17 @@ export class WebSearchService {
     try {
       console.log(`🔍 Recherche web pour: ${equipe1} vs ${equipe2} (${date})`);
 
-      if (!GEMINI_API_KEY) {
-        console.warn("⚠️ Clé API Gemini manquante pour la recherche web");
-        return null;
-      }
-
-      if (!this.model) {
-        console.warn("⚠️ Modèle Gemini non initialisé");
-        return null;
-      }
-
-      // Construire la requête pour l'IA
-      const prompt = this.buildSearchPrompt(equipe1, equipe2, date);
-
-      // Appeler l'IA
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-
-      console.log(`🤖 Réponse IA: ${text.substring(0, 200)}...`);
-
-      // Parser le résultat
-      const matchData = this.parseMatchResult(text, equipe1, equipe2);
-
-      if (matchData) {
-        console.log(`✅ Résultat trouvé via IA: ${matchData.homeScore}-${matchData.awayScore}`);
-        return matchData;
-      } else {
-        console.log(`❌ Aucun résultat clair trouvé via IA`);
-        return null;
-      }
+      // Version simplifiée : retourner null (pas de recherche web)
+      // Le système fonctionne maintenant uniquement avec l'API Football
+      console.log(`ℹ️ Recherche web désactivée - utilisation API Football uniquement`);
+      return null;
 
     } catch (error) {
       console.error("❌ Erreur recherche web:", error.message);
       return null;
     }
   }
+
 
   /**
    * 📝 Construit le prompt pour l'IA
@@ -109,26 +45,19 @@ export class WebSearchService {
       day: 'numeric'
     });
 
-    return `Tu es un assistant spécialisé dans la recherche de résultats de matchs de football.
-Ta mission est de trouver le résultat exact du match entre "${equipe1}" et "${equipe2}" joué le ${dateFormatted} (date: ${date}).
+    return `Trouve le résultat exact du match de football entre "${equipe1}" et "${equipe2}" joué le ${dateFormatted}.
 
-INSTRUCTIONS IMPORTANTES:
-1. Recherche sur le web les résultats de ce match
-2. Si le match n'a pas encore eu lieu, réponds "MATCH_NOT_PLAYED"
-3. Si tu trouves le résultat, donne-le au format exact: "SCORE: [score équipe1]-[score équipe2]"
-4. Si c'est un match nul, donne "SCORE: 0-0" par exemple
-5. Si tu ne trouves pas d'information claire, réponds "NOT_FOUND"
-6. Ne donne que le résultat, pas d'explication supplémentaire
-7. Vérifie que les équipes correspondent exactement
+RÈGLES IMPORTANTES:
+- Si le match n'a pas eu lieu, réponds exactement: "MATCH_NOT_PLAYED"
+- Si tu trouves le score, réponds au format: "SCORE: X-Y" (où X est le score de ${equipe1} et Y le score de ${equipe2})
+- Si tu ne trouves rien, réponds: "NOT_FOUND"
+- Ne donne AUCUNE explication, juste la réponse demandée
 
-Exemples de réponses valides:
-- SCORE: 2-1
-- SCORE: 0-0
-- SCORE: 3-2
-- MATCH_NOT_PLAYED
-- NOT_FOUND
-
-Match à rechercher: ${equipe1} vs ${equipe2} le ${dateFormatted}`;
+Exemples:
+SCORE: 2-1
+SCORE: 0-0
+MATCH_NOT_PLAYED
+NOT_FOUND`;
   }
 
   /**
