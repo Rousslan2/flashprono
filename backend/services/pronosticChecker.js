@@ -4,7 +4,7 @@ import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
 
-const API_KEY = process.env.FOOTBALL_API_KEY || "";
+const API_KEY = process.env.FOOTBALL_API_KEY || process.env.API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
 
 // Enhanced cache for better match detection
