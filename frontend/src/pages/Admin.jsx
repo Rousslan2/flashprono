@@ -682,12 +682,30 @@ export default function Admin() {
                 {pronosTotal} pronostic(s) au total • Page {pronosPage} sur {pronosPages}
               </p>
             </div>
-            <button
-              onClick={() => loadPronos(pronosPage)}
-              className="px-4 py-2 bg-primary/20 border border-primary rounded-lg hover:bg-primary/30 transition"
-            >
-              🔄 Actualiser
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const { data } = await axios.post(`${API_BASE}/api/admin/pronostics/check-results`, {}, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    alert(`✅ ${data.message}`);
+                    loadPronos(pronosPage); // Recharger la page actuelle
+                  } catch (error) {
+                    alert(`❌ Erreur: ${error.response?.data?.message || error.message}`);
+                  }
+                }}
+                className="px-4 py-2 bg-green-500/20 border border-green-500/40 text-green-400 rounded-lg hover:bg-green-500/30 transition font-semibold"
+              >
+                ⚽ Vérifier résultats
+              </button>
+              <button
+                onClick={() => loadPronos(pronosPage)}
+                className="px-4 py-2 bg-primary/20 border border-primary rounded-lg hover:bg-primary/30 transition"
+              >
+                🔄 Actualiser
+              </button>
+            </div>
           </div>
 
           {loadingList ? (

@@ -96,6 +96,39 @@ router.get("/pronostics", async (req, res, next) => {
   }
 });
 
+// ==============================
+// 🔄 FORCE CHECK RESULTS (ADMIN)
+// ==============================
+router.post("/pronostics/check-results", async (req, res, next) => {
+  try {
+    const { checkAndUpdatePronosticResults } = await import("../services/pronosticChecker.js");
+
+    console.log("🔄 Vérification forcée des résultats par admin");
+    const result = await checkAndUpdatePronosticResults();
+
+    if (result) {
+      res.json({
+        success: true,
+        message: `${result.updated} pronostic(s) mis à jour sur ${result.checked} vérifié(s)`,
+        checked: result.checked,
+        updated: result.updated,
+        live: result.live
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la vérification"
+      });
+    }
+  } catch (error) {
+    console.error("❌ Erreur vérification forcée:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 router.post("/pronostics", async (req, res, next) => {
   try {
     const { sport, date, equipe1, equipe2, type, cote, resultat, label, details, audioUrl } = req.body;
