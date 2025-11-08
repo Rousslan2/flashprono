@@ -104,15 +104,21 @@ router.post("/pronostics/check-results", async (req, res, next) => {
     const { checkAndUpdatePronosticResults } = await import("../services/pronosticChecker.js");
 
     console.log("🔄 Vérification forcée des résultats par admin");
+
+    // Vérifier TOUS les pronostics (pas seulement en attente/en cours)
+    const allPronostics = await Pronostic.find({ sport: "Football" });
+    console.log(`📊 Vérification de TOUS les pronostics: ${allPronostics.length}`);
+
     const result = await checkAndUpdatePronosticResults();
 
     if (result) {
       res.json({
         success: true,
-        message: `${result.updated} pronostic(s) mis à jour sur ${result.checked} vérifié(s)`,
+        message: `${result.updated} pronostic(s) mis à jour sur ${result.checked} vérifié(s) (${allPronostics.length} au total)`,
         checked: result.checked,
         updated: result.updated,
-        live: result.live
+        live: result.live,
+        total: allPronostics.length
       });
     } else {
       res.status(500).json({

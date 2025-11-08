@@ -73,11 +73,21 @@ export async function checkAndUpdatePronosticResults() {
       return;
     }
 
-    // 1. Récupérer tous les pronostics en attente OU en cours (Football uniquement)
-    const pendingPronostics = await Pronostic.find({
-      statut: { $in: ["en attente", "en cours"] },
+    // 1. Récupérer TOUS les pronostics Football (pas seulement en attente/en cours)
+    // Cela permet de corriger les pronostics qui sont mal marqués
+    const allPronostics = await Pronostic.find({
       sport: "Football",
     });
+
+    // Filtrer pour ne traiter que ceux qui peuvent encore être mis à jour
+    const pendingPronostics = allPronostics.filter(p =>
+      p.statut === "en attente" ||
+      p.statut === "en cours" ||
+      !p.statut || // Cas où statut est null/undefined
+      p.statut === "" // Cas où statut est vide
+    );
+
+    console.log(`📊 ${allPronostics.length} pronostic(s) au total, ${pendingPronostics.length} à vérifier/corriger`);
 
     if (pendingPronostics.length === 0) {
       console.log("✅ Aucun pronostic en attente à vérifier");
