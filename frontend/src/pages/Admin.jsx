@@ -700,6 +700,22 @@ export default function Admin() {
                 ⚽ Vérifier résultats
               </button>
               <button
+                onClick={async () => {
+                  try {
+                    const { data } = await axios.post(`${API_BASE}/api/admin/check-results`, {}, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    alert(`✅ ${data.message}`);
+                    loadPronos(pronosPage); // Recharger la page actuelle
+                  } catch (error) {
+                    alert(`❌ Erreur: ${error.response?.data?.message || error.message}`);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-500/20 border border-blue-500/40 text-blue-400 rounded-lg hover:bg-blue-500/30 transition font-semibold"
+              >
+                🔄 Vérifier API
+              </button>
+              <button
                 onClick={() => loadPronos(pronosPage)}
                 className="px-4 py-2 bg-primary/20 border border-primary rounded-lg hover:bg-primary/30 transition"
               >
