@@ -29,7 +29,7 @@ export class SoccerDataService {
       console.log(`🔍 Soccer Data API: Recherche matchs du ${date}`);
 
       if (!API_KEY) {
-        console.warn("⚠️ Clé SOCCER_DATA_API_KEY manquante");
+        console.warn("⚠️ Clé SOCCER_DATA_API_KEY manquante - utilisation du fallback web");
         return [];
       }
 
