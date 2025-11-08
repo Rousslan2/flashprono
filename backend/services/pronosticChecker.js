@@ -155,7 +155,34 @@ export async function checkAndUpdatePronosticResults() {
         
       } catch (apiError) {
         console.error("❌ Erreur API:", apiError.message);
-        return;
+        console.log("🔄 Tentative de récupération des matchs via cache seulement...");
+
+        // Si l'API échoue, essayer d'utiliser le cache existant
+        if (matchesCache.data && matchesCache.data.length > 0) {
+          console.log("📋 Utilisation du cache existant malgré l'erreur API");
+          allMatches = matchesCache.data;
+        } else {
+          console.log("❌ Aucun cache disponible, tentative avec les matchs d'hier...");
+
+          // Essayer de récupérer les matchs d'hier même en cas d'erreur API
+          try {
+            await new Promise(resolve => setTimeout(resolve, API_RATE_LIMIT_DELAY));
+
+            const { data: yesterdayData } = await axios.get(`${API_BASE_URL}/fixtures`, {
+              params: { date: yesterday },
+              headers: {
+                "x-rapidapi-key": API_KEY,
+                "x-rapidapi-host": "v3.football.api-sports.io",
+              },
+            });
+
+            allMatches = yesterdayData.response || [];
+            console.log(`📅 Récupération des matchs d'hier malgré l'erreur API: ${allMatches.length} matchs`);
+          } catch (yesterdayError) {
+            console.error("❌ Impossible de récupérer les matchs d'hier:", yesterdayError.message);
+            return;
+          }
+        }
       }
     }
 

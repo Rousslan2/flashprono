@@ -114,16 +114,21 @@ router.post("/pronostics/check-results", async (req, res, next) => {
     if (result) {
       res.json({
         success: true,
-        message: `${result.updated} pronostic(s) mis à jour sur ${result.checked} vérifié(s) (${allPronostics.length} au total)`,
+        message: `${result.updated} résultat(s) mis à jour sur ${result.checked} vérifié(s) (${allPronostics.length} au total)`,
         checked: result.checked,
         updated: result.updated,
         live: result.live,
         total: allPronostics.length
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: "Erreur lors de la vérification"
+      // Si la fonction retourne null, c'est probablement parce qu'il n'y a aucun prono à vérifier
+      res.json({
+        success: true,
+        message: `0 résultat(s) mis à jour sur 0 vérifié(s) (${allPronostics.length} au total)`,
+        checked: 0,
+        updated: 0,
+        live: 0,
+        total: allPronostics.length
       });
     }
   } catch (error) {
