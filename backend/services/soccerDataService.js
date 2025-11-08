@@ -1,7 +1,14 @@
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
 const API_KEY = process.env.SOCCER_DATA_API_KEY || "";
 const API_HOST = "soccer-data6.p.rapidapi.com";
+
+console.log("🔑 Soccer Data API - Clé chargée:", API_KEY ? "✅ OUI" : "❌ NON");
+if (API_KEY) {
+  console.log("🔑 Début de clé:", API_KEY.substring(0, 15) + "...");
+}
 
 /**
  * 🚀 Service Soccer Data API (RapidAPI) - API alternative avancée
@@ -49,9 +56,8 @@ export class SoccerDataService {
       const startDate = `${date}T00:00:00Z`;
       const endDate = `${date}T23:59:59Z`;
 
-      // CORRECTION: Rechercher dans TOUTES les compétitions
-      // Ne pas utiliser un ID de compétition fixe comme "/match/1t97ffnd5cp761lay7ucgk9qak"
-      const response = await this.client.get("/match", {
+      // Utiliser l'endpoint avec dataKey mais sans filtre de compétition spécifique
+      const response = await this.client.get("/soccerdata/match/v1", {
         params: {
           status: "played,playing", // Terminé + en cours
           "mt.mDt": `[${startDate} TO ${endDate}]`, // Filtre par date

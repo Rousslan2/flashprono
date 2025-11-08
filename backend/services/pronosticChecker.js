@@ -3,8 +3,6 @@ import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
-import { webSearchService } from "./webSearchService.js";
-import { soccerDataService } from "./soccerDataService.js";
 
 const API_KEY = process.env.FOOTBALL_API_KEY || process.env.API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
@@ -119,111 +117,48 @@ export async function checkAndUpdatePronosticResults() {
         let matchData = null;
         let source = null;
 
-        // 🔄 TENTATIVE 1: Soccer Data API
+        // 🔄 Recherche via API Football
         try {
-          console.log(`   1️⃣ Soccer Data API...`);
-          const soccerResult = await soccerDataService.findMatch(
-            prono.equipe1,
-            prono.equipe2,
-            matchDate
-          );
+          console.log(`   🔍 API Football (date: ${matchDate})...`);
+          
+          const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
+            params: { date: matchDate },
+            headers: {
+              "x-rapidapi-key": API_KEY,
+              "x-rapidapi-host": "v3.football.api-sports.io",
+            },
+          });
 
-          if (soccerResult && soccerResult.goals.home !== null && soccerResult.goals.away !== null) {
-            matchData = {
-              homeScore: soccerResult.goals.home,
-              awayScore: soccerResult.goals.away,
-              homeTeam: soccerResult.teams.home.name,
-              awayTeam: soccerResult.teams.away.name,
-              status: soccerResult.fixture.status.short,
-              source: "soccer_data_api"
-            };
-            source = "soccer_data_api";
-            console.log(`   ✅ Soccer Data: ${soccerResult.goals.home}-${soccerResult.goals.away} (${soccerResult.fixture.status.short})`);
-          } else {
-            console.log(`   ❌ Soccer Data: Pas trouvé`);
-          }
-        } catch (error) {
-          console.log(`   ❌ Soccer Data: Erreur - ${error.message}`);
-        }
-
-        // 🔄 TENTATIVE 2: Soccer Data API (lendemain)
-        if (!matchData) {
-          try {
-            const nextDay = new Date(matchDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            const nextDayStr = nextDay.toISOString().split("T")[0];
+          const matchesForDate = data.response || [];
+          console.log(`   📊 ${matchesForDate.length} matchs trouvés le ${matchDate}`);
+          
+          const matchingMatch = findBestMatch(prono, matchesForDate);
+          
+          if (matchingMatch) {
+            const status = matchingMatch.fixture.status.short;
+            const homeScore = matchingMatch.goals.home;
+            const awayScore = matchingMatch.goals.away;
             
-            console.log(`   2️⃣ Soccer Data (lendemain ${nextDayStr})...`);
-            
-            const soccerResultNext = await soccerDataService.findMatch(
-              prono.equipe1,
-              prono.equipe2,
-              nextDayStr
-            );
-
-            if (soccerResultNext && soccerResultNext.goals.home !== null && soccerResultNext.goals.away !== null) {
+            if (homeScore !== null && awayScore !== null) {
               matchData = {
-                homeScore: soccerResultNext.goals.home,
-                awayScore: soccerResultNext.goals.away,
-                homeTeam: soccerResultNext.teams.home.name,
-                awayTeam: soccerResultNext.teams.away.name,
-                status: soccerResultNext.fixture.status.short,
-                source: "soccer_data_api_nextday"
+                homeScore,
+                awayScore,
+                homeTeam: matchingMatch.teams.home.name,
+                awayTeam: matchingMatch.teams.away.name,
+                status,
+                elapsed: matchingMatch.fixture.status.elapsed,
+                source: "api_football"
               };
-              source = "soccer_data_api_nextday";
-              console.log(`   ✅ Soccer Data (lendemain): ${soccerResultNext.goals.home}-${soccerResultNext.goals.away}`);
+              source = "api_football";
+              console.log(`   ✅ API Football: ${homeScore}-${awayScore} (${status})`);
             } else {
-              console.log(`   ❌ Soccer Data (lendemain): Pas trouvé`);
+              console.log(`   ⚠️ API Football: Match trouvé mais scores null`);
             }
-          } catch (error) {
-            console.log(`   ❌ Soccer Data (lendemain): Erreur - ${error.message}`);
+          } else {
+            console.log(`   ❌ API Football: Aucun match correspondant`);
           }
-        }
-
-        // 🔄 TENTATIVE 3: API Football
-        if (!matchData) {
-          try {
-            console.log(`   3️⃣ API Football...`);
-            
-            const { data } = await axios.get(`${API_BASE_URL}/fixtures`, {
-              params: { date: matchDate },
-              headers: {
-                "x-rapidapi-key": API_KEY,
-                "x-rapidapi-host": "v3.football.api-sports.io",
-              },
-            });
-
-            const matchesForDate = data.response || [];
-            console.log(`   📊 ${matchesForDate.length} matchs trouvés le ${matchDate}`);
-            
-            const matchingMatch = findBestMatch(prono, matchesForDate);
-            
-            if (matchingMatch) {
-              const status = matchingMatch.fixture.status.short;
-              const homeScore = matchingMatch.goals.home;
-              const awayScore = matchingMatch.goals.away;
-              
-              if (homeScore !== null && awayScore !== null) {
-                matchData = {
-                  homeScore,
-                  awayScore,
-                  homeTeam: matchingMatch.teams.home.name,
-                  awayTeam: matchingMatch.teams.away.name,
-                  status,
-                  elapsed: matchingMatch.fixture.status.elapsed,
-                  source: "api_football"
-                };
-                source = "api_football";
-                console.log(`   ✅ API Football: ${homeScore}-${awayScore} (${status})`);
-              } else {
-                console.log(`   ⚠️ API Football: Match trouvé mais scores null`);
-              }
-            } else {
-              console.log(`   ❌ API Football: Aucun match correspondant`);
-            }
-          } catch (apiError) {
-            console.log(`   ❌ API Football: Erreur - ${apiError.message}`);
-          }
+        } catch (apiError) {
+          console.log(`   ❌ API Football: Erreur - ${apiError.message}`);
         }
 
         // Aucune source n'a trouvé le match
