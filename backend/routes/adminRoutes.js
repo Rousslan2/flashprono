@@ -68,12 +68,29 @@ router.get("/stats", async (_req, res, next) => {
 });
 
 // ==============================
-// ⚽ PRONOSTICS CRUD
+// ⚽ PRONOSTICS CRUD (PAGINÉ)
 // ==============================
-router.get("/pronostics", async (_req, res, next) => {
+router.get("/pronostics", async (req, res, next) => {
   try {
-    const list = await Pronostic.find({}).sort({ createdAt: -1 }).limit(50);
-    res.json(list);
+    const page = Math.max(parseInt(req.query.page || "1"), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "25"), 1), 100);
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      Pronostic.find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Pronostic.countDocuments(),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      limit
+    });
   } catch (e) {
     next(e);
   }

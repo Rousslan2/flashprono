@@ -29,6 +29,9 @@ export default function Admin() {
 
   // ---- LISTE PRONOS ----
   const [pronos, setPronos] = useState([]);
+  const [pronosPage, setPronosPage] = useState(1);
+  const [pronosPages, setPronosPages] = useState(1);
+  const [pronosTotal, setPronosTotal] = useState(0);
   const [loadingList, setLoadingList] = useState(true);
 
   // ---- USERS ----
@@ -67,13 +70,16 @@ export default function Admin() {
     }
   };
 
-  const loadPronos = async () => {
+  const loadPronos = async (page = 1) => {
     try {
       setLoadingList(true);
-      const { data } = await axios.get(`${API_BASE}/api/admin/pronostics`, {
+      const { data } = await axios.get(`${API_BASE}/api/admin/pronostics?page=${page}&limit=25`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPronos(data);
+      setPronos(data.items || []);
+      setPronosPage(data.page || 1);
+      setPronosPages(data.pages || 1);
+      setPronosTotal(data.total || 0);
     } catch {
       alert("Erreur chargement pronostics");
     } finally {
@@ -119,7 +125,7 @@ export default function Admin() {
   // Load initial datasets (stats + pronos + users page 1)
   useEffect(() => {
     loadStats();
-    loadPronos();
+    loadPronos(1);
     loadUsers(1);
     
     // 🔥 ÉCOUTER LES ÉVÉNEMENTS SOCKET.IO (TOUJOURS ACTIFS)
@@ -667,70 +673,148 @@ export default function Admin() {
 
       {/* LISTE PRONOS */}
       {tab === "list" && (
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
+          {/* Header avec stats */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-2xl font-bold text-white">📋 Liste des pronostics</h3>
+              <p className="text-gray-400 text-sm mt-1">
+                {pronosTotal} pronostic(s) au total • Page {pronosPage} sur {pronosPages}
+              </p>
+            </div>
+            <button
+              onClick={() => loadPronos(pronosPage)}
+              className="px-4 py-2 bg-primary/20 border border-primary rounded-lg hover:bg-primary/30 transition"
+            >
+              🔄 Actualiser
+            </button>
+          </div>
+
           {loadingList ? (
             <p className="text-center text-gray-400">Chargement…</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="text-gray-400">
-                    <th className="py-2">Date</th>
-                    <th className="py-2">Sport</th>
-                    <th className="py-2">Match</th>
-                    <th className="py-2">Type</th>
-                    <th className="py-2">Cote</th>
-                    <th className="py-2">Résultat</th>
-                    <th className="py-2"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pronos.map((p) => (
-                    <tr key={p._id} className="border-t border-[#222]">
-                      <td className="py-2">{new Date(p.date).toLocaleString()}</td>
-                      <td className="py-2">{p.sport}</td>
-                      <td className="py-2">
-                        {p.equipe1} vs {p.equipe2}
-                      </td>
-                      <td className="py-2">{p.type}</td>
-                      <td className="py-2">{p.cote}</td>
-                      <td className="py-2">{p.resultat}</td>
-                      <td className="py-2 text-right">
-                        <button
-                          onClick={() => {
-                            setEditingId(p._id);
-                            setForm({
-                              label: p.label || "standard",
-                              details: p.details || "",
-                              audioUrl: p.audioUrl || "",
-                              sport: p.sport || "Football",
-                              date: p.date
-                                ? new Date(p.date).toISOString().slice(0, 16)
-                                : new Date().toISOString().slice(0, 16),
-                              equipe1: p.equipe1 || "",
-                              equipe2: p.equipe2 || "",
-                              type: p.type || "1N2",
-                              cote: p.cote ? String(p.cote) : "",
-                              resultat: p.resultat || "En attente",
-                            });
-                            setTab("add");
-                          }}
-                          className="text-yellow-400 hover:text-yellow-300 mr-2"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => deleteProno(p._id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Supprimer
-                        </button>
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="text-gray-400 border-b border-gray-700">
+                      <th className="py-3 px-2">Date</th>
+                      <th className="py-3 px-2">Sport</th>
+                      <th className="py-3 px-2">Match</th>
+                      <th className="py-3 px-2">Type</th>
+                      <th className="py-3 px-2">Cote</th>
+                      <th className="py-3 px-2">Résultat</th>
+                      <th className="py-3 px-2 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {pronos.map((p) => (
+                      <tr key={p._id} className="border-b border-gray-800 hover:bg-gray-900/50 transition">
+                        <td className="py-3 px-2 text-white">
+                          <div className="font-semibold">
+                            {new Date(p.date).toLocaleDateString('fr-FR')}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {new Date(p.date).toLocaleTimeString('fr-FR')}
+                          </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-semibold">
+                            ⚽ {p.sport}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-white font-semibold">
+                          {p.equipe1} vs {p.equipe2}
+                        </td>
+                        <td className="py-3 px-2 text-gray-300">
+                          {p.type}
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded font-semibold">
+                            {p.cote}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2">
+                          {p.resultat === "gagnant" ? (
+                            <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-semibold">
+                              ✅ Gagnant
+                            </span>
+                          ) : p.resultat === "perdu" ? (
+                            <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-semibold">
+                              ❌ Perdu
+                            </span>
+                          ) : p.resultat === "en cours" ? (
+                            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold">
+                              🔄 En cours
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/30 text-xs font-semibold">
+                              ⏳ {p.resultat}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => {
+                                setEditingId(p._id);
+                                setForm({
+                                  label: p.label || "standard",
+                                  details: p.details || "",
+                                  audioUrl: p.audioUrl || "",
+                                  sport: p.sport || "Football",
+                                  date: p.date
+                                    ? new Date(p.date).toISOString().slice(0, 16)
+                                    : new Date().toISOString().slice(0, 16),
+                                  equipe1: p.equipe1 || "",
+                                  equipe2: p.equipe2 || "",
+                                  type: p.type || "1N2",
+                                  cote: p.cote ? String(p.cote) : "",
+                                  resultat: p.resultat || "En attente",
+                                });
+                                setTab("add");
+                              }}
+                              className="px-3 py-1.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/30 transition text-xs font-semibold"
+                            >
+                              ✏️ Modifier
+                            </button>
+                            <button
+                              onClick={() => deleteProno(p._id)}
+                              className="px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition text-xs font-semibold"
+                            >
+                              🗑️ Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-between items-center mt-6">
+                <div className="text-gray-400 text-sm">
+                  Page {pronosPage} sur {pronosPages} • {pronosTotal} pronostics au total
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    disabled={pronosPage <= 1}
+                    onClick={() => loadPronos(pronosPage - 1)}
+                    className="px-4 py-2 rounded-lg bg-black border-2 border-primary/30 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-900 transition"
+                  >
+                    ← Précédent
+                  </button>
+                  <button
+                    disabled={pronosPage >= pronosPages}
+                    onClick={() => loadPronos(pronosPage + 1)}
+                    className="px-4 py-2 rounded-lg bg-black border-2 border-primary/30 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-900 transition"
+                  >
+                    Suivant →
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
