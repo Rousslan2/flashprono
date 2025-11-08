@@ -169,6 +169,9 @@ export async function checkAndUpdatePronosticResults() {
 
         // 🔄 FALLBACK: Si pas trouvé via API, utiliser la recherche web avec IA
         if (!matchingMatch) {
+          // Désactiver temporairement la recherche web pour éviter les logs inutiles
+          console.log(`⚠️ Aucun match trouvé pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
+          /*
           console.log(`🌐 Recherche web pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
 
           const webResult = await webSearchService.searchWithRetry(
@@ -192,6 +195,7 @@ export async function checkAndUpdatePronosticResults() {
           } else {
             console.log(`❌ Aucun résultat trouvé via web pour: ${prono.equipe1} vs ${prono.equipe2}`);
           }
+          */
         } else {
           // Données depuis l'API
           matchData = {
