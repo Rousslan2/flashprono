@@ -221,6 +221,7 @@ export async function checkAndUpdatePronosticResults() {
           console.log(`✅ Match trouvé via Soccer Data API: ${soccerResult.goals.home}-${soccerResult.goals.away}`);
         } else {
           console.log(`❌ Aucun résultat trouvé via Soccer Data API pour: ${prono.equipe1} vs ${prono.equipe2}`);
+          // Aucun fallback - on ne fait rien si Soccer Data API ne trouve pas
         }
 
         if (matchData) {
