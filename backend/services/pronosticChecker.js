@@ -3,6 +3,7 @@ import Pronostic from "../models/Pronostic.js";
 import UserBet from "../models/UserBet.js";
 import User from "../models/User.js";
 import { io } from "../server.js";
+import { webSearchService } from "./webSearchService.js";
 
 const API_KEY = process.env.FOOTBALL_API_KEY || process.env.API_KEY || "";
 const API_BASE_URL = "https://v3.football.api-sports.io";
@@ -162,15 +163,50 @@ export async function checkAndUpdatePronosticResults() {
     // 3. Pour chaque pronostic, trouver le match correspondant et vérifier le résultat
     for (const prono of pendingPronostics) {
       try {
-        const matchingMatch = findBestMatch(prono, allMatches);
+        let matchingMatch = findBestMatch(prono, allMatches);
+        let matchData = null;
+        let source = "api";
 
-        if (matchingMatch) {
-          const homeScore = matchingMatch.goals.home;
-          const awayScore = matchingMatch.goals.away;
-          const homeTeam = matchingMatch.teams.home.name;
-          const awayTeam = matchingMatch.teams.away.name;
-          const status = matchingMatch.fixture.status.short; // NS, 1H, HT, 2H, FT, etc.
-          const elapsed = matchingMatch.fixture.status.elapsed; // Minutes écoulées
+        // 🔄 FALLBACK: Si pas trouvé via API, utiliser la recherche web avec IA
+        if (!matchingMatch) {
+          console.log(`🌐 Recherche web pour: ${prono.equipe1} vs ${prono.equipe2} (${prono.type})`);
+
+          const webResult = await webSearchService.searchWithRetry(
+            prono.equipe1,
+            prono.equipe2,
+            today
+          );
+
+          if (webResult && webResult.status === "FT") {
+            // Créer un objet match simulé à partir des données web
+            matchData = {
+              homeScore: webResult.homeScore,
+              awayScore: webResult.awayScore,
+              homeTeam: prono.equipe1, // Approximation
+              awayTeam: prono.equipe2,
+              status: "FT",
+              source: "web_search"
+            };
+            source = "web_search";
+            console.log(`✅ Match trouvé via web: ${webResult.homeScore}-${webResult.awayScore}`);
+          } else {
+            console.log(`❌ Aucun résultat trouvé via web pour: ${prono.equipe1} vs ${prono.equipe2}`);
+          }
+        } else {
+          // Données depuis l'API
+          matchData = {
+            homeScore: matchingMatch.goals.home,
+            awayScore: matchingMatch.goals.away,
+            homeTeam: matchingMatch.teams.home.name,
+            awayTeam: matchingMatch.teams.away.name,
+            status: matchingMatch.fixture.status.short,
+            elapsed: matchingMatch.fixture.status.elapsed,
+            source: "api"
+          };
+        }
+
+        if (matchData) {
+          const { homeScore, awayScore, homeTeam, awayTeam, status, elapsed } = matchData;
 
           // Match terminé (enhanced status detection)
           if (isMatchFinished(status)) {
@@ -193,12 +229,12 @@ export async function checkAndUpdatePronosticResults() {
               // Update all UserBets
               const syncResult = await UserBet.updateMany(
                 { pronoId: prono._id },
-                { 
-                  $set: { 
-                    resultat: result, 
+                {
+                  $set: {
+                    resultat: result,
                     scoreLive: `${homeScore}-${awayScore}`,
                     dateValidation: new Date()
-                  } 
+                  }
                 }
               );
 
@@ -207,7 +243,7 @@ export async function checkAndUpdatePronosticResults() {
               updatedCount++;
 
               console.log(
-                `✅ Pronostic terminé: ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
+                `✅ Pronostic terminé (${source}): ${prono.equipe1} vs ${prono.equipe2} - ${result} (${homeScore}-${awayScore})`
               );
 
               // Emit socket event
@@ -221,14 +257,15 @@ export async function checkAndUpdatePronosticResults() {
                 type: prono.type,
                 cote: prono.cote,
                 matchStatus: status,
+                source: source
               });
             }
           }
-          // Match en cours (enhanced detection)
-          else if (isMatchLive(status)) {
+          // Match en cours (enhanced detection) - seulement pour API
+          else if (isMatchLive(status) && source === "api") {
             const liveScore = `${homeScore}-${awayScore} (${elapsed}')`;
             liveMatchCount++;
-            
+
             if (prono.statut !== "en cours" || prono.scoreLive !== liveScore) {
               prono.statut = "en cours";
               prono.resultat = "en cours";
